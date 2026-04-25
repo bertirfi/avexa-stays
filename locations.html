@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AVEXA STAYS — Locations in Bucharest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Manrope:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#191919;
+    --ink-80:rgba(25,25,25,.82);
+    --ink-60:rgba(25,25,25,.6);
+    --gold:#DDB97A;
+    --gold-dark:#B08840;
+    --gold-pale:#F7EDDB;
+    --cream:#FAF9F5;
+    --white:#ffffff;
+    --gray-light:#F1F1F1;
+    --gray-line:#E6E4DD;
+    --c-floreasca:#FF4136;
+    --c-pipera:#D4531A;
+    --c-centre:#2E7D32;
+    --c-dorobanti:#1565C0;
+    --c-herastrau:#6A1B9A;
+    --c-baneasa:#00695C;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--cream);color:var(--ink);-webkit-font-smoothing:antialiased}
+  body{font-family:'Manrope',system-ui,sans-serif;font-weight:300;font-size:16px;line-height:1.65;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  ::selection{background:var(--gold);color:var(--ink)}
+  .mono{font-family:'DM Mono',ui-monospace,monospace}
+  .label{font-family:'DM Mono',ui-monospace,monospace;font-size:11px;font-weight:500;letter-spacing:0.2em;text-transform:uppercase}
+
+  /* ── Announcement bar ── */
+  .ann{
+    background:var(--ink);color:#fff;height:40px;display:flex;align-items:center;justify-content:center;gap:16px;
+    font-size:13px;padding:0 56px 0 24px;position:relative;z-index:70;
+  }
+  .ann a{color:var(--gold);text-decoration:underline;text-underline-offset:3px;font-weight:600}
+  .ann .x{position:absolute;right:18px;top:50%;transform:translateY(-50%);opacity:.7;cursor:pointer;font-size:16px}
+  .ann.hide{display:none}
+
+  /* ── NAV ── */
+  .nav{
+    position:sticky;top:0;left:0;right:0;height:64px;z-index:60;
+    background:#fff;border-bottom:1px solid var(--gray-line);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 28px;transition:transform .34s cubic-bezier(.16,1,.3,1);
+    will-change:transform;
+  }
+  .nav.hide{transform:translateY(-100%)}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo-mark{width:32px;height:32px;border-radius:10px;background:var(--ink);display:grid;place-items:center;position:relative;flex:none}
+  .logo-mark svg{width:18px;height:18px}
+  .logo-mark .dot{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--gold);animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.35)}}
+  .wordmark{font-family:'Plus Jakarta Sans';font-weight:800;letter-spacing:.02em;font-size:17px;color:var(--gold-dark)}
+  .nav-links{display:flex;gap:32px}
+  .nav-links a{font-size:13.5px;font-weight:500;opacity:.8}
+  .nav-links a.current{color:var(--gold-dark);opacity:1}
+  .nav-links a:hover{opacity:1}
+  .nav-right{display:flex;align-items:center;gap:16px;font-size:13.5px}
+  .globe{width:18px;height:18px;stroke:var(--ink);stroke-width:1.6;fill:none}
+
+  /* ── SEARCH BAR (not sticky — scrolls with the page) ── */
+  .search-bar{
+    position:relative;z-index:54;background:var(--cream);
+    padding:14px 28px;border-bottom:1px solid var(--gray-line);
+    display:flex;justify-content:center;
+  }
+  .search-pill{
+    background:#fff;border-radius:9999px;padding:6px 6px 6px 18px;
+    display:grid;grid-template-columns:1fr 1px 1.3fr 1px 1fr auto;align-items:center;gap:4px;
+    box-shadow:0 8px 24px -12px rgba(25,25,25,.22),0 1px 4px rgba(25,25,25,.05);
+    border:1px solid rgba(25,25,25,.06);
+    width:min(820px,100%);
+  }
+  .search-pill .sep{width:1px;height:26px;background:var(--gray-line)}
+  .search-pill .field{padding:7px 16px;cursor:pointer;border-radius:9999px;transition:background .2s;text-align:left}
+  .search-pill .field:hover{background:var(--cream)}
+  .search-pill .field .k{font-family:'DM Mono';font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);display:block}
+  .search-pill .field .v{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .search-pill .go{width:38px;height:38px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center}
+  .search-pill .go:hover{background:var(--gold-dark)}
+  .search-pill .go svg{width:14px;height:14px;stroke:#fff;stroke-width:2;fill:none}
+
+  /* ── PAGE SHELL ── */
+  .page{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 104px);transition:grid-template-columns .45s cubic-bezier(.16,1,.3,1)}
+  .page.hidemap{grid-template-columns:320px 1fr}
+  .page.hidemap .map-panel{display:none}
+
+  /* ── LEFT: List ── */
+  .list-panel{padding:36px 40px 100px;overflow:visible}
+  .list-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;margin-bottom:22px}
+  .list-head h1{font-family:'Plus Jakarta Sans';font-weight:800;font-size:clamp(28px,3vw,40px);letter-spacing:-0.02em;line-height:1.05}
+  .list-head .count{color:var(--gold-dark);font-family:'DM Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px;display:block}
+  .list-head .sub{font-size:14px;color:var(--ink-60);max-width:400px;margin-top:6px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .chip{
+    padding:8px 14px;border-radius:9999px;background:#fff;border:1px solid var(--gray-line);
+    font-size:12.5px;font-weight:500;cursor:pointer;transition:all .2s;
+  }
+  .chip:hover{border-color:var(--ink);background:var(--cream)}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .chip.more{background:var(--gold-pale);border-color:var(--gold);color:var(--gold-dark);font-weight:600}
+
+  .sort-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px;font-size:13px;flex-wrap:wrap}
+  .sort-row .left{display:flex;gap:18px;align-items:center}
+  .sort-row select{font:inherit;border:1px solid var(--gray-line);background:#fff;padding:8px 28px 8px 12px;border-radius:8px;font-size:13px;cursor:pointer;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%);background-position:calc(100% - 14px) 14px,calc(100% - 9px) 14px;background-size:5px 5px;background-repeat:no-repeat}
+  .toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+  .toggle input{appearance:none;width:32px;height:18px;border-radius:9999px;background:var(--gray-light);position:relative;cursor:pointer;transition:background .2s}
+  .toggle input::before{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .toggle input:checked{background:var(--ink)}
+  .toggle input:checked::before{left:16px}
+
+  .promo{
+    background:var(--gold);color:var(--ink);padding:14px 20px;border-radius:14px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;font-size:13.5px;
+  }
+  .promo strong{font-weight:700}
+  .promo a{text-decoration:underline;text-underline-offset:3px;font-weight:600}
+
+  /* ── PROPERTY CARDS ── */
+  .cards{display:flex;flex-direction:column;gap:22px}
+  .card{
+    background:#fff;border-radius:18px;overflow:hidden;border:1.5px solid transparent;
+    transition:transform .3s cubic-bezier(.16,1,.3,1),border-color .3s,box-shadow .3s;
+    box-shadow:0 1px 2px rgba(25,25,25,.04);
+  }
+  .card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 18px 40px -20px rgba(25,25,25,.22)}
+  .card-media{position:relative;aspect-ratio:16/9;overflow:hidden;background:var(--gray-light)}
+  .card-slide{position:absolute;inset:0;display:flex;transition:transform .45s cubic-bezier(.16,1,.3,1)}
+  .card-slide > div{flex:0 0 100%;height:100%;position:relative}
+  .card-slide .ph-a{background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 2px, transparent 2px 16px),
+    linear-gradient(160deg, #a98d5d 0%, #4a3d25 100%)}
+  .card-slide .ph-b{background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 22px),
+    linear-gradient(160deg, #3a3226 0%, #171310 100%)}
+  .card-slide .ph-c{background:
+    repeating-linear-gradient(45deg, rgba(255,255,255,.06) 0 2px, transparent 2px 18px),
+    linear-gradient(160deg, #d1b488 0%, #7d5f34 100%)}
+  .card-slide .tag{position:absolute;left:14px;top:14px;background:rgba(25,25,25,.72);color:#fff;padding:6px 10px;border-radius:999px;font-family:'DM Mono';font-size:10px;letter-spacing:.16em;text-transform:uppercase}
+  .card-slide .tag.fav{right:14px;left:auto;background:#fff;color:var(--ink);padding:6px 8px}
+  .arr{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;transition:background .2s,transform .2s;opacity:0}
+  .card:hover .arr{opacity:1}
+  .arr:hover{background:#fff;transform:translateY(-50%) scale(1.08)}
+  .arr.prev{left:14px}.arr.next{right:14px}
+  .arr svg{width:14px;height:14px;stroke:var(--ink);stroke-width:2;fill:none}
+  .dots{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+  .dots span{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5);transition:background .2s,width .2s}
+  .dots span.on{background:#fff;width:20px;border-radius:9999px}
+
+  .card-body{padding:22px 24px 24px;display:grid;grid-template-columns:1fr auto;gap:14px 20px;align-items:start}
+  .nbh{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono';font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:500}
+  .nbh .dot{width:7px;height:7px;border-radius:50%}
+  .p-name{font-family:'Plus Jakarta Sans';font-weight:800;font-size:24px;letter-spacing:-0.01em;line-height:1.1;margin-top:8px}
+  .p-tag{font-size:14px;color:var(--ink-60);margin-top:6px;max-width:460px}
+  .amens{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+  .amens span{padding:5px 10px;border:1px solid var(--gray-line);border-radius:999px;font-size:11.5px;background:var(--cream)}
+  .price{text-align:right}
+  .price .badge{display:inline-flex;align-items:baseline;gap:4px;background:var(--gold);color:var(--ink);padding:10px 14px;border-radius:9999px;font-weight:700}
+  .price .badge .n{font-family:'Plus Jakarta Sans';font-size:22px;letter-spacing:-0.01em}
+  .price .badge .u{font-size:11.5px;font-weight:500;opacity:.7}
+  .price .ppn{font-size:11px;color:var(--ink-60);margin-top:6px;display:block}
+  .cta{grid-column:1/-1;margin-top:20px}
+  .cta a{display:block;width:100%;background:var(--ink);color:#fff;padding:15px 18px;text-align:center;border-radius:12px;font-weight:600;font-size:14px;transition:background .2s,transform .2s}
+  .cta a:hover{background:var(--gold-dark)}
+
+  /* ── RIGHT: MAP ── */
+  .map-panel{position:sticky;top:64px;height:calc(100vh - 64px);background:#242824;overflow:hidden;border-left:1px solid var(--gray-line)}
+  .map-inner{
+    position:absolute;inset:0;
+    background:
+      /* park blobs */
+      radial-gradient(ellipse 200px 120px at 22% 30%, rgba(60,120,55,.55), transparent 70%),
+      radial-gradient(ellipse 260px 160px at 78% 72%, rgba(60,120,55,.45), transparent 70%),
+      radial-gradient(ellipse 140px 100px at 60% 18%, rgba(60,120,55,.4), transparent 70%),
+      /* water */
+      radial-gradient(ellipse 340px 90px at 12% 82%, rgba(60,100,140,.45), transparent 70%),
+      /* base */
+      linear-gradient(180deg,#2e332d,#1f231e);
+  }
+  .streets{position:absolute;inset:0;pointer-events:none;opacity:.55}
+  .streets line{stroke:rgba(255,255,255,.08);stroke-width:1}
+  .streets line.major{stroke:rgba(255,255,255,.14);stroke-width:2}
+  .streets path{stroke:rgba(255,255,255,.12);stroke-width:1.5;fill:none}
+
+  .pin{
+    position:absolute;transform:translate(-50%,-100%);
+    background:#fff;color:var(--ink);padding:6px 10px;border-radius:9999px;
+    font-family:'Plus Jakarta Sans';font-weight:700;font-size:12.5px;letter-spacing:-0.01em;
+    box-shadow:0 4px 12px rgba(0,0,0,.35);cursor:pointer;
+    transition:background .25s,color .25s,transform .25s,box-shadow .25s;
+    white-space:nowrap;border:1.5px solid transparent;
+  }
+  .pin::after{content:"";position:absolute;left:50%;bottom:-5px;transform:translateX(-50%) rotate(45deg);width:8px;height:8px;background:inherit;border-right:inherit;border-bottom:inherit}
+  .pin.active{background:var(--gold);color:var(--ink);transform:translate(-50%,-100%) scale(1.2);box-shadow:0 10px 28px rgba(0,0,0,.5);z-index:5;border-color:var(--ink)}
+  .pin .nbh-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:middle}
+
+  .nbh-label{
+    position:absolute;transform:translate(-50%,-50%);font-family:'DM Mono';font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+    color:rgba(255,255,255,.5);pointer-events:none;
+  }
+
+  .map-toggle{
+    position:absolute;top:16px;right:16px;z-index:10;
+    background:#fff;color:var(--ink);padding:10px 14px;border-radius:9999px;
+    font-size:12.5px;font-weight:600;box-shadow:0 6px 16px rgba(0,0,0,.25);
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .map-toggle:hover{background:var(--gold);color:var(--ink)}
+  .show-map-float{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:40;
+    background:var(--gold);color:var(--ink);padding:14px 22px;border-radius:9999px;
+    font-weight:700;font-size:14px;box-shadow:0 14px 34px -10px rgba(25,25,25,.45);
+    display:none;align-items:center;gap:10px;
+  }
+  .page.hidemap ~ .show-map-float{display:inline-flex}
+  .show-map-float:hover{background:var(--ink);color:var(--gold)}
+
+  .zoom{position:absolute;bottom:20px;right:16px;display:flex;flex-direction:column;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,.25);z-index:6}
+  .zoom button{padding:10px 12px;font-size:16px;border-bottom:1px solid var(--gray-line)}
+  .zoom button:last-child{border-bottom:0}
+
+  /* ── FILTERS SIDEBAR (shown when map hidden) ── */
+  .filters{display:none;padding:30px 28px;border-right:1px solid var(--gray-line);background:#fff}
+  .page.hidemap .filters{display:block}
+  .page.hidemap .list-panel{padding:36px 48px 100px}
+  .filters-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:22px}
+  .filters-head h3{font-family:'DM Mono';font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-weight:500}
+  .filters-head a{font-size:12px;text-decoration:underline;color:var(--ink-60)}
+  .filters h4{font-family:'Plus Jakarta Sans';font-weight:700;font-size:14px;margin:22px 0 12px;letter-spacing:-0.01em}
+  .filters h4:first-of-type{margin-top:0}
+  .check{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13.5px;cursor:pointer}
+  .check input{appearance:none;width:16px;height:16px;border:1.5px solid var(--gray-line);border-radius:4px;position:relative;cursor:pointer;transition:background .15s,border-color .15s}
+  .check input:checked{background:var(--ink);border-color:var(--ink)}
+  .check input:checked::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+  .check .n{margin-left:auto;color:var(--ink-60);font-size:12px;font-family:'DM Mono'}
+  .check .paid{margin-left:auto;font-size:10px;padding:3px 8px;border-radius:999px;background:var(--gold-pale);color:var(--gold-dark);font-family:'DM Mono';letter-spacing:.08em;font-weight:600;text-transform:uppercase}
+  .filters .showall{font-size:12px;color:var(--gold-dark);text-decoration:underline;margin-top:6px;display:inline-block;cursor:pointer}
+
+  @media (max-width:980px){
+    .nav-links{display:none}
+    .page{grid-template-columns:1fr}
+    .map-panel{display:none}
+    .search-pill{grid-template-columns:1fr auto}
+    .search-pill .sep,.search-pill .field:nth-of-type(2),.search-pill .field:nth-of-type(3){display:none}
+  }
+
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ANNOUNCEMENT -->
+<div class="ann" id="ann">
+  <span>As an AVEXA member you get the lowest rate and great perks — for free. <a href="#">Join now</a></span>
+  <span class="x" onclick="document.getElementById('ann').classList.add('hide')">✕</span>
+</div>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <a href="index.html" class="logo">
+    <span class="logo-mark"><svg viewBox="0 0 20 20"><line x1="3" y1="3" x2="17" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="3" x2="3" y2="17" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round"/></svg><span class="dot"></span></span>
+    <span class="wordmark">AVEXA</span>
+  </a>
+  <div class="nav-links">
+    <a href="locations.html" class="current">Locations</a>
+    <a href="index.html#benefits">Member Benefits</a>
+    <a href="#">Business Travel</a>
+    <a href="#">My Trips</a>
+  </div>
+  <div class="nav-right">
+    <svg class="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg>
+    <a href="#">Sign up</a>
+  </div>
+</nav>
+
+<!-- STICKY SEARCH -->
+<div class="search-bar">
+  <div class="search-pill">
+    <button class="field"><span class="k">Location</span><span class="v">Bucharest · All</span></button>
+    <span class="sep"></span>
+    <button class="field"><span class="k">Check in — Check out</span><span class="v">Apr 28 — May 03</span></button>
+    <span class="sep"></span>
+    <button class="field"><span class="k">Guests</span><span class="v">2 adults</span></button>
+    <button class="go" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+  </div>
+</div>
+
+<div class="page" id="page">
+
+  <!-- FILTERS sidebar (visible only when map hidden) -->
+  <aside class="filters">
+    <div class="filters-head">
+      <h3>Filter by</h3>
+      <a href="#">Clear all</a>
+    </div>
+    <h4>Popular neighborhoods</h4>
+    <label class="check"><input type="checkbox"> Floreasca <span class="n">4</span></label>
+    <label class="check"><input type="checkbox"> Pipera <span class="n">3</span></label>
+    <label class="check"><input type="checkbox"> City Centre <span class="n">2</span></label>
+    <label class="check"><input type="checkbox"> Dorobanti <span class="n">1</span></label>
+    <a class="showall">Show all</a>
+
+    <h4>Amenities</h4>
+    <label class="check"><input type="checkbox"> Kitchen / Kitchenette</label>
+    <label class="check"><input type="checkbox"> Balcony / Terrace</label>
+    <label class="check"><input type="checkbox"> Air Conditioning</label>
+    <label class="check"><input type="checkbox"> Breakfast available <span class="paid">Paid</span></label>
+    <label class="check"><input type="checkbox"> Lift</label>
+
+    <h4>Property amenities</h4>
+    <label class="check"><input type="checkbox"> Accessible</label>
+    <label class="check"><input type="checkbox"> Parking</label>
+    <label class="check"><input type="checkbox"> Pets allowed <span class="paid">Paid</span></label>
+    <label class="check"><input type="checkbox"> Luggage storage</label>
+    <label class="check"><input type="checkbox"> Shared laundry</label>
+
+    <h4>Room amenities</h4>
+    <label class="check"><input type="checkbox"> Work station</label>
+    <label class="check"><input type="checkbox"> Washing machine in unit</label>
+    <label class="check"><input type="checkbox"> Microwave</label>
+  </aside>
+
+  <!-- LEFT: LIST -->
+  <main class="list-panel">
+    <div class="list-head">
+      <div>
+        <span class="count">— 10 available properties</span>
+        <h1>Stays in Bucharest</h1>
+        <p class="sub">Member rates and fully digital check-in at every AVEXA address across the city.</p>
+      </div>
+    </div>
+
+    <div class="chips">
+      <button class="chip on">All</button>
+      <button class="chip">Kitchen</button>
+      <button class="chip">Balcony</button>
+      <button class="chip">Air Conditioning</button>
+      <button class="chip">Breakfast</button>
+      <button class="chip">Lift</button>
+      <button class="chip">Pets OK</button>
+      <button class="chip more">+ More filters</button>
+    </div>
+
+    <div class="sort-row">
+      <div class="left">
+        <label>Sort by:
+          <select>
+            <option>Price — low to high</option>
+            <option>Price — high to low</option>
+            <option>Newest</option>
+            <option>Top rated</option>
+          </select>
+        </label>
+      </div>
+      <label class="toggle"><input type="checkbox" checked> Show total prices</label>
+    </div>
+
+    <div class="promo">
+      <span><strong>Members save 15%</strong> · As an AVEXA member, get the lowest rate — for free.</span>
+      <a href="#">Join →</a>
+    </div>
+
+    <div class="cards" id="cards">
+      <!-- injected -->
+    </div>
+  </main>
+
+  <!-- RIGHT: MAP -->
+  <aside class="map-panel" id="mapPanel">
+    <div class="map-inner" id="mapInner">
+      <!-- street SVG grid -->
+      <svg class="streets" viewBox="0 0 1000 800" preserveAspectRatio="none">
+        <!-- major avenues -->
+        <line class="major" x1="0" y1="180" x2="1000" y2="220"/>
+        <line class="major" x1="0" y1="520" x2="1000" y2="480"/>
+        <line class="major" x1="280" y1="0" x2="260" y2="800"/>
+        <line class="major" x1="680" y1="0" x2="720" y2="800"/>
+        <!-- minor grid -->
+        <line x1="0" y1="60" x2="1000" y2="80"/>
+        <line x1="0" y1="120" x2="1000" y2="140"/>
+        <line x1="0" y1="300" x2="1000" y2="330"/>
+        <line x1="0" y1="380" x2="1000" y2="400"/>
+        <line x1="0" y1="600" x2="1000" y2="580"/>
+        <line x1="0" y1="680" x2="1000" y2="700"/>
+        <line x1="120" y1="0" x2="100" y2="800"/>
+        <line x1="180" y1="0" x2="170" y2="800"/>
+        <line x1="380" y1="0" x2="370" y2="800"/>
+        <line x1="460" y1="0" x2="450" y2="800"/>
+        <line x1="560" y1="0" x2="570" y2="800"/>
+        <line x1="820" y1="0" x2="830" y2="800"/>
+        <line x1="900" y1="0" x2="910" y2="800"/>
+        <!-- river curve -->
+        <path d="M-20 660 Q 200 600 420 680 T 900 720 L 1020 760 L 1020 820 L -20 820 Z" fill="rgba(60,100,140,.28)" stroke="none"/>
+        <path d="M-20 660 Q 200 600 420 680 T 900 720" stroke="rgba(120,160,200,.35)" stroke-width="2" fill="none"/>
+      </svg>
+
+      <!-- neighborhood labels -->
+      <div class="nbh-label" style="left:24%;top:26%">Floreasca</div>
+      <div class="nbh-label" style="left:72%;top:18%">Pipera</div>
+      <div class="nbh-label" style="left:46%;top:58%">City Centre</div>
+      <div class="nbh-label" style="left:30%;top:50%">Dorobanti</div>
+      <div class="nbh-label" style="left:58%;top:30%">Herastrau</div>
+      <div class="nbh-label" style="left:82%;top:50%">Baneasa</div>
+
+      <!-- pins injected -->
+      <div id="pins"></div>
+    </div>
+
+    <button class="map-toggle" id="hideMapBtn">← Hide map</button>
+    <div class="zoom">
+      <button aria-label="Zoom in">＋</button>
+      <button aria-label="Zoom out">−</button>
+    </div>
+  </aside>
+</div>
+
+<button class="show-map-float" id="showMapBtn">🗺 Show map</button>
+
+<script>
+  // ─── Properties data
+  const PROPS = [
+    {id:'p1', name:'The Floreasca Loft', nbh:'Floreasca', color:'var(--c-floreasca)', tag:'Park-side one-bedroom with terrace', amens:['Kitchen','Balcony','A/C','Lift'], price:149, x:22, y:28},
+    {id:'p2', name:'Dorobanti 74', nbh:'Dorobanti', color:'var(--c-dorobanti)', tag:'Calm street, 8 min from Piata Victoriei', amens:['Kitchen','Work station','A/C'], price:128, x:33, y:48},
+    {id:'p3', name:'Centre Studio — Lipscani', nbh:'City Centre', color:'var(--c-centre)', tag:'Old town studio for nights out', amens:['A/C','Lift','Luggage'], price:109, x:48, y:60},
+    {id:'p4', name:'Pipera Skyline 18', nbh:'Pipera', color:'var(--c-pipera)', tag:'Glass-fronted flat near office park', amens:['Kitchen','Parking','Gym'], price:138, x:70, y:20},
+    {id:'p5', name:'Herastrau Green One', nbh:'Herastrau', color:'var(--c-herastrau)', tag:'Overlooks the lake, quiet at night', amens:['Balcony','Kitchen','A/C'], price:172, x:56, y:32},
+    {id:'p6', name:'Baneasa Garden Flat', nbh:'Baneasa', color:'var(--c-baneasa)', tag:'Green-belt apartment near the airport', amens:['Parking','Pets','Kitchen'], price:119, x:82, y:48},
+    {id:'p7', name:'Floreasca Park Suite', nbh:'Floreasca', color:'var(--c-floreasca)', tag:'Two-bedroom with lake views', amens:['Balcony','Lift','Work station'], price:189, x:26, y:38},
+    {id:'p8', name:'Centre · Palace Court', nbh:'City Centre', color:'var(--c-centre)', tag:'Walk to every landmark', amens:['A/C','Breakfast','Lift'], price:132, x:52, y:64},
+    {id:'p9', name:'Dorobanti Quiet Studio', nbh:'Dorobanti', color:'var(--c-dorobanti)', tag:'Embassy district pied-à-terre', amens:['Kitchen','A/C'], price:98, x:38, y:44},
+    {id:'p10', name:'Pipera Atrium', nbh:'Pipera', color:'var(--c-pipera)', tag:'Open-plan with home office', amens:['Work station','Kitchen','Parking'], price:155, x:74, y:26},
+  ];
+
+  // ─── Render cards
+  const cardsEl = document.getElementById('cards');
+  cardsEl.innerHTML = PROPS.map((p,i) => `
+    <article class="card" data-id="${p.id}">
+      <div class="card-media">
+        <div class="card-slide" data-idx="0">
+          <div class="ph-a"><span class="tag">${String(i+1).padStart(2,'0')} / 10</span><span class="tag fav">♡</span></div>
+          <div class="ph-b"></div>
+          <div class="ph-c"></div>
+        </div>
+        <button class="arr prev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <button class="arr next" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="dots"><span class="on"></span><span></span><span></span></div>
+      </div>
+      <div class="card-body">
+        <div>
+          <span class="nbh" style="color:${p.color}"><span class="dot" style="background:${p.color}"></span>${p.nbh}</span>
+          <h3 class="p-name">${p.name}</h3>
+          <p class="p-tag">${p.tag}</p>
+          <div class="amens">${p.amens.map(a=>`<span>${a}</span>`).join('')}</div>
+        </div>
+        <div class="price">
+          <div class="badge"><span class="n">€${p.price}</span><span class="u">/ night</span></div>
+          <span class="ppn">Member rate · incl. taxes</span>
+        </div>
+        <div class="cta"><a href="#">Explore &amp; Book →</a></div>
+      </div>
+    </article>
+  `).join('');
+
+  // ─── Render map pins
+  const pinsEl = document.getElementById('pins');
+  pinsEl.innerHTML = PROPS.map(p => `
+    <button class="pin" data-id="${p.id}" style="left:${p.x}%;top:${p.y}%">
+      <span class="nbh-dot" style="background:${p.color}"></span>€${p.price}
+    </button>
+  `).join('');
+
+  // ─── Carousel
+  document.querySelectorAll('.card').forEach(card => {
+    const slide = card.querySelector('.card-slide');
+    const dots = card.querySelectorAll('.dots span');
+    const total = 3;
+    let idx = 0;
+    const set = (i) => {
+      idx = (i + total) % total;
+      slide.style.transform = `translateX(${-idx*100}%)`;
+      dots.forEach((d,k)=>d.classList.toggle('on',k===idx));
+    };
+    card.querySelector('.arr.prev').addEventListener('click', e => { e.stopPropagation(); set(idx-1); });
+    card.querySelector('.arr.next').addEventListener('click', e => { e.stopPropagation(); set(idx+1); });
+  });
+
+  // ─── Card hover ↔ pin sync
+  const setActive = (id) => {
+    document.querySelectorAll('.pin').forEach(p => p.classList.toggle('active', p.dataset.id === id));
+    document.querySelectorAll('.card').forEach(c => c.classList.toggle('active', c.dataset.id === id));
+  };
+  document.querySelectorAll('.card').forEach(c => {
+    c.addEventListener('mouseenter', () => setActive(c.dataset.id));
+    c.addEventListener('mouseleave', () => setActive(null));
+  });
+  document.querySelectorAll('.pin').forEach(p => {
+    p.addEventListener('mouseenter', () => setActive(p.dataset.id));
+    p.addEventListener('mouseleave', () => setActive(null));
+    p.addEventListener('click', () => {
+      const card = document.querySelector(`.card[data-id="${p.dataset.id}"]`);
+      card && card.scrollIntoView({block:'center', behavior:'smooth'});
+    });
+  });
+
+  // ─── Map toggle
+  const page = document.getElementById('page');
+  document.getElementById('hideMapBtn').addEventListener('click', () => page.classList.add('hidemap'));
+  document.getElementById('showMapBtn').addEventListener('click', () => page.classList.remove('hidemap'));
+
+  // ─── Nav hide on scroll down (sticky — slides up and out)
+  (function(){
+    const nav = document.getElementById('nav');
+    let lastY = 0;
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      const d = y - lastY;
+      if (y > 120 && d > 4) nav.classList.add('hide');
+      else if (d < -4 || y < 80) nav.classList.remove('hide');
+      lastY = y;
+    }, {passive:true});
+  })();
+
+  // ─── Chips toggle
+  document.querySelectorAll('.chip').forEach(c => {
+    if (c.classList.contains('more')) return;
+    c.addEventListener('click', () => {
+      if (c.textContent.trim() === 'All') {
+        document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c));
+      } else {
+        document.querySelector('.chip').classList.remove('on');
+        c.classList.toggle('on');
+      }
+    });
+  });
+</script>
+</body>
+</html>
