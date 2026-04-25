@@ -376,7 +376,7 @@
     .r,.stagger>*{opacity:1;transform:none}
   }
 
-  /* ───────── HAMBURGER ───────── */
+  /* ───────── HAMBURGER (tablet only) ───────── */
   .nav-burger{
     display:none;flex-direction:column;justify-content:center;gap:5px;
     width:40px;height:40px;padding:9px;cursor:pointer;border-radius:8px;
@@ -391,7 +391,7 @@
   .nav-burger.open span:nth-child(2){opacity:0}
   .nav-burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
 
-  /* ───────── MOBILE NAV OVERLAY ───────── */
+  /* ───────── MOBILE NAV OVERLAY (tablet only) ───────── */
   .mobile-nav{
     position:fixed;inset:0;z-index:90;
     background:var(--ink);color:#fff;
@@ -404,8 +404,7 @@
   .mobile-nav.open{transform:none;pointer-events:auto}
   .mob-head{display:flex;justify-content:space-between;align-items:center}
   .mob-close{
-    font-size:20px;color:#fff;opacity:.6;padding:8px;cursor:pointer;transition:opacity .2s;
-    border-radius:8px;
+    font-size:20px;color:#fff;opacity:.6;padding:8px;cursor:pointer;transition:opacity .2s;border-radius:8px;
   }
   .mob-close:hover{opacity:1}
   .mob-links{display:flex;flex-direction:column;padding:16px 0}
@@ -425,72 +424,104 @@
   }
   .mob-note{font-family:'DM Mono';font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
 
-  /* ───────── TABLET (≤980px) ───────── */
+  /* ───────── BOTTOM TAB BAR (phone) ───────── */
+  .tab-bar{
+    display:none;
+    position:fixed;bottom:0;left:0;right:0;z-index:110;
+    background:#fff;border-top:1px solid var(--gray-line);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .tab-bar a{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;color:var(--ink-60);transition:color .2s;padding:10px 4px 6px;
+  }
+  .tab-bar a.active{color:var(--ink)}
+  .tab-bar a svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.8;fill:none;display:block}
+  .tab-bar a span{font-family:'DM Mono';font-size:9px;letter-spacing:.06em;text-transform:uppercase;line-height:1}
+
+  /* ───────── HERO MOBILE SEARCH CTA ───────── */
+  .hero-mob-cta{display:none;margin-top:36px;width:min(320px,calc(100% - 32px))}
+  .hero-mob-cta button{
+    width:100%;background:#fff;border-radius:9999px;padding:14px 20px;
+    display:flex;align-items:center;gap:12px;
+    font-size:15px;font-weight:600;color:var(--ink);
+    box-shadow:0 8px 28px rgba(25,25,25,.22);
+  }
+  .hero-mob-cta button svg{width:18px;height:18px;stroke:var(--ink-60);fill:none;stroke-width:2;flex-shrink:0}
+  .hero-mob-cta button span{opacity:.5;margin-left:auto;font-size:20px;line-height:1}
+
+  /* ───────── TABLET (641px – 980px) ───────── */
   @media (max-width:980px){
     .nav-links,.nav-right{display:none}
     .nav-burger{display:flex}
     .nav{padding:22px 20px}
-
-    /* Logo scales down from hero-size but stays readable */
     .logo-mark{width:56px;height:56px;border-radius:16px}
     .logo-mark svg{width:32px;height:32px}
     .logo-mark .dot{width:8px;height:8px}
     .wordmark{font-size:44px}
-
     .hero{padding:150px 24px 220px}
     .hero-stats{gap:28px}
     .search-wrap{top:68px;width:calc(100% - 24px)}
     .search-pill{grid-template-columns:1fr auto;gap:0}
     .search-pill .sep,.search-pill .field:nth-of-type(2),.search-pill .field:nth-of-type(3){display:none}
-
     .edit-grid,.loc-grid,.ben-wrap{grid-template-columns:1fr;gap:48px}
     .how-grid,.ben-grid{grid-template-columns:1fr 1fr}
     .how-col{border-right:0;border-bottom:1px solid rgba(25,25,25,.22)}
-
     .locations-head,.how-wrap,.foot-wrap{padding-left:24px;padding-right:24px}
     .loc-grid{padding-left:24px;padding-right:24px}
     .edit-grid{padding:0 24px}
-
     .foot-top{grid-template-columns:1fr 1fr;gap:32px}
   }
 
-  /* ───────── PHONE (≤640px) ───────── */
+  /* ───────── PHONE (≤640px) — App mode ───────── */
   @media (max-width:640px){
-    .nav{padding:18px 16px}
-    .logo-mark{width:44px;height:44px;border-radius:12px}
-    .logo-mark svg{width:26px;height:26px}
-    .wordmark{font-size:34px}
+    /* Tab bar replaces hamburger */
+    .nav-burger,.mobile-nav{display:none!important}
+    .tab-bar{display:flex}
+    body{padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}
 
-    .hero{padding:130px 16px 200px}
-    .hero-sub{font-size:16px}
-    .hero-stats{gap:20px}
-    .hero-stats .s .n{font-size:24px}
-    .hero-bottom-pill{bottom:60px;width:calc(100% - 32px)}
+    /* Minimal top nav: logo + globe only */
+    .nav{padding:0 16px;height:60px}
+    .nav-right{display:flex}
+    .nav-right a{display:none}          /* hide Sign up text */
+    .globe{display:block}               /* keep globe icon */
+    .logo-mark{width:34px;height:34px;border-radius:10px;border-color:transparent}
+    .logo-mark svg{width:20px;height:20px}
+    .logo-mark .dot{width:5px;height:5px}
+    .wordmark{font-size:20px}
+    /* pinned nav already at 68px height — tighten it */
+    .nav.pinned{height:56px;padding:0 16px}
 
-    .locations-head,.how-wrap,.foot-wrap{padding-left:16px;padding-right:16px}
+    /* Hero */
+    .hero{padding:80px 20px 60px;min-height:auto}
+    .hero-sub{font-size:15px;margin-top:24px;max-width:100%}
+    .hero-stats{gap:24px;margin-top:32px}
+    .hero-stats .s .n{font-size:22px}
+    .hero-stats .s .l{font-size:9.5px}
+
+    /* Replace heavy bottom pill with a single app-style CTA */
+    .hero-bottom-pill,.hero-scroll,.search-wrap{display:none!important}
+    .hero-mob-cta{display:block}
+
+    /* Sections */
+    .edit-grid,.loc-grid,.ben-wrap{grid-template-columns:1fr;gap:40px}
+    .edit-grid{padding:0 16px}
+    .locations-head,.how-wrap,.foot-wrap{padding-left:16px;padding-right:16px;margin-bottom:40px}
     .loc-grid{padding-left:16px;padding-right:16px}
     .ben-wrap{padding-left:16px;padding-right:16px}
-    .edit-grid{padding:0 16px}
-
     .how-grid,.ben-grid{grid-template-columns:1fr}
-    .how-col{padding:32px 16px}
-
-    .ben-left h2{font-size:clamp(36px,9vw,56px)}
-
+    .how-col{padding:28px 16px}
+    .ben-left h2{font-size:clamp(34px,9vw,52px)}
     .foot-top{grid-template-columns:1fr}
     .foot-brand .store{flex-direction:column}
     .foot-social{margin-top:16px}
-    .foot-giant{margin-bottom:-6vw}
-
-    .mobile-nav{padding:20px 20px 40px}
+    .foot-giant{display:none}
   }
 
-  /* ───────── SMALL PHONE (≤420px) ───────── */
-  @media (max-width:420px){
-    .hero{padding:120px 14px 190px}
-    .hero-stats{flex-wrap:wrap;gap:16px 24px}
-    .hero-scroll{display:none}
-    .ben-grid{grid-template-columns:1fr}
+  /* ───────── SMALL PHONE (≤390px) ───────── */
+  @media (max-width:390px){
+    .hero-stats{flex-wrap:wrap;gap:14px 20px}
+    .hero-title{font-size:clamp(52px,14vw,80px)}
   }
 </style>
 </head>
@@ -548,6 +579,15 @@
     <div class="s"><div class="n">120+</div><div class="l">Apartments</div></div>
     <div class="s"><div class="n">6</div><div class="l">Neighborhoods</div></div>
     <div class="s"><div class="n">4.9</div><div class="l">Guest rating</div></div>
+  </div>
+
+  <!-- Mobile app-style search CTA (phone only, replaces bottom pill) -->
+  <div class="hero-mob-cta">
+    <button>
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      Check availability
+      <span>›</span>
+    </button>
   </div>
 
   <div class="hero-bottom-pill">
@@ -850,5 +890,29 @@
     update();
   })();
 </script>
+
+<!-- BOTTOM TAB BAR (phone only) -->
+<nav class="tab-bar" aria-label="Main navigation">
+  <a href="index.html" class="active" aria-label="Search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <span>Search</span>
+  </a>
+  <a href="locations.html" aria-label="Locations">
+    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg>
+    <span>Locations</span>
+  </a>
+  <a href="#" aria-label="My Trips">
+    <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a4 4 0 018 0v2"/></svg>
+    <span>My Trips</span>
+  </a>
+  <a href="#" aria-label="Profile">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    <span>Profile</span>
+  </a>
+  <a href="#" aria-label="More">
+    <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
+    <span>More</span>
+  </a>
+</nav>
 </body>
 </html>
