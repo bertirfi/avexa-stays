@@ -376,14 +376,121 @@
     .r,.stagger>*{opacity:1;transform:none}
   }
 
+  /* ───────── HAMBURGER ───────── */
+  .nav-burger{
+    display:none;flex-direction:column;justify-content:center;gap:5px;
+    width:40px;height:40px;padding:9px;cursor:pointer;border-radius:8px;
+    transition:background .2s;flex-shrink:0;
+  }
+  .nav.pinned .nav-burger:hover{background:rgba(25,25,25,.07)}
+  .nav-burger span{
+    display:block;width:22px;height:2px;border-radius:2px;background:currentColor;
+    transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .2s;
+  }
+  .nav-burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+  .nav-burger.open span:nth-child(2){opacity:0}
+  .nav-burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+  /* ───────── MOBILE NAV OVERLAY ───────── */
+  .mobile-nav{
+    position:fixed;inset:0;z-index:90;
+    background:var(--ink);color:#fff;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:28px 28px 48px;
+    transform:translateX(100%);
+    transition:transform .45s cubic-bezier(.16,1,.3,1);
+    pointer-events:none;
+  }
+  .mobile-nav.open{transform:none;pointer-events:auto}
+  .mob-head{display:flex;justify-content:space-between;align-items:center}
+  .mob-close{
+    font-size:20px;color:#fff;opacity:.6;padding:8px;cursor:pointer;transition:opacity .2s;
+    border-radius:8px;
+  }
+  .mob-close:hover{opacity:1}
+  .mob-links{display:flex;flex-direction:column;padding:16px 0}
+  .mob-links a{
+    font-family:'Plus Jakarta Sans';font-weight:800;
+    font-size:clamp(30px,7vw,52px);letter-spacing:-0.02em;line-height:1.2;
+    padding:14px 0;border-bottom:1px solid rgba(255,255,255,.1);color:#fff;
+    opacity:.5;transition:opacity .2s,color .2s;
+  }
+  .mob-links a:first-child{border-top:1px solid rgba(255,255,255,.1)}
+  .mob-links a:hover{opacity:1;color:var(--gold)}
+  .mob-foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+  .mob-signup{
+    display:inline-flex;align-items:center;gap:10px;
+    background:var(--gold);color:var(--ink);padding:16px 26px;
+    border-radius:9999px;font-weight:700;font-size:15px;
+  }
+  .mob-note{font-family:'DM Mono';font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+
+  /* ───────── TABLET (≤980px) ───────── */
   @media (max-width:980px){
-    .nav-links{display:none}
+    .nav-links,.nav-right{display:none}
+    .nav-burger{display:flex}
+    .nav{padding:22px 20px}
+
+    /* Logo scales down from hero-size but stays readable */
+    .logo-mark{width:56px;height:56px;border-radius:16px}
+    .logo-mark svg{width:32px;height:32px}
+    .logo-mark .dot{width:8px;height:8px}
+    .wordmark{font-size:44px}
+
+    .hero{padding:150px 24px 220px}
+    .hero-stats{gap:28px}
+    .search-wrap{top:68px;width:calc(100% - 24px)}
     .search-pill{grid-template-columns:1fr auto;gap:0}
     .search-pill .sep,.search-pill .field:nth-of-type(2),.search-pill .field:nth-of-type(3){display:none}
+
     .edit-grid,.loc-grid,.ben-wrap{grid-template-columns:1fr;gap:48px}
-    .how-grid,.ben-grid{grid-template-columns:1fr}
+    .how-grid,.ben-grid{grid-template-columns:1fr 1fr}
     .how-col{border-right:0;border-bottom:1px solid rgba(25,25,25,.22)}
+
+    .locations-head,.how-wrap,.foot-wrap{padding-left:24px;padding-right:24px}
+    .loc-grid{padding-left:24px;padding-right:24px}
+    .edit-grid{padding:0 24px}
+
     .foot-top{grid-template-columns:1fr 1fr;gap:32px}
+  }
+
+  /* ───────── PHONE (≤640px) ───────── */
+  @media (max-width:640px){
+    .nav{padding:18px 16px}
+    .logo-mark{width:44px;height:44px;border-radius:12px}
+    .logo-mark svg{width:26px;height:26px}
+    .wordmark{font-size:34px}
+
+    .hero{padding:130px 16px 200px}
+    .hero-sub{font-size:16px}
+    .hero-stats{gap:20px}
+    .hero-stats .s .n{font-size:24px}
+    .hero-bottom-pill{bottom:60px;width:calc(100% - 32px)}
+
+    .locations-head,.how-wrap,.foot-wrap{padding-left:16px;padding-right:16px}
+    .loc-grid{padding-left:16px;padding-right:16px}
+    .ben-wrap{padding-left:16px;padding-right:16px}
+    .edit-grid{padding:0 16px}
+
+    .how-grid,.ben-grid{grid-template-columns:1fr}
+    .how-col{padding:32px 16px}
+
+    .ben-left h2{font-size:clamp(36px,9vw,56px)}
+
+    .foot-top{grid-template-columns:1fr}
+    .foot-brand .store{flex-direction:column}
+    .foot-social{margin-top:16px}
+    .foot-giant{margin-bottom:-6vw}
+
+    .mobile-nav{padding:20px 20px 40px}
+  }
+
+  /* ───────── SMALL PHONE (≤420px) ───────── */
+  @media (max-width:420px){
+    .hero{padding:120px 14px 190px}
+    .hero-stats{flex-wrap:wrap;gap:16px 24px}
+    .hero-scroll{display:none}
+    .ben-grid{grid-template-columns:1fr}
   }
 </style>
 </head>
@@ -422,6 +529,9 @@
       <svg class="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg>
       <a href="#">Sign up</a>
     </div>
+    <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
 
   <div class="hero-bg" aria-hidden="true">
@@ -452,6 +562,27 @@
   </div>
   <div class="hero-scroll">Scroll</div>
 </section>
+
+<!-- MOBILE NAV OVERLAY -->
+<div class="mobile-nav" id="mobileNav" aria-hidden="true">
+  <div class="mob-head">
+    <a href="index.html" class="logo" style="color:#fff">
+      <span class="logo-mark" style="width:36px;height:36px;border-radius:10px"><svg viewBox="0 0 20 20"><line x1="3" y1="3" x2="17" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="3" x2="3" y2="17" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round"/></svg><span class="dot"></span></span>
+      <span class="wordmark" style="font-size:20px">AVEXA</span>
+    </a>
+    <button class="mob-close" id="mobClose" aria-label="Close menu">✕</button>
+  </div>
+  <div class="mob-links">
+    <a href="locations.html">Locations</a>
+    <a href="#benefits">Member Benefits</a>
+    <a href="#">Business Travel</a>
+    <a href="#">My Trips</a>
+  </div>
+  <div class="mob-foot">
+    <a href="#" class="mob-signup">Join free →</a>
+    <span class="mob-note">Bucharest · 2026</span>
+  </div>
+</div>
 
 <!-- EDITORIAL -->
 <section class="editorial">
@@ -594,6 +725,24 @@
 </footer>
 
 <script>
+  // ─── Hamburger menu
+  (function(){
+    const burger = document.getElementById('navBurger');
+    const mob = document.getElementById('mobileNav');
+    const close = document.getElementById('mobClose');
+    if(!burger || !mob) return;
+    const toggle = (open) => {
+      burger.classList.toggle('open', open);
+      burger.setAttribute('aria-expanded', String(open));
+      mob.classList.toggle('open', open);
+      mob.setAttribute('aria-hidden', String(!open));
+      document.body.style.overflow = open ? 'hidden' : '';
+    };
+    burger.addEventListener('click', () => toggle(!mob.classList.contains('open')));
+    close?.addEventListener('click', () => toggle(false));
+    mob.querySelectorAll('a').forEach(a => a.addEventListener('click', () => toggle(false)));
+  })();
+
   // ─── NAV hide on scroll down, show on scroll up
   (function(){
     const nav = document.getElementById('nav');

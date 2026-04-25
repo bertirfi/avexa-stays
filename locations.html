@@ -245,12 +245,76 @@
   .check .paid{margin-left:auto;font-size:10px;padding:3px 8px;border-radius:999px;background:var(--gold-pale);color:var(--gold-dark);font-family:'DM Mono';letter-spacing:.08em;font-weight:600;text-transform:uppercase}
   .filters .showall{font-size:12px;color:var(--gold-dark);text-decoration:underline;margin-top:6px;display:inline-block;cursor:pointer}
 
+  /* ─── Hamburger ─── */
+  .nav-burger{
+    display:none;flex-direction:column;justify-content:center;gap:5px;
+    width:40px;height:40px;padding:9px;cursor:pointer;border-radius:8px;
+    transition:background .2s;flex-shrink:0;
+  }
+  .nav-burger:hover{background:rgba(25,25,25,.07)}
+  .nav-burger span{
+    display:block;width:22px;height:2px;border-radius:2px;background:var(--ink);
+    transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .2s;
+  }
+  .nav-burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+  .nav-burger.open span:nth-child(2){opacity:0}
+  .nav-burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+  /* ─── Mobile nav overlay ─── */
+  .mobile-nav{
+    position:fixed;inset:0;z-index:90;
+    background:var(--ink);color:#fff;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:20px 20px 40px;
+    transform:translateX(100%);
+    transition:transform .45s cubic-bezier(.16,1,.3,1);
+    pointer-events:none;
+  }
+  .mobile-nav.open{transform:none;pointer-events:auto}
+  .mob-head{display:flex;justify-content:space-between;align-items:center}
+  .mob-close{font-size:20px;color:#fff;opacity:.6;padding:8px;cursor:pointer;transition:opacity .2s;border-radius:8px}
+  .mob-close:hover{opacity:1}
+  .mob-links{display:flex;flex-direction:column;padding:16px 0}
+  .mob-links a{
+    font-family:'Plus Jakarta Sans';font-weight:800;
+    font-size:clamp(30px,7vw,52px);letter-spacing:-0.02em;line-height:1.2;
+    padding:14px 0;border-bottom:1px solid rgba(255,255,255,.1);color:#fff;
+    opacity:.5;transition:opacity .2s,color .2s;
+  }
+  .mob-links a:first-child{border-top:1px solid rgba(255,255,255,.1)}
+  .mob-links a:hover,.mob-links a.current{opacity:1;color:var(--gold)}
+  .mob-foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+  .mob-signup{
+    display:inline-flex;align-items:center;gap:10px;
+    background:var(--gold);color:var(--ink);padding:14px 24px;
+    border-radius:9999px;font-weight:700;font-size:14px;
+  }
+  .mob-note{font-family:'DM Mono';font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+
+  /* ─── Tablet (≤980px) ─── */
   @media (max-width:980px){
-    .nav-links{display:none}
+    .nav-links,.nav-right{display:none}
+    .nav-burger{display:flex}
     .page{grid-template-columns:1fr}
     .map-panel{display:none}
     .search-pill{grid-template-columns:1fr auto}
     .search-pill .sep,.search-pill .field:nth-of-type(2),.search-pill .field:nth-of-type(3){display:none}
+    .list-panel{padding:28px 24px 80px}
+    .show-map-float{display:inline-flex}
+  }
+
+  /* ─── Phone (≤640px) ─── */
+  @media (max-width:640px){
+    .list-panel{padding:20px 16px 80px}
+    .list-head h1{font-size:clamp(24px,6vw,32px)}
+    .chips{gap:6px}
+    .chip{padding:7px 12px;font-size:12px}
+    .sort-row{flex-direction:column;align-items:flex-start;gap:8px}
+    .promo{flex-direction:column;align-items:flex-start;gap:8px}
+    .card-body{grid-template-columns:1fr}
+    .price{text-align:left}
+    .cta{margin-top:12px}
+    .search-bar{padding:10px 16px}
   }
 
   @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
@@ -280,7 +344,31 @@
     <svg class="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg>
     <a href="#">Sign up</a>
   </div>
+  <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+
+<!-- MOBILE NAV OVERLAY -->
+<div class="mobile-nav" id="mobileNav" aria-hidden="true">
+  <div class="mob-head">
+    <a href="index.html" class="logo" style="color:#fff">
+      <span class="logo-mark" style="width:36px;height:36px;border-radius:10px;background:var(--ink)"><svg viewBox="0 0 20 20"><line x1="3" y1="3" x2="17" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="3" x2="3" y2="17" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round"/></svg><span class="dot"></span></span>
+      <span style="font-family:'Plus Jakarta Sans';font-weight:800;font-size:20px;color:var(--gold)">AVEXA</span>
+    </a>
+    <button class="mob-close" id="mobClose" aria-label="Close menu">✕</button>
+  </div>
+  <div class="mob-links">
+    <a href="locations.html" class="current">Locations</a>
+    <a href="index.html#benefits">Member Benefits</a>
+    <a href="#">Business Travel</a>
+    <a href="#">My Trips</a>
+  </div>
+  <div class="mob-foot">
+    <a href="#" class="mob-signup">Join free →</a>
+    <span class="mob-note">Bucharest · 2026</span>
+  </div>
+</div>
 
 <!-- STICKY SEARCH -->
 <div class="search-bar">
@@ -426,6 +514,24 @@
 <button class="show-map-float" id="showMapBtn">🗺 Show map</button>
 
 <script>
+  // ─── Hamburger menu
+  (function(){
+    const burger = document.getElementById('navBurger');
+    const mob = document.getElementById('mobileNav');
+    const close = document.getElementById('mobClose');
+    if(!burger || !mob) return;
+    const toggle = (open) => {
+      burger.classList.toggle('open', open);
+      burger.setAttribute('aria-expanded', String(open));
+      mob.classList.toggle('open', open);
+      mob.setAttribute('aria-hidden', String(!open));
+      document.body.style.overflow = open ? 'hidden' : '';
+    };
+    burger.addEventListener('click', () => toggle(!mob.classList.contains('open')));
+    close?.addEventListener('click', () => toggle(false));
+    mob.querySelectorAll('a').forEach(a => a.addEventListener('click', () => toggle(false)));
+  })();
+
   // ─── Properties data
   const PROPS = [
     {id:'p1', name:'The Floreasca Loft', nbh:'Floreasca', color:'var(--c-floreasca)', tag:'Park-side one-bedroom with terrace', amens:['Kitchen','Balcony','A/C','Lift'], price:149, x:22, y:28},
