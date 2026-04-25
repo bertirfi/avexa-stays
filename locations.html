@@ -385,10 +385,68 @@
       border:none;display:none;
     }
     .map-panel.mob-visible{display:block}
-    /* map-toggle and zoom still usable */
-    .map-panel.mob-visible .map-toggle{top:12px;right:12px}
-    .map-panel.mob-visible .zoom{bottom:calc(60px + env(safe-area-inset-bottom,0px) + 60px)}
+    /* Hide desktop hide-map button; zoom clears the toggle pill */
+    .map-toggle{display:none}
+    .map-panel.mob-visible .zoom{bottom:calc(60px + env(safe-area-inset-bottom,0px) + 68px)}
     .page{min-height:0}
+
+    /* Prevent hidemap class from triggering desktop sidebar layout on mobile */
+    .page.hidemap{grid-template-columns:1fr}
+    .page.hidemap .filters{display:none}
+    .page.hidemap .list-panel{padding:16px 14px calc(60px + env(safe-area-inset-bottom,0px) + 80px)}
+  }
+
+  /* ─── Map property card popup (phone) ─── */
+  .map-card-popup{
+    position:fixed;
+    bottom:calc(60px + env(safe-area-inset-bottom,0px) + 68px);
+    left:12px;right:12px;z-index:86;
+    background:#fff;border-radius:18px;
+    box-shadow:0 12px 40px rgba(25,25,25,.4);
+    overflow:hidden;
+    transform:translateY(calc(100% + 20px));
+    transition:transform .38s cubic-bezier(.16,1,.3,1);
+    pointer-events:none;
+  }
+  .map-card-popup.open{transform:translateY(0);pointer-events:auto}
+  .map-card-popup-inner{display:flex;gap:0;align-items:stretch}
+  .map-card-popup-img{
+    width:110px;flex-shrink:0;
+    background:linear-gradient(160deg,#a98d5d,#4a3d25);
+    position:relative;
+  }
+  .map-card-popup-img .ph-a{
+    position:absolute;inset:0;
+    background:
+      repeating-linear-gradient(135deg,rgba(255,255,255,.06) 0 2px,transparent 2px 16px),
+      linear-gradient(160deg,#a98d5d 0%,#4a3d25 100%);
+  }
+  .map-card-popup-info{flex:1;padding:14px 14px 14px 16px;min-width:0}
+  .map-card-popup-nbh{
+    display:flex;align-items:center;gap:5px;
+    font-family:'DM Mono';font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+    font-weight:500;margin-bottom:4px;
+  }
+  .map-card-popup-nbh .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .map-card-popup-name{
+    font-family:'Plus Jakarta Sans';font-weight:800;font-size:15px;
+    letter-spacing:-0.01em;line-height:1.2;margin-bottom:3px;
+  }
+  .map-card-popup-tag{font-size:12px;color:var(--ink-60);line-height:1.4;margin-bottom:10px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .map-card-popup-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .map-card-popup-price{
+    background:var(--gold);color:var(--ink);padding:6px 10px;border-radius:999px;
+    font-family:'Plus Jakarta Sans';font-weight:800;font-size:13px;
+  }
+  .map-card-popup-cta{
+    font-size:12px;font-weight:600;color:var(--ink);opacity:.6;
+    display:flex;align-items:center;gap:3px;
+  }
+  .map-card-popup-close{
+    position:absolute;top:10px;right:10px;z-index:2;
+    width:26px;height:26px;border-radius:50%;background:rgba(25,25,25,.55);
+    color:#fff;display:grid;place-items:center;font-size:13px;cursor:pointer;
   }
 
   /* ─── Mobile controls bar (phone: replaces chips + sort-row) ─── */
@@ -731,6 +789,12 @@
   </aside>
 </div>
 
+<!-- MAP PROPERTY CARD POPUP (phone) -->
+<div class="map-card-popup" id="mapCardPopup">
+  <button class="map-card-popup-close" id="mapCardClose">✕</button>
+  <div class="map-card-popup-inner" id="mapCardInner"></div>
+</div>
+
 <!-- FILTER BACKDROP -->
 <div class="filter-backdrop" id="filterBackdrop"></div>
 
@@ -895,22 +959,75 @@
     card.querySelector('.arr.next').addEventListener('click', e => { e.stopPropagation(); set(idx+1); });
   });
 
-  // ─── Card hover ↔ pin sync
+  // ─── Card hover ↔ pin sync + mobile popup
+  const popup = document.getElementById('mapCardPopup');
+  const popupInner = document.getElementById('mapCardInner');
+
+  const closePopup = () => {
+    popup?.classList.remove('open');
+    document.querySelectorAll('.pin').forEach(p => p.classList.remove('active'));
+  };
+
+  const openPopup = (prop) => {
+    if(!popup || !popupInner) return;
+    popupInner.innerHTML = `
+      <div class="map-card-popup-img"><div class="ph-a"></div></div>
+      <div class="map-card-popup-info">
+        <div class="map-card-popup-nbh" style="color:${prop.color}">
+          <span class="dot" style="background:${prop.color}"></span>${prop.nbh}
+        </div>
+        <div class="map-card-popup-name">${prop.name}</div>
+        <div class="map-card-popup-tag">${prop.tag}</div>
+        <div class="map-card-popup-footer">
+          <span class="map-card-popup-price">€${prop.price} / night</span>
+          <span class="map-card-popup-cta">View →</span>
+        </div>
+      </div>`;
+    popup.classList.add('open');
+  };
+
   const setActive = (id) => {
     document.querySelectorAll('.pin').forEach(p => p.classList.toggle('active', p.dataset.id === id));
     document.querySelectorAll('.card').forEach(c => c.classList.toggle('active', c.dataset.id === id));
   };
+
   document.querySelectorAll('.card').forEach(c => {
     c.addEventListener('mouseenter', () => setActive(c.dataset.id));
     c.addEventListener('mouseleave', () => setActive(null));
   });
+
   document.querySelectorAll('.pin').forEach(p => {
     p.addEventListener('mouseenter', () => setActive(p.dataset.id));
     p.addEventListener('mouseleave', () => setActive(null));
     p.addEventListener('click', () => {
-      const card = document.querySelector(`.card[data-id="${p.dataset.id}"]`);
-      card && card.scrollIntoView({block:'center', behavior:'smooth'});
+      const isMobile = window.innerWidth <= 640;
+      if(isMobile) {
+        const prop = PROPS.find(pr => pr.id === p.dataset.id);
+        if(!prop) return;
+        setActive(p.dataset.id);
+        openPopup(prop);
+      } else {
+        const card = document.querySelector(`.card[data-id="${p.dataset.id}"]`);
+        card && card.scrollIntoView({block:'center', behavior:'smooth'});
+      }
     });
+  });
+
+  // Close popup: X button, or tap the popup card to jump to list
+  document.getElementById('mapCardClose')?.addEventListener('click', (e) => {
+    e.stopPropagation(); closePopup();
+  });
+  popup?.addEventListener('click', () => {
+    // tap the card → switch to list and scroll to it
+    const activePin = document.querySelector('.pin.active');
+    if(activePin) {
+      document.getElementById('lmtList')?.click();
+      requestAnimationFrame(() => {
+        const card = document.querySelector(`.card[data-id="${activePin.dataset.id}"]`);
+        card?.scrollIntoView({block:'center', behavior:'smooth'});
+      });
+    }
+    closePopup();
   });
 
   // ─── Map toggle (tablet)
@@ -992,25 +1109,26 @@
     const isMobile = () => window.innerWidth <= 640;
 
     const showList = () => {
+      // strip desktop layout class so sidebar never appears on mobile
+      page.classList.remove('hidemap');
       mapPanel.classList.remove('mob-visible');
       listPanel.style.display = '';
       if(searchBar) searchBar.style.display = '';
       if(ann && !ann.classList.contains('hide')) ann.style.display = '';
       lmtList.classList.add('active');
       lmtMap.classList.remove('active');
-      // restore normal scroll
       document.body.style.overflow = '';
+      closePopup();
     };
 
     const showMap = () => {
+      page.classList.remove('hidemap');
       mapPanel.classList.add('mob-visible');
       listPanel.style.display = 'none';
-      // hide search bar and announcement so map is fully full-screen
       if(searchBar) searchBar.style.display = 'none';
       if(ann) ann.style.display = 'none';
       lmtMap.classList.add('active');
       lmtList.classList.remove('active');
-      // lock body scroll while in map mode
       document.body.style.overflow = 'hidden';
     };
 
