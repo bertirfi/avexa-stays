@@ -399,7 +399,8 @@
   /* ─── Map property card popup (phone) ─── */
   .map-card-popup{
     position:fixed;
-    bottom:calc(60px + env(safe-area-inset-bottom,0px) + 68px);
+    /* sits above List/Map toggle (~52px) + tab bar (60px) + safe area + gap */
+    bottom:calc(128px + env(safe-area-inset-bottom,0px));
     left:12px;right:12px;z-index:86;
     background:#fff;border-radius:18px;
     box-shadow:0 12px 40px rgba(25,25,25,.4);
@@ -407,25 +408,18 @@
     transform:translateY(calc(100% + 20px));
     transition:transform .38s cubic-bezier(.16,1,.3,1);
     pointer-events:none;
+    /* hidden unless body is in map mode */
+    display:none;
   }
-  .map-card-popup.open{transform:translateY(0);pointer-events:auto}
-  .map-card-popup-inner{display:flex;gap:0;align-items:stretch}
-  .map-card-popup-img{
-    width:110px;flex-shrink:0;
-    background:linear-gradient(160deg,#a98d5d,#4a3d25);
-    position:relative;
-  }
-  .map-card-popup-img .ph-a{
-    position:absolute;inset:0;
-    background:
-      repeating-linear-gradient(135deg,rgba(255,255,255,.06) 0 2px,transparent 2px 16px),
-      linear-gradient(160deg,#a98d5d 0%,#4a3d25 100%);
-  }
-  .map-card-popup-info{flex:1;padding:14px 14px 14px 16px;min-width:0}
+  body.mob-map-active .map-card-popup{display:flex;flex-direction:column}
+  body.mob-map-active .map-card-popup.open{transform:translateY(0);pointer-events:auto}
+  .map-card-popup-inner{display:flex;align-items:stretch;min-height:110px}
+  .map-card-popup-img{width:100px;flex-shrink:0;position:relative;overflow:hidden}
+  .map-card-popup-info{flex:1;padding:14px 48px 14px 14px;min-width:0;display:flex;flex-direction:column;justify-content:space-between}
   .map-card-popup-nbh{
     display:flex;align-items:center;gap:5px;
     font-family:'DM Mono';font-size:10px;letter-spacing:.18em;text-transform:uppercase;
-    font-weight:500;margin-bottom:4px;
+    font-weight:500;margin-bottom:5px;
   }
   .map-card-popup-nbh .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
   .map-card-popup-name{
@@ -433,21 +427,20 @@
     letter-spacing:-0.01em;line-height:1.2;margin-bottom:3px;
   }
   .map-card-popup-tag{font-size:12px;color:var(--ink-60);line-height:1.4;margin-bottom:10px;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .map-card-popup-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .map-card-popup-price{
     background:var(--gold);color:var(--ink);padding:6px 10px;border-radius:999px;
     font-family:'Plus Jakarta Sans';font-weight:800;font-size:13px;
   }
-  .map-card-popup-cta{
-    font-size:12px;font-weight:600;color:var(--ink);opacity:.6;
-    display:flex;align-items:center;gap:3px;
-  }
+  .map-card-popup-cta{font-size:12px;font-weight:700;color:var(--ink-60)}
   .map-card-popup-close{
     position:absolute;top:10px;right:10px;z-index:2;
-    width:26px;height:26px;border-radius:50%;background:rgba(25,25,25,.55);
-    color:#fff;display:grid;place-items:center;font-size:13px;cursor:pointer;
+    width:28px;height:28px;border-radius:50%;background:rgba(25,25,25,.6);
+    color:#fff;display:grid;place-items:center;font-size:14px;cursor:pointer;
+    transition:background .2s;
   }
+  .map-card-popup-close:hover{background:var(--ink)}
 
   /* ─── Mobile controls bar (phone: replaces chips + sort-row) ─── */
   .mob-ctrl-bar{
@@ -970,17 +963,21 @@
 
   const openPopup = (prop) => {
     if(!popup || !popupInner) return;
+    // Use inline styles for image so we don't depend on .card-slide .ph-a selector
+    const imgBg = `repeating-linear-gradient(135deg,rgba(255,255,255,.07) 0 2px,transparent 2px 16px),linear-gradient(160deg,#a98d5d 0%,#4a3d25 100%)`;
     popupInner.innerHTML = `
-      <div class="map-card-popup-img"><div class="ph-a"></div></div>
+      <div class="map-card-popup-img" style="background:${imgBg}"></div>
       <div class="map-card-popup-info">
-        <div class="map-card-popup-nbh" style="color:${prop.color}">
-          <span class="dot" style="background:${prop.color}"></span>${prop.nbh}
+        <div>
+          <div class="map-card-popup-nbh" style="color:${prop.color}">
+            <span class="dot" style="background:${prop.color}"></span>${prop.nbh}
+          </div>
+          <div class="map-card-popup-name">${prop.name}</div>
+          <div class="map-card-popup-tag">${prop.tag}</div>
         </div>
-        <div class="map-card-popup-name">${prop.name}</div>
-        <div class="map-card-popup-tag">${prop.tag}</div>
         <div class="map-card-popup-footer">
           <span class="map-card-popup-price">€${prop.price} / night</span>
-          <span class="map-card-popup-cta">View →</span>
+          <span class="map-card-popup-cta">View details →</span>
         </div>
       </div>`;
     popup.classList.add('open');
@@ -1017,17 +1014,20 @@
   document.getElementById('mapCardClose')?.addEventListener('click', (e) => {
     e.stopPropagation(); closePopup();
   });
-  popup?.addEventListener('click', () => {
-    // tap the card → switch to list and scroll to it
+  popup?.addEventListener('click', (e) => {
+    if(e.target.closest('.map-card-popup-close')) return; // handled by X button
+    // tap card → switch to list and scroll to that property
     const activePin = document.querySelector('.pin.active');
-    if(activePin) {
-      document.getElementById('lmtList')?.click();
-      requestAnimationFrame(() => {
-        const card = document.querySelector(`.card[data-id="${activePin.dataset.id}"]`);
-        card?.scrollIntoView({block:'center', behavior:'smooth'});
-      });
-    }
+    const targetId = activePin?.dataset.id;
     closePopup();
+    if(window._avexa_showList) window._avexa_showList();
+    if(targetId) {
+      // wait for list to render, then scroll
+      setTimeout(() => {
+        document.querySelector(`.card[data-id="${targetId}"]`)
+          ?.scrollIntoView({block:'center', behavior:'smooth'});
+      }, 80);
+    }
   });
 
   // ─── Map toggle (tablet)
@@ -1109,9 +1109,9 @@
     const isMobile = () => window.innerWidth <= 640;
 
     const showList = () => {
-      // strip desktop layout class so sidebar never appears on mobile
       page.classList.remove('hidemap');
       mapPanel.classList.remove('mob-visible');
+      document.body.classList.remove('mob-map-active'); // hides popup via CSS
       listPanel.style.display = '';
       if(searchBar) searchBar.style.display = '';
       if(ann && !ann.classList.contains('hide')) ann.style.display = '';
@@ -1124,6 +1124,7 @@
     const showMap = () => {
       page.classList.remove('hidemap');
       mapPanel.classList.add('mob-visible');
+      document.body.classList.add('mob-map-active'); // enables popup via CSS
       listPanel.style.display = 'none';
       if(searchBar) searchBar.style.display = 'none';
       if(ann) ann.style.display = 'none';
@@ -1134,13 +1135,8 @@
 
     lmtList.addEventListener('click', showList);
     lmtMap.addEventListener('click', showMap);
-
-    // clicking a pin in map view switches back to list and scrolls to that card
-    document.querySelectorAll('.pin').forEach(p => {
-      p.addEventListener('click', () => {
-        if(isMobile()) showList();
-      });
-    });
+    // expose showList so popup "tap card" can call it
+    window._avexa_showList = showList;
   })();
 
   // ─── Nav hide on scroll down (sticky — slides up and out)
