@@ -118,17 +118,8 @@
     animation:rise 1s .45s cubic-bezier(.16,1,.3,1) forwards;
   }
 
-  /* Brand X — inline logo X inside headline */
-  .brand-x{
-    display:inline-block;
-    width:0.64em;height:0.74em;
-    vertical-align:baseline;position:relative;bottom:-0.01em;
-  }
-  .brand-x svg{width:100%;height:100%;display:block;overflow:visible}
-  .brand-x svg circle{
-    transform-box:fill-box;transform-origin:center;
-    animation:pulse 2.4s ease-in-out infinite;
-  }
+  /* Brand X — mirrored font letter */
+  .brand-x{display:inline-block;transform:scaleX(-1)}
 
   /* Reusable brand pulse dot */
   .pdot{
@@ -245,7 +236,7 @@
 
   <!-- Center content -->
   <div class="content">
-    <h1 class="headline" aria-label="AVEXA STAYS">AV<span class="brand-x" aria-hidden="true"><svg viewBox="0 0 20 20"><line x1="2" y1="1.5" x2="18" y2="18.5" stroke="rgb(255,255,255)" stroke-width="2.4" stroke-linecap="round"/><line x1="18" y1="1.5" x2="2" y2="18.5" stroke="#8a8a8a" stroke-width="2.4" stroke-linecap="round"/></svg></span>A STAYS</h1>
+    <h1 class="headline">AVE<span class="brand-x">X</span>A STAYS</h1>
     <p class="subhead">Coming Soon <span class="pdot" aria-hidden="true" style="width:8px;height:8px;margin-left:4px;vertical-align:middle"></span></p>
     <div class="divider" aria-hidden="true"></div>
     <p class="city">Bucharest City Center Apartments</p>
