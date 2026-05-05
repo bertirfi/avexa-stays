@@ -84,10 +84,9 @@
     display:grid;place-items:center;position:relative;flex:none;
   }
   .logo-mark svg{width:30px;height:30px;display:block}
-  .logo-mark .dot{
-    position:absolute;width:8px;height:8px;border-radius:50%;
-    background:var(--gold);top:50%;left:50%;transform:translate(-50%,-50%);
+  .logo-mark svg circle{
     animation:pulse 2.4s ease-in-out infinite;
+    transform-box:fill-box;transform-origin:center;
   }
   .wordmark{
     font-family:'Plus Jakarta Sans';font-weight:800;
@@ -218,8 +217,8 @@
       <svg viewBox="0 0 20 20">
         <line x1="3" y1="3" x2="17" y2="17" style="stroke:rgb(255,255,255)" stroke-width="2" stroke-linecap="round"/>
         <line x1="17" y1="3" x2="3" y2="17" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="10" cy="10" r="2" fill="#DDB97A"/>
       </svg>
-      <span class="dot"></span>
     </span>
     <span class="wordmark">AVEXA</span>
   </div>
