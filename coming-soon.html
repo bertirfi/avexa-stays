@@ -117,6 +117,25 @@
     animation:rise 1s .45s cubic-bezier(.16,1,.3,1) forwards;
   }
 
+  /* Brand X — inline logo X inside headline */
+  .brand-x{
+    display:inline-block;
+    width:0.64em;height:0.74em;
+    vertical-align:baseline;position:relative;bottom:-0.01em;
+  }
+  .brand-x svg{width:100%;height:100%;display:block;overflow:visible}
+  .brand-x svg circle{
+    transform-box:fill-box;transform-origin:center;
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+
+  /* Reusable brand pulse dot */
+  .pdot{
+    display:inline-block;width:5px;height:5px;border-radius:50%;
+    background:var(--gold);vertical-align:middle;flex-shrink:0;
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+
   .subhead{
     font-family:'Plus Jakarta Sans';font-weight:800;
     font-size:clamp(24px,3.8vw,48px);letter-spacing:-0.025em;line-height:1;
@@ -226,8 +245,8 @@
   <!-- Center content -->
   <div class="content">
     <div class="eyebrow">— Coming Soon</div>
-    <h1 class="headline">AVEXA STAYS</h1>
-    <p class="subhead">live for you.</p>
+    <h1 class="headline" aria-label="AVEXA STAYS">AV<span class="brand-x" aria-hidden="true"><svg viewBox="0 0 20 20"><line x1="2" y1="1.5" x2="18" y2="18.5" stroke="rgb(255,255,255)" stroke-width="2.4" stroke-linecap="round"/><line x1="18" y1="1.5" x2="2" y2="18.5" stroke="#8a8a8a" stroke-width="2.4" stroke-linecap="round"/><circle cx="10" cy="10" r="1.9" fill="#DDB97A"/></svg></span>A STAYS</h1>
+    <p class="subhead">live for you<span class="pdot" aria-hidden="true" style="margin-left:6px;width:7px;height:7px"></span></p>
     <div class="divider" aria-hidden="true"></div>
     <p class="city">Bucharest City Center Apartments</p>
     <div class="offer">
@@ -256,7 +275,7 @@
 
   <!-- Footer -->
   <div class="foot">
-    <span>© 2026 AVEXA Stays · Bucharest</span>
+    <span>© 2026 AVEXA Stays · Bucharest <span class="pdot" aria-hidden="true" style="margin-left:4px;opacity:.5"></span></span>
     <a href="/app.html">Development preview →</a>
   </div>
 
