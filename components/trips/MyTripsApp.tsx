@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { hasTrips, readUser, type StoredUser } from '@/lib/booking';
 import { LoggedOutHero } from '@/components/trips/LoggedOutHero';
 import { EmptyTripsState } from '@/components/trips/EmptyTripsState';
 import { TripsList } from '@/components/trips/TripsList';
+import { MosaicSection } from '@/components/trips/MosaicSection';
+import { ContactSection } from '@/components/trips/ContactSection';
 
 export function MyTripsApp() {
   const [mounted, setMounted] = useState(false);
@@ -38,7 +40,22 @@ export function MyTripsApp() {
     );
   }
 
-  if (!user?.loggedIn) return <LoggedOutHero />;
-  if (!trips) return <EmptyTripsState name={user.firstName || user.name || 'there'} />;
-  return <TripsList name={user.firstName || user.name || 'There'} />;
+  let main: ReactNode;
+  if (!user?.loggedIn) {
+    main = <LoggedOutHero />;
+  } else if (!trips) {
+    main = <EmptyTripsState name={user.firstName || user.name || 'there'} />;
+  } else {
+    main = <TripsList name={user.firstName || user.name || 'There'} />;
+  }
+
+  // Mosaic + Contact are shared page chrome — rendered below the main content
+  // in every state (logged-out hero, empty, and with trips), matching the source.
+  return (
+    <>
+      {main}
+      <MosaicSection />
+      <ContactSection />
+    </>
+  );
 }

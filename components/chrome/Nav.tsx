@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/chrome/Logo';
+import { clearUser, readUser, type StoredUser } from '@/lib/booking';
 import { cn } from '@/lib/cn';
 
 const links = [
@@ -15,18 +16,21 @@ const links = [
 
 export function Nav() {
   const pathname = usePathname();
+  const router = useRouter();
   const isHome = pathname === '/';
 
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<StoredUser | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const lastY = useRef(0);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function onScroll() {
       const y = window.scrollY;
       setScrolled(y > 32);
-      // Hide on scroll down (past the hero), show on scroll up
       if (y > 160 && y > lastY.current + 4) setHidden(true);
       else if (y < lastY.current - 4) setHidden(false);
       lastY.current = y;
@@ -36,8 +40,47 @@ export function Nav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Transparent only over the homepage hero, before scrolling
+  // Read auth on mount + react to the D-key demo toggle / cross-tab changes
+  useEffect(() => {
+    const sync = () => setUser(readUser());
+    sync();
+    window.addEventListener('avexa:auth-changed', sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener('avexa:auth-changed', sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
+
+  // Close the account menu on outside click / Escape
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onDown(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMenuOpen(false);
+    }
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
   const transparent = isHome && !scrolled;
+  const loggedIn = !!user?.loggedIn;
+  const displayName = user?.firstName || user?.name || user?.email || 'Guest';
+  const initial = displayName.trim().charAt(0).toUpperCase() || 'A';
+
+  function logout() {
+    clearUser();
+    window.dispatchEvent(new Event('avexa:auth-changed'));
+    setUser(null);
+    setMenuOpen(false);
+    router.push('/');
+  }
 
   return (
     <>
@@ -83,17 +126,54 @@ export function Nav() {
                 </Link>
               );
             })}
-            <Link
-              href="/login"
-              className={cn(
-                'rounded-full px-5 py-2 text-[13.5px] font-semibold transition',
-                transparent
-                  ? 'bg-white text-ink hover:bg-gold'
-                  : 'bg-ink text-cream hover:bg-gold hover:text-ink',
-              )}
-            >
-              Sign up
-            </Link>
+
+            {loggedIn ? (
+              <div className="relative" ref={menuRef}>
+                <button
+                  type="button"
+                  aria-label="Account menu"
+                  aria-expanded={menuOpen}
+                  onClick={() => setMenuOpen((o) => !o)}
+                  className="grid size-9 place-items-center rounded-full bg-gold font-display text-sm text-ink transition hover:bg-gold-dark hover:text-cream"
+                >
+                  {initial}
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-[120%] w-56 overflow-hidden rounded-2xl border border-gray-line bg-white py-2 shadow-[var(--shadow-pill)]">
+                    <div className="border-b border-gray-line px-4 py-2.5">
+                      <p className="text-sm font-semibold text-ink">{displayName}</p>
+                      {user?.email && <p className="truncate text-xs text-ink-60">{user.email}</p>}
+                    </div>
+                    <MenuLink href="/my-trips" icon="calendar" onClick={() => setMenuOpen(false)}>
+                      My Trips
+                    </MenuLink>
+                    <MenuLink href="/profile" icon="user" onClick={() => setMenuOpen(false)}>
+                      My Profile
+                    </MenuLink>
+                    <button
+                      type="button"
+                      onClick={logout}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-ink transition hover:bg-cream"
+                    >
+                      <Icon name="x" size={16} className="text-ink-60" />
+                      Log out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className={cn(
+                  'rounded-full px-5 py-2 text-[13.5px] font-semibold transition',
+                  transparent
+                    ? 'bg-white text-ink hover:bg-gold'
+                    : 'bg-ink text-cream hover:bg-gold hover:text-ink',
+                )}
+              >
+                Sign up
+              </Link>
+            )}
           </nav>
 
           <button
@@ -126,15 +206,56 @@ export function Nav() {
               {l.label}
             </Link>
           ))}
-          <Link
-            href="/login"
-            onClick={() => setMobileOpen(false)}
-            className="mt-6 inline-flex w-fit rounded-full bg-gold px-8 py-4 text-2xl text-ink"
-          >
-            Sign up
-          </Link>
+          {loggedIn ? (
+            <>
+              <Link href="/profile" onClick={() => setMobileOpen(false)}>
+                My Profile
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  logout();
+                }}
+                className="mt-6 inline-flex w-fit rounded-full bg-gold px-8 py-4 text-2xl text-ink"
+              >
+                Log out
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setMobileOpen(false)}
+              className="mt-6 inline-flex w-fit rounded-full bg-gold px-8 py-4 text-2xl text-ink"
+            >
+              Sign up
+            </Link>
+          )}
         </nav>
       </div>
     </>
+  );
+}
+
+function MenuLink({
+  href,
+  icon,
+  onClick,
+  children,
+}: {
+  href: string;
+  icon: 'calendar' | 'user';
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="flex items-center gap-3 px-4 py-2.5 text-sm text-ink transition hover:bg-cream"
+    >
+      <Icon name={icon} size={16} className="text-ink-60" />
+      {children}
+    </Link>
   );
 }

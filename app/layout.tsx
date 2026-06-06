@@ -11,6 +11,21 @@ export const metadata: Metadata = {
   description:
     'Premium short and medium-stay apartments in the heart of Bucharest. Booked direct, kept honest.',
   metadataBase: new URL('https://avexastays.com'),
+  openGraph: {
+    title: 'AVEXA Stays — Live the city.',
+    description:
+      'Premium short and medium-stay apartments in the heart of Bucharest. Booked direct, kept honest.',
+    url: 'https://avexastays.com',
+    siteName: 'AVEXA Stays',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AVEXA Stays — Live the city.',
+    description:
+      'Premium short and medium-stay apartments in the heart of Bucharest. Booked direct, kept honest.',
+  },
 };
 
 export const viewport: Viewport = {

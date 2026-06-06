@@ -13,9 +13,102 @@ import {
   StayTestimonials,
 } from '@/components/stay/StayContent';
 import { StayBookingSidebar } from '@/components/stay/StayBookingSidebar';
+import { JsonLd } from '@/components/seo/JsonLd';
+import type { Property } from '@/types';
+
+const SITE_URL = 'https://avexastays.com';
 
 interface Params {
   id: string;
+}
+
+function absoluteUrl(path: string): string {
+  return path.startsWith('http') ? path : `${SITE_URL}${path}`;
+}
+
+function buildLodgingSchema(property: Property) {
+  const saverRate =
+    property.rates.find((r) => r.id === 'saver') ?? property.rates[0];
+
+  const ratings = property.reviews
+    .map((r) => r.rating)
+    .filter((n) => typeof n === 'number');
+  const ratingValue =
+    ratings.length > 0
+      ? Number(
+          (ratings.reduce((sum, n) => sum + n, 0) / ratings.length).toFixed(1),
+        )
+      : null;
+
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': ['Apartment', 'LodgingBusiness', 'Product'],
+    name: property.name,
+    description: property.description.split('\n\n')[0],
+    image: absoluteUrl(property.cover),
+    url: `${SITE_URL}/stays/${property.slug}`,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: property.address,
+      addressLocality: 'Bucharest',
+      addressCountry: 'RO',
+    },
+    priceRange: `From €${saverRate.perNight} / night`,
+    offers: {
+      '@type': 'Offer',
+      price: saverRate.perNight,
+      priceCurrency: 'EUR',
+      availability: 'https://schema.org/InStock',
+      url: `${SITE_URL}/stays/${property.slug}`,
+    },
+    numberOfRooms: property.maxGuests,
+    petsAllowed: false,
+  };
+
+  if (ratingValue !== null) {
+    schema.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue,
+      reviewCount: ratings.length,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+
+  return schema;
+}
+
+function buildBreadcrumbSchema(property: Property) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: `${SITE_URL}/`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Locations',
+        item: `${SITE_URL}/locations`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: property.neighborhoodLabel,
+        item: `${SITE_URL}/locations?where=${property.neighborhood}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 4,
+        name: property.name,
+        item: `${SITE_URL}/stays/${property.slug}`,
+      },
+    ],
+  };
 }
 
 export function generateStaticParams(): Params[] {
@@ -45,6 +138,8 @@ export default async function StayPage(props: { params: Promise<Params> }) {
 
   return (
     <div className="bg-cream pt-24 md:pt-32">
+      <JsonLd data={buildLodgingSchema(property)} />
+      <JsonLd data={buildBreadcrumbSchema(property)} />
       <div className="mx-auto max-w-[1200px] px-6 md:px-10">
         {/* Breadcrumb */}
         <nav className="font-mono-label mb-4 flex items-center gap-2 text-ink-60">

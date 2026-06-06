@@ -69,26 +69,30 @@ export function HowItWorks() {
                     isActive ? 'bg-ink/30' : 'bg-ink/70',
                   )}
                 />
-                <div className="absolute inset-0 flex flex-col justify-between p-6 md:p-10">
+                <div className="absolute inset-0 p-6 md:p-10">
                   <p className="font-mono-label text-gold">{p.eyebrow}</p>
-                  <div>
-                    <h3
-                      className={cn(
-                        'font-display transition-all',
-                        isActive ? 'text-5xl md:text-7xl' : 'text-3xl md:text-4xl',
-                      )}
-                    >
-                      {p.title}
-                    </h3>
-                    <p
-                      className={cn(
-                        'mt-4 max-w-md text-cream/80 transition-opacity duration-500',
-                        isActive ? 'opacity-100' : 'opacity-0',
-                      )}
-                    >
-                      {p.body}
-                    </p>
+
+                  {/* Active panel: horizontal title + body at the bottom */}
+                  <div
+                    className={cn(
+                      'absolute inset-x-6 bottom-6 transition-opacity duration-300 md:inset-x-10 md:bottom-10',
+                      isActive ? 'opacity-100 delay-200' : 'pointer-events-none opacity-0',
+                    )}
+                  >
+                    <h3 className="font-display text-5xl md:text-7xl">{p.title}</h3>
+                    <p className="mt-4 max-w-md text-cream/80">{p.body}</p>
                   </div>
+
+                  {/* Collapsed panel: title rotated vertical (reads bottom-to-top) */}
+                  <h3
+                    aria-hidden={isActive}
+                    className={cn(
+                      'font-display absolute left-1/2 top-14 -translate-x-1/2 whitespace-nowrap text-xl tracking-tight transition-opacity duration-300 [writing-mode:vertical-lr] rotate-180 md:text-2xl',
+                      isActive ? 'pointer-events-none opacity-0' : 'opacity-100',
+                    )}
+                  >
+                    {p.title}
+                  </h3>
                 </div>
               </button>
             );

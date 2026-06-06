@@ -43,14 +43,18 @@ export function StayBookingSidebar({ property }: Props) {
   const nights = nightsBetween(startDate, endDate);
 
   const pricing = useMemo(() => {
-    const subtotal = rate.perNight * nights;
-    const discount = Math.floor(subtotal * (rate.discount / 100));
-    const afterDiscount = subtotal - discount;
+    // Anchor the breakdown to a rack ("regular") rate, matching the Claude Design
+    // sidebar. The member rate IS that rack minus the rate's discount, so the
+    // discount line is a real saving — not a second discount on top of the rate.
+    const rackPerNight = Math.round(rate.perNight / (1 - rate.discount / 100));
+    const subtotal = rackPerNight * nights; // at rack rate
+    const afterDiscount = rate.perNight * nights; // member price
+    const discount = subtotal - afterDiscount; // savings vs rack
     const occupants = guests.adults + guests.children;
     const breakfastTotal = upgrades.breakfast ? 20 * nights * occupants : 0;
     const cityTax = CITY_TAX_PER_PERSON * nights * occupants;
     const total = afterDiscount + breakfastTotal + cityTax;
-    return { subtotal, discount, afterDiscount, breakfastTotal, cityTax, total, occupants };
+    return { rackPerNight, subtotal, discount, afterDiscount, breakfastTotal, cityTax, total, occupants };
   }, [rate, nights, guests, upgrades]);
 
   function book() {
@@ -66,7 +70,7 @@ export function StayBookingSidebar({ property }: Props) {
       guests,
       rateId,
       upgrades,
-      pricePerNight: rate.perNight,
+      pricePerNight: pricing.rackPerNight,
       subtotal: pricing.subtotal,
       discount: pricing.discount,
       breakfastTotal: pricing.breakfastTotal,
@@ -82,7 +86,10 @@ export function StayBookingSidebar({ property }: Props) {
   return (
     <aside className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-card border border-gray-line bg-white p-6 shadow-[var(--shadow-pill)]">
       <div className="mb-4 flex items-baseline justify-between">
-        <span className="font-display text-2xl">€{rate.perNight}</span>
+        <span className="flex items-baseline gap-2">
+          <span className="text-sm text-ink-60 line-through">€{pricing.rackPerNight}</span>
+          <span className="font-display text-2xl">€{rate.perNight}</span>
+        </span>
         <span className="text-sm text-ink-60">/ night</span>
       </div>
 
@@ -205,7 +212,7 @@ export function StayBookingSidebar({ property }: Props) {
           </button>
           {priceOpen && (
             <ul className="mt-3 space-y-1.5 text-sm">
-              <Row label={`€${rate.perNight} × ${nights} night${nights === 1 ? '' : 's'}`} value={`€${pricing.subtotal}`} />
+              <Row label={`€${pricing.rackPerNight} × ${nights} night${nights === 1 ? '' : 's'}`} value={`€${pricing.subtotal}`} />
               <Row label={`Member discount (${rate.discount}%)`} value={`-€${pricing.discount}`} muted />
               {pricing.breakfastTotal > 0 && (
                 <Row label={`Breakfast (${pricing.occupants}p × ${nights}n)`} value={`€${pricing.breakfastTotal}`} />
