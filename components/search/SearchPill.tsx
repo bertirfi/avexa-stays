@@ -163,7 +163,7 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
 
       {/* Dropdowns (z-200 so they paint over later sections) */}
       {open('location') && (
-        <div className="absolute left-0 top-[calc(100%+8px)] z-[200] w-[320px] rounded-2xl bg-white p-2 shadow-[0_16px_48px_-12px_rgba(25,25,25,0.25)]">
+        <div className="absolute left-0 top-[calc(100%+8px)] z-[200] w-[320px] rounded-2xl bg-white p-2 text-ink shadow-[0_16px_48px_-12px_rgba(25,25,25,0.25)]">
           <h4 className="font-mono-label px-4 py-3 text-ink-60">Bucharest City Center</h4>
           <ul>
             {neighborhoods.map((n) => (

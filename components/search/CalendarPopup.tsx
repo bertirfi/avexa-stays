@@ -146,7 +146,7 @@ export function CalendarPopup({
       : 0;
 
   return (
-    <div className="rounded-3xl bg-white p-6 shadow-[var(--shadow-pill)]">
+    <div className="rounded-3xl bg-white p-6 text-ink shadow-[var(--shadow-pill)]">
       <div className="mb-4 flex items-center justify-between">
         <button
           onClick={() => shift(-1)}

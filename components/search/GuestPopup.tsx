@@ -76,7 +76,7 @@ export function GuestPopup({ guests, onChange, onClose }: GuestPopupProps) {
   }
 
   return (
-    <div className="w-[320px] rounded-3xl bg-white p-6 shadow-[var(--shadow-pill)]">
+    <div className="w-[320px] rounded-3xl bg-white p-6 text-ink shadow-[var(--shadow-pill)]">
       <ul className="divide-y divide-gray-line">
         {rows.map((r) => {
           const val = guests[r.key];
