@@ -9,7 +9,7 @@ export default function MarketingLayout({
 }) {
   return (
     <>
-      <Nav overlay />
+      <Nav />
       <main className="pb-20 md:pb-0">{children}</main>
       <Footer />
       <TabBar />
