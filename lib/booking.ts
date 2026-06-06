@@ -50,6 +50,7 @@ export interface StoredUser {
   firstName?: string;
   lastName?: string;
   name?: string; // legacy combined name
+  method?: 'email' | 'google' | 'apple' | 'demo';
 }
 
 export function readUser(): StoredUser | null {
@@ -60,6 +61,48 @@ export function readUser(): StoredUser | null {
   } catch {
     return null;
   }
+}
+
+export function writeUser(user: StoredUser) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(USER_KEY, JSON.stringify(user));
+  } catch {}
+}
+
+export function clearUser() {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(USER_KEY);
+    window.localStorage.removeItem(HAS_TRIPS_KEY);
+  } catch {}
+}
+
+export function hasTrips(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.localStorage.getItem(HAS_TRIPS_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function setHasTrips(value: boolean) {
+  if (typeof window === 'undefined') return;
+  try {
+    if (value) window.localStorage.setItem(HAS_TRIPS_KEY, 'true');
+    else window.localStorage.removeItem(HAS_TRIPS_KEY);
+  } catch {}
+}
+
+/** Demo helper — names the user from an email prefix ("alice@x.com" → "Alice") */
+export function nameFromEmail(email: string): string {
+  const prefix = (email.split('@')[0] || 'Guest').replace(/[._-]+/g, ' ').trim();
+  return prefix
+    .split(' ')
+    .map((p) => (p ? p[0].toUpperCase() + p.slice(1) : ''))
+    .join(' ')
+    .trim() || 'Guest';
 }
 
 export function hydrate(b: Booking): HydratedBooking | null {

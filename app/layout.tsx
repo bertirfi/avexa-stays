@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { jakarta, manrope, dmMono } from '@/lib/fonts';
+import { DemoModeToggle } from '@/components/DemoModeToggle';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -24,7 +25,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${jakarta.variable} ${manrope.variable} ${dmMono.variable}`}
     >
-      <body className="font-body antialiased">{children}</body>
+      <body className="font-body antialiased">
+        {children}
+        <DemoModeToggle />
+      </body>
     </html>
   );
 }
