@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { motion } from 'motion/react';
 import { SearchPill } from '@/components/search/SearchPill';
 
@@ -9,7 +10,7 @@ export function Hero() {
       id="top"
       className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-visible bg-ink px-6 text-cream"
     >
-      {/* Abstract animated gradient background (no photo) */}
+      {/* Abstract animated gradient background + faded photo backdrop */}
       <div aria-hidden className="absolute inset-0 z-0 overflow-hidden">
         <div
           className="absolute inset-0"
@@ -20,6 +21,15 @@ export function Hero() {
               'radial-gradient(ellipse 40% 40% at 50% 50%, rgba(201,160,94,.05), transparent),' +
               'linear-gradient(160deg,#1a1a1a 0%,#0f0f0f 100%)',
           }}
+        />
+        {/* Faded photo backdrop */}
+        <Image
+          src="/listing-photos/30-living-room.jpeg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-[0.18] mix-blend-luminosity"
         />
         <div
           className="absolute -inset-[20%] [animation:drift_18s_ease-in-out_infinite_alternate]"
