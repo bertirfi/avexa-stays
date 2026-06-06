@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { jakarta, manrope, dmMono } from '@/lib/fonts';
 import { DemoModeToggle } from '@/components/DemoModeToggle';
+import { ChromeScrollProvider } from '@/components/chrome/ChromeScrollProvider';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -41,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${jakarta.variable} ${manrope.variable} ${dmMono.variable}`}
     >
       <body className="font-body antialiased">
-        {children}
+        <ChromeScrollProvider>{children}</ChromeScrollProvider>
         <DemoModeToggle />
       </body>
     </html>

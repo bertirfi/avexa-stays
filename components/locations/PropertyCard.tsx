@@ -12,12 +12,21 @@ import { cn } from '@/lib/cn';
 interface PropertyCardProps {
   property: Property;
   index?: number;
+  active?: boolean;
+  onActivate?: () => void;
+  onClear?: () => void;
 }
 
-export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
+export function PropertyCard({
+  property,
+  index = 0,
+  active = false,
+  onActivate,
+  onClear,
+}: PropertyCardProps) {
   const card = getLocationCard(property.id);
   const photos = property.photos.slice(0, 5);
-  const [active, setActive] = useState(0);
+  const [slide, setSlide] = useState(0);
   const [fav, setFav] = useState(false);
 
   const bedType = property.stats.find((s) => s.icon === 'bed')?.label ?? '';
@@ -26,16 +35,24 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
   function go(delta: number, e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    setActive((i) => (i + delta + photos.length) % photos.length);
+    setSlide((i) => (i + delta + photos.length) % photos.length);
   }
 
   return (
     <motion.article
+      id={`loc-card-${property.id}`}
+      onMouseEnter={onActivate}
+      onMouseLeave={onClear}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.7, delay: (index % 3) * 0.06, ease: [0.16, 1, 0.3, 1] }}
-      className="group overflow-hidden rounded-[18px] border-[1.5px] border-transparent bg-white shadow-[0_1px_2px_rgba(25,25,25,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-gold hover:shadow-[0_18px_40px_-20px_rgba(25,25,25,0.22)]"
+      className={cn(
+        'group scroll-mt-44 overflow-hidden rounded-[18px] border-[1.5px] bg-white transition-all duration-300 hover:-translate-y-1 hover:border-gold hover:shadow-[0_18px_40px_-20px_rgba(25,25,25,0.22)]',
+        active
+          ? 'border-gold shadow-[0_18px_40px_-20px_rgba(25,25,25,0.22)]'
+          : 'border-transparent shadow-[0_1px_2px_rgba(25,25,25,0.04)]',
+      )}
     >
       {/* Media carousel */}
       <div className="relative aspect-[2.4/1] overflow-hidden rounded-[14px] bg-gray-light">
@@ -44,7 +61,7 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
             key={p.id}
             className={cn(
               'absolute inset-0 transition-opacity duration-500',
-              i === active ? 'opacity-100' : 'opacity-0',
+              i === slide ? 'opacity-100' : 'opacity-0',
             )}
           >
             <Image
@@ -102,7 +119,7 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
               key={i}
               className={cn(
                 'h-1.5 rounded-full bg-white/50 transition-all',
-                i === active ? 'w-5 bg-white' : 'w-1.5',
+                i === slide ? 'w-5 bg-white' : 'w-1.5',
               )}
             />
           ))}

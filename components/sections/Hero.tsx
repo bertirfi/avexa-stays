@@ -57,7 +57,7 @@ export function Hero() {
         transition={{ duration: 1, delay: 0.85, ease: [0.16, 1, 0.3, 1] }}
         className="absolute inset-x-0 bottom-24 z-10 mx-auto flex justify-center px-6"
       >
-        <SearchPill variant="hero" />
+        <SearchPill pillId="hero" variant="hero" />
       </motion.div>
 
       {/* Scroll cue */}

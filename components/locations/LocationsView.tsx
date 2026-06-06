@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { SearchPill } from '@/components/search/SearchPill';
+import { SearchProvider } from '@/components/search/SearchContext';
 import { PropertyCard } from '@/components/locations/PropertyCard';
 import { StylizedMap } from '@/components/locations/StylizedMap';
 import { neighborhoods } from '@/lib/neighborhoods';
@@ -13,6 +14,7 @@ import { cn } from '@/lib/cn';
 
 export function LocationsView() {
   const [mapOpen, setMapOpen] = useState(true);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const groups = neighborhoods
     .map((n) => ({ neighborhood: n, items: getPropertiesByNeighborhood(n.id) }))
@@ -22,7 +24,9 @@ export function LocationsView() {
     <div className="bg-cream">
       {/* Sticky search bar */}
       <div className="sticky top-20 z-[54] px-6 pb-1.5 pt-3.5 md:px-7">
-        <SearchPill variant="compact" className="max-w-[820px]" />
+        <SearchProvider>
+          <SearchPill pillId="locations" variant="compact" className="max-w-[820px]" />
+        </SearchProvider>
       </div>
 
       <div
@@ -112,7 +116,14 @@ export function LocationsView() {
 
                 <div className="flex flex-col gap-5">
                   {g.items.map((p, i) => (
-                    <PropertyCard key={p.id} property={p} index={i} />
+                    <PropertyCard
+                      key={p.id}
+                      property={p}
+                      index={i}
+                      active={activeId === p.id}
+                      onActivate={() => setActiveId(p.id)}
+                      onClear={() => setActiveId(null)}
+                    />
                   ))}
                 </div>
               </section>
@@ -121,7 +132,14 @@ export function LocationsView() {
         </div>
 
         {/* RIGHT — map */}
-        {mapOpen && <StylizedMap properties={properties} />}
+        {mapOpen && (
+          <StylizedMap
+            properties={properties}
+            activeId={activeId}
+            onActivate={setActiveId}
+            onClear={() => setActiveId(null)}
+          />
+        )}
       </div>
     </div>
   );

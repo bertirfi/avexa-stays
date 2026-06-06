@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/chrome/Logo';
+import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
 import { clearUser, readUser, type StoredUser } from '@/lib/booking';
 import { cn } from '@/lib/cn';
 
@@ -19,26 +20,11 @@ export function Nav() {
   const router = useRouter();
   const isHome = pathname === '/';
 
-  const [scrolled, setScrolled] = useState(false);
-  const [hidden, setHidden] = useState(false);
+  const { pinned, navHidden } = useChromeScroll();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<StoredUser | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const lastY = useRef(0);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onScroll() {
-      const y = window.scrollY;
-      setScrolled(y > 32);
-      if (y > 160 && y > lastY.current + 4) setHidden(true);
-      else if (y < lastY.current - 4) setHidden(false);
-      lastY.current = y;
-    }
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   // Read auth on mount + react to the D-key demo toggle / cross-tab changes
   useEffect(() => {
@@ -69,7 +55,7 @@ export function Nav() {
     };
   }, [menuOpen]);
 
-  const transparent = isHome && !scrolled;
+  const transparent = isHome && !pinned;
   const loggedIn = !!user?.loggedIn;
   const displayName = user?.firstName || user?.name || user?.email || 'Guest';
   const initial = displayName.trim().charAt(0).toUpperCase() || 'A';
@@ -88,7 +74,7 @@ export function Nav() {
         className={cn(
           'fixed inset-x-0 top-0 z-50 transition-[transform,background,border-color,padding] duration-300 ease-[var(--ease-snap)]',
           transparent ? 'bg-transparent' : 'border-b border-gray-line bg-cream/95 backdrop-blur',
-          hidden && !mobileOpen ? '-translate-y-full' : 'translate-y-0',
+          navHidden && !mobileOpen ? '-translate-y-full' : 'translate-y-0',
         )}
       >
         <div

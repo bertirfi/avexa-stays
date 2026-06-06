@@ -1,5 +1,7 @@
-import Link from 'next/link';
+'use client';
+
 import type { Property } from '@/types';
+import { cn } from '@/lib/cn';
 
 /** Decorative pin positions (% of map box), spread for legibility by zone. */
 const PIN_POS: Record<string, { x: number; y: number }> = {
@@ -20,9 +22,23 @@ const ZONE_LABELS: Array<{ label: string; x: number; y: number }> = [
   { label: 'Old City Center', x: 50, y: 80 },
 ];
 
-export function StylizedMap({ properties }: { properties: Property[] }) {
+interface StylizedMapProps {
+  properties: Property[];
+  activeId: string | null;
+  onActivate: (id: string) => void;
+  onClear: () => void;
+}
+
+export function StylizedMap({ properties, activeId, onActivate, onClear }: StylizedMapProps) {
+  function onPinClick(id: string) {
+    onActivate(id);
+    // Desktop: scroll the matching card into view (the map only renders ≥ lg)
+    const el = document.getElementById(`loc-card-${id}`);
+    el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+
   return (
-    <div className="relative m-3 ml-0 hidden overflow-hidden rounded-[20px] border-l border-gray-line bg-[#242824] lg:block lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)]">
+    <div className="relative m-3 ml-0 hidden overflow-hidden rounded-[20px] border-l border-gray-line bg-[#242824] lg:sticky lg:top-20 lg:block lg:h-[calc(100vh-5rem)]">
       {/* Base map gradient (parks + water) */}
       <div
         className="absolute inset-0"
@@ -50,12 +66,7 @@ export function StylizedMap({ properties }: { properties: Property[] }) {
           <line x1="0" y1="50" x2="100" y2="46" />
           <line x1="48" y1="0" x2="54" y2="100" />
         </g>
-        <path
-          d="M 5 88 Q 35 78 55 84 T 98 74"
-          stroke="rgba(60,100,140,.5)"
-          strokeWidth="1.2"
-          fill="none"
-        />
+        <path d="M 5 88 Q 35 78 55 84 T 98 74" stroke="rgba(60,100,140,.5)" strokeWidth="1.2" fill="none" />
       </svg>
 
       {/* Zone labels */}
@@ -73,25 +84,34 @@ export function StylizedMap({ properties }: { properties: Property[] }) {
       {properties.map((p) => {
         const pos = PIN_POS[p.id];
         if (!pos) return null;
+        const isActive = activeId === p.id;
         return (
-          <Link
+          <button
             key={p.id}
-            href={`/stays/${p.slug}`}
-            className="group/pin absolute -translate-x-1/2 -translate-y-full"
-            style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+            type="button"
+            aria-label={`${p.name} — €${p.rates[0].perNight}/night`}
+            onMouseEnter={() => onActivate(p.id)}
+            onMouseLeave={onClear}
+            onClick={() => onPinClick(p.id)}
+            className="absolute -translate-x-1/2 -translate-y-full"
+            style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: isActive ? 5 : 1 }}
           >
-            <span className="relative flex items-center gap-1.5 whitespace-nowrap rounded-full border-[1.5px] border-transparent bg-white px-2.5 py-1.5 font-display text-[12.5px] font-bold text-ink shadow-[0_4px_12px_rgba(0,0,0,.35)] transition-all duration-200 group-hover/pin:scale-110 group-hover/pin:border-ink group-hover/pin:bg-gold">
-              <span
-                className="size-1.5 rounded-full"
-                style={{ background: p.neighborhoodColor }}
-              />
+            <span
+              className={cn(
+                'relative flex items-center gap-1.5 whitespace-nowrap rounded-full border-[1.5px] px-2.5 py-1.5 font-display text-[12.5px] font-bold transition-all duration-200',
+                isActive
+                  ? 'scale-[1.2] border-ink bg-gold text-ink shadow-[0_10px_28px_rgba(0,0,0,.5)]'
+                  : 'border-transparent bg-white text-ink shadow-[0_4px_12px_rgba(0,0,0,.35)] hover:scale-105 hover:bg-gold',
+              )}
+            >
+              <span className="size-1.5 rounded-full" style={{ background: p.neighborhoodColor }} />
               €{p.rates[0].perNight}
               <span
                 aria-hidden
                 className="absolute -bottom-1 left-1/2 size-2 -translate-x-1/2 rotate-45 bg-inherit"
               />
             </span>
-          </Link>
+          </button>
         );
       })}
     </div>
