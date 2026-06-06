@@ -134,11 +134,17 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Giant AVEXA wordmark */}
+      {/* Giant AVEXA watermark — centered, tucked into the bottom edge */}
       <div
         aria-hidden
-        className="font-display select-none overflow-hidden px-6 pb-4 text-cream/8"
-        style={{ fontSize: 'clamp(120px, 22vw, 320px)', lineHeight: 0.82 }}
+        className="font-display hidden select-none overflow-hidden text-center text-cream/10 sm:block"
+        style={{
+          fontSize: 'clamp(80px, 18vw, 280px)',
+          lineHeight: 0.78,
+          letterSpacing: '-0.04em',
+          marginTop: 40,
+          marginBottom: -20,
+        }}
       >
         AVEXA
       </div>

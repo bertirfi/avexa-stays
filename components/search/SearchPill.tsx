@@ -146,7 +146,7 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
           onClick={() => toggle('guests')}
           className={cn(fieldBase, open('guests') && 'bg-cream')}
         >
-          <span className="font-mono-label text-ink">Who</span>
+          <span className="font-mono-label text-ink">Guests</span>
           <span className="text-sm font-semibold text-ink">{guestSummary(guests)}</span>
         </button>
 
