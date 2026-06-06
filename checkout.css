@@ -1,0 +1,312 @@
+/* ═══════════════════════════════════════════════════════
+   CHECKOUT — Styles
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Progress stepper ── */
+.ck-stepper{
+  max-width:900px;margin:0 auto;padding:32px 40px 0;
+  display:flex;align-items:center;gap:0;
+}
+.ck-step{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.ck-step-icon{
+  width:32px;height:32px;border-radius:50%;
+  display:grid;place-items:center;
+  border:2px solid var(--gray-line);color:var(--ink-60);
+  font-size:14px;font-weight:700;
+  transition:background .3s,border-color .3s,color .3s;
+}
+.ck-step.active .ck-step-icon{background:var(--ink);border-color:var(--ink);color:#fff}
+.ck-step.done .ck-step-icon{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.ck-step-label{font-size:13px;font-weight:600;color:var(--ink-60);transition:color .3s}
+.ck-step.active .ck-step-label{color:var(--ink)}
+.ck-step.done .ck-step-label{color:var(--gold-dark)}
+.ck-step-line{flex:1;height:2px;background:var(--gray-line);margin:0 12px;transition:background .3s}
+.ck-step-line.done{background:var(--gold)}
+
+/* ── Layout ── */
+.ck-layout{
+  max-width:900px;margin:0 auto;padding:32px 40px 80px;
+  display:grid;grid-template-columns:1fr 340px;gap:48px;align-items:start;
+}
+.ck-main{min-width:0}
+.ck-aside{position:sticky;top:84px}
+
+/* Confirmation step has no sidebar — collapse to a single centered column */
+.ck-layout.ck-layout-confirm{
+  grid-template-columns:minmax(0,640px);
+  justify-content:center;
+}
+
+/* ── Section title ── */
+.ck-title{
+  font-family:'Plus Jakarta Sans';font-weight:800;
+  font-size:28px;letter-spacing:-0.02em;line-height:1.1;
+  margin-bottom:28px;
+}
+
+/* ── Form styles ── */
+.ck-field{margin-bottom:20px}
+.ck-label{
+  display:block;font-size:13px;font-weight:600;
+  color:var(--gold-dark);margin-bottom:6px;
+}
+.ck-input{
+  width:100%;padding:14px 16px;
+  border:1.5px solid var(--gray-line);border-radius:10px;
+  background:#fff;font-size:15px;font-weight:500;color:var(--ink);
+  outline:none;transition:border-color .2s;font-family:inherit;
+}
+.ck-input:focus{border-color:var(--gold-dark)}
+.ck-input::placeholder{color:var(--ink-60);font-weight:400}
+.ck-input:disabled{background:var(--cream);color:var(--ink-60)}
+.ck-hint{font-size:12px;color:var(--ink-60);margin-top:6px;display:flex;align-items:center;gap:4px}
+.ck-hint svg{width:14px;height:14px;stroke:var(--ink-60);stroke-width:1.8;fill:none;flex-shrink:0}
+.ck-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* ── Radio row ── */
+.ck-radio-row{display:flex;gap:16px;margin-bottom:20px}
+.ck-radio{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 18px;border:1.5px solid var(--gray-line);border-radius:10px;
+  cursor:pointer;font-size:14px;font-weight:500;
+  transition:border-color .2s,background .2s;
+}
+.ck-radio.active{border-color:var(--ink);background:rgba(25,25,25,.02)}
+.ck-radio-dot{
+  width:18px;height:18px;border-radius:50%;border:2px solid var(--gray-line);
+  display:grid;place-items:center;flex-shrink:0;transition:border-color .2s;
+}
+.ck-radio.active .ck-radio-dot{border-color:var(--ink)}
+.ck-radio-inner{width:10px;height:10px;border-radius:50%;background:var(--ink);transform:scale(0);transition:transform .2s}
+.ck-radio.active .ck-radio-inner{transform:scale(1)}
+
+/* ── Phone input ── */
+.ck-phone-wrap{display:flex;gap:8px}
+
+/* ── Select dropdown ── */
+.ck-select-wrap{position:relative}
+.ck-select{
+  width:100%;padding:14px 42px 14px 16px;
+  border:1.5px solid var(--gray-line);border-radius:10px;
+  background:#fff;font-size:15px;font-weight:500;color:var(--ink);
+  outline:none;transition:border-color .2s;font-family:inherit;
+  appearance:none;-webkit-appearance:none;cursor:pointer;
+}
+.ck-select:focus{border-color:var(--gold-dark)}
+.ck-select-wrap::after{
+  content:'';position:absolute;right:18px;top:50%;
+  width:8px;height:8px;
+  border-right:2px solid var(--ink-60);border-bottom:2px solid var(--ink-60);
+  transform:translateY(-70%) rotate(45deg);pointer-events:none;
+}
+
+/* ── Business invoice box ── */
+.ck-biz-box{
+  border:1.5px solid var(--gray-line);border-radius:14px;
+  padding:22px 22px 6px;margin-top:16px;background:var(--cream);
+}
+.ck-biz-head{
+  font-family:'Plus Jakarta Sans';font-weight:800;font-size:15px;
+  margin-bottom:18px;
+}
+
+/* ── Business card reminder (Payment step) ── */
+.ck-biz-reminder{
+  display:flex;gap:12px;align-items:flex-start;
+  background:var(--gold-pale);border:1px solid var(--gold);
+  border-radius:12px;padding:16px 18px;margin-bottom:24px;
+}
+.ck-biz-reminder svg{width:18px;height:18px;stroke:var(--gold-dark);stroke-width:1.8;fill:none;flex-shrink:0;margin-top:1px}
+.ck-biz-reminder strong{display:block;font-family:'Plus Jakarta Sans';font-weight:700;font-size:14px;margin-bottom:3px}
+.ck-biz-reminder span{font-size:13px;color:var(--ink-80);line-height:1.5}
+.ck-phone-prefix{
+  width:90px;padding:14px 12px;
+  border:1.5px solid var(--gray-line);border-radius:10px;
+  background:#fff;font-size:15px;font-weight:500;color:var(--ink);
+  outline:none;font-family:inherit;
+}
+
+/* ── Payment card box ── */
+.ck-card-box{
+  border:1.5px solid var(--gray-line);border-radius:14px;
+  padding:24px;margin-bottom:20px;
+}
+.ck-card-box-head{
+  display:flex;align-items:center;gap:10px;margin-bottom:18px;
+  font-size:14px;font-weight:600;
+}
+.ck-card-logos{display:flex;gap:6px;margin-left:auto}
+.ck-card-logo{
+  padding:4px 8px;border:1px solid var(--gray-line);border-radius:4px;
+  font-family:'Figtree',system-ui,sans-serif;font-size:10px;font-weight:500;letter-spacing:.04em;
+}
+.ck-pay-btn{
+  display:block;width:100%;padding:17px;margin-top:20px;
+  background:var(--ink);color:#fff;border:none;border-radius:12px;
+  font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;
+  cursor:pointer;text-align:center;
+  transition:background .25s,transform .15s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.ck-pay-btn:hover{background:var(--gold-dark)}
+.ck-pay-btn:active{transform:scale(.98)}
+.ck-pay-btn svg{width:16px;height:16px;stroke:#fff;stroke-width:2;fill:none}
+
+/* ── Alt payment ── */
+.ck-alt-pay{
+  display:flex;align-items:center;gap:10px;
+  padding:16px 18px;border:1.5px solid var(--gray-line);border-radius:12px;
+  cursor:pointer;margin-bottom:10px;
+  transition:border-color .2s,background .2s;
+}
+.ck-alt-pay:hover{border-color:var(--ink);background:rgba(25,25,25,.02)}
+.ck-alt-pay-radio{
+  width:18px;height:18px;border-radius:50%;border:2px solid var(--gray-line);
+  flex-shrink:0;
+}
+.ck-alt-pay-badge{
+  padding:4px 10px;border:1px solid var(--gray-line);border-radius:6px;
+  font-size:12px;font-weight:700;background:#fff;
+}
+.ck-alt-pay span{font-size:14px;font-weight:600}
+
+/* ── Secure badge ── */
+.ck-secure{
+  display:flex;align-items:center;gap:6px;justify-content:flex-end;
+  font-size:12px;color:var(--ink-60);margin-bottom:16px;
+}
+.ck-secure svg{width:14px;height:14px;stroke:var(--ink-60);stroke-width:1.8;fill:none}
+
+/* ── Amount header ── */
+.ck-amount-row{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:24px;
+}
+.ck-amount-label{font-size:14px;color:var(--ink-60)}
+.ck-amount{
+  font-family:'Plus Jakarta Sans';font-weight:800;
+  font-size:28px;color:var(--gold-dark);letter-spacing:-0.01em;
+}
+
+/* ── Next button ── */
+.ck-next{
+  display:block;width:100%;padding:17px;margin-top:24px;
+  background:var(--ink);color:#fff;border:none;border-radius:12px;
+  font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;
+  cursor:pointer;text-align:center;
+  transition:background .25s,transform .15s;
+}
+.ck-next:hover{background:var(--gold-dark)}
+.ck-next:active{transform:scale(.98)}
+
+/* ── Legal text ── */
+.ck-legal{font-size:12px;color:var(--ink-60);line-height:1.6;margin-bottom:20px}
+.ck-legal a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+
+/* ── Booking summary card ── */
+.ck-summary{
+  background:#fff;border-radius:16px;
+  border:1.5px solid var(--gray-line);
+  box-shadow:0 8px 32px -12px rgba(25,25,25,.12);
+  overflow:hidden;
+}
+.ck-summary-head{
+  font-family:'Plus Jakarta Sans';font-weight:800;
+  font-size:16px;text-align:center;
+  padding:18px 20px;border-bottom:1px solid var(--gray-line);
+}
+.ck-summary-img{
+  position:relative;height:160px;overflow:hidden;
+}
+.ck-summary-img .g-ph{position:absolute;inset:0}
+.ck-summary-overlay{
+  position:absolute;bottom:0;left:0;right:0;padding:16px 20px;
+  background:linear-gradient(transparent, rgba(0,0,0,.6));color:#fff;
+}
+.ck-summary-overlay h4{font-family:'Plus Jakarta Sans';font-weight:800;font-size:16px;line-height:1.2}
+.ck-summary-overlay p{font-size:12px;opacity:.8;margin-top:2px}
+.ck-summary-body{padding:18px 20px}
+.ck-summary-row{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding:5px 0;font-size:13px;
+}
+.ck-summary-row.sep{border-top:1px solid var(--gray-line);margin-top:8px;padding-top:10px}
+.ck-summary-row .label{color:var(--ink-60)}
+.ck-summary-row .val{font-weight:600}
+.ck-summary-row.discount .val{color:#2E7D32}
+.ck-summary-total{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 20px;border-top:1px solid var(--gray-line);
+}
+.ck-summary-total .label{font-size:12px;color:var(--ink-60)}
+.ck-summary-total .badge{
+  background:var(--gold-pale);border:1px solid var(--gold);
+  border-radius:8px;padding:6px 12px;
+  font-family:'Plus Jakarta Sans';font-weight:800;font-size:15px;
+}
+.ck-summary-refund{
+  padding:12px 20px;font-size:11px;color:var(--gold-dark);
+  border-top:1px solid var(--gray-line);line-height:1.5;
+}
+.ck-summary-refund strong{display:block;color:var(--ink);font-weight:700;margin-bottom:2px}
+.ck-summary-promo{
+  display:block;width:calc(100% - 40px);margin:0 20px 16px;
+  padding:12px;border:1.5px solid var(--gray-line);border-radius:10px;
+  font-size:13px;font-weight:600;text-align:center;color:var(--ink);
+  cursor:pointer;background:#fff;transition:border-color .2s;
+}
+.ck-summary-promo:hover{border-color:var(--ink)}
+
+/* ── Confirmation ── */
+.ck-confirm{text-align:center;padding:40px 0}
+.ck-confirm-icon{
+  width:80px;height:80px;border-radius:50%;
+  background:var(--gold-pale);color:var(--gold-dark);
+  display:inline-grid;place-items:center;margin-bottom:24px;
+}
+.ck-confirm-icon svg{width:40px;height:40px;stroke:var(--gold-dark);stroke-width:2;fill:none}
+.ck-confirm h2{
+  font-family:'Plus Jakarta Sans';font-weight:800;
+  font-size:28px;letter-spacing:-0.02em;margin-bottom:12px;
+}
+.ck-confirm p{font-size:15px;color:var(--ink-60);max-width:420px;margin:0 auto 8px}
+.ck-confirm-id{
+  display:inline-block;background:var(--cream);border:1px solid var(--gray-line);
+  border-radius:8px;padding:8px 16px;margin:16px 0 24px;
+  font-family:'Figtree',system-ui,sans-serif;font-size:14px;letter-spacing:.06em;font-weight:500;
+}
+.ck-confirm-details{
+  background:#fff;border:1.5px solid var(--gray-line);border-radius:14px;
+  padding:24px;text-align:left;max-width:420px;margin:0 auto 24px;
+}
+.ck-confirm-row{
+  display:flex;justify-content:space-between;padding:8px 0;font-size:14px;
+  border-bottom:1px solid var(--gray-line);
+}
+.ck-confirm-row:last-child{border-bottom:none}
+.ck-confirm-row .k{color:var(--ink-60)}
+.ck-confirm-row .v{font-weight:600}
+.ck-confirm-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.ck-confirm-btn{
+  padding:14px 28px;border-radius:9999px;font-size:14px;font-weight:600;
+  cursor:pointer;transition:background .2s,color .2s,border-color .2s;
+}
+.ck-confirm-btn.primary{background:var(--ink);color:#fff;border:1.5px solid var(--ink)}
+.ck-confirm-btn.primary:hover{background:var(--gold-dark);border-color:var(--gold-dark)}
+.ck-confirm-btn.outline{background:#fff;color:var(--ink);border:1.5px solid var(--gray-line)}
+.ck-confirm-btn.outline:hover{border-color:var(--ink)}
+
+/* ── Responsive ── */
+@media(max-width:980px){
+  .ck-stepper{padding:24px 24px 0}
+  .ck-layout{padding:24px 24px 60px;grid-template-columns:1fr;gap:24px}
+  .ck-aside{position:static}
+}
+@media(max-width:640px){
+  .ck-stepper{padding:16px 16px 0}
+  .ck-step-label{display:none}
+  .ck-layout{padding:20px 16px 100px}
+  .ck-title{font-size:22px}
+  .ck-row{grid-template-columns:1fr}
+  .ck-confirm h2{font-size:22px}
+}

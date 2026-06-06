@@ -1,0 +1,7 @@
+{
+  "preSectionCSSLen": 10287,
+  "footerCSSLen": 2191,
+  "postSectionCSSLen": 7872,
+  "editorialStart": 32609,
+  "benefitsEnd": 38340
+}
