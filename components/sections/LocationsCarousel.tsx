@@ -20,11 +20,13 @@ export function LocationsCarousel() {
     <section id="locations" className="bg-cream py-24 md:py-32">
       <div className="mx-auto max-w-[1400px] px-6 md:px-10">
         <Reveal direction="up">
-          <p className="font-mono-label mb-3 text-gold-dark">Locations</p>
+          <p className="font-mono-label mb-3 text-gold-dark">— WHERE WE ARE</p>
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 className="font-display text-4xl md:text-6xl">Pick a corner of the city.</h2>
+            <h2 className="font-display max-w-[800px] text-4xl md:text-6xl">
+              Bucharest city center, at the heart of every neighborhood.
+            </h2>
             <Link href="/locations" className="text-sm font-semibold text-ink underline-offset-4 hover:underline">
-              See all locations →
+              View all listings →
             </Link>
           </div>
         </Reveal>
@@ -79,18 +81,25 @@ export function LocationsCarousel() {
                 </div>
 
                 <div className="absolute bottom-6 left-6 right-6 text-cream">
-                  <h3 className="font-display text-3xl">{n.label}</h3>
-                  <p className="mt-1 text-sm text-cream/80">{n.description}</p>
-                  <p className="mt-3 font-mono-label text-gold">
-                    {n.propertyCount > 0
-                      ? `${n.propertyCount} stay${n.propertyCount === 1 ? '' : 's'}`
-                      : 'Coming soon'}
-                  </p>
+                  <h3 className="font-display text-4xl md:text-5xl">{n.label}</h3>
+                  <p className="mt-2 text-base text-cream/80">{n.description}</p>
                 </div>
+
+                <span className="absolute right-5 top-5 rounded-full bg-white/95 px-3 py-1.5 font-mono-label text-ink">
+                  {String(n.propertyCount).padStart(2, '0')}
+                </span>
               </Link>
             ))}
           </div>
         </div>
+
+        <Reveal direction="up">
+          <div className="font-mono-label mt-10 flex items-center justify-center gap-4 text-ink-60">
+            <span className="h-px w-12 bg-gray-line" />
+            <span>Drag to explore</span>
+            <span className="h-px w-12 bg-gray-line" />
+          </div>
+        </Reveal>
       </div>
     </section>
   );

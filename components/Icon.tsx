@@ -33,6 +33,7 @@ import {
   Car,
   Dumbbell,
   Waves,
+  Check,
   type LucideProps,
 } from 'lucide-react';
 
@@ -59,6 +60,7 @@ const map = {
   minus: Minus,
   copy: Copy,
   star: Star,
+  check: Check,
   menu: Menu,
   heart: Heart,
   calendar: Calendar,

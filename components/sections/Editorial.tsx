@@ -7,27 +7,27 @@ import { Reveal } from '@/components/Reveal';
 
 const steps = [
   {
-    eyebrow: 'Step 01',
-    title: 'A city of layers.',
-    body: 'Bucharest is rarely loud about itself. We pick stays that let you feel the texture: a courtyard with morning espresso, an Art Nouveau hallway, a quiet park nearby.',
+    eyebrow: '01',
+    title: 'Business or leisure.',
+    body: 'Designed for the way you actually travel — whether it\'s a laptop-and-latte workweek or a long weekend with nowhere to be.',
     image: '/listing-photos/00-cover.jpeg',
   },
   {
-    eyebrow: 'Step 02',
-    title: 'Direct, not transactional.',
-    body: 'No platform middlemen. You book with the people who designed the apartment, kept it clean, and know which window catches the best afternoon light.',
+    eyebrow: '02',
+    title: 'Long stay or weekend away.',
+    body: 'From a two-night escape to a month-long relocation. Rates that get better the longer you stay.',
     image: '/listing-photos/09-hallway.jpeg',
   },
   {
-    eyebrow: 'Step 03',
-    title: 'Long enough to belong.',
-    body: 'Two nights or two months — every stay is configured for living, not surviving. Working from the couch is allowed. So is brunch in pajamas.',
+    eyebrow: '03',
+    title: 'The city, on your terms.',
+    body: 'Walkable nightlife or a quiet residential street — pick the corner of Bucharest that fits the trip.',
     image: '/listing-photos/30-living-room.jpeg',
   },
   {
-    eyebrow: 'Step 04',
-    title: 'Quiet luxury, deliberately.',
-    body: 'No marble pretending to be a hotel. Just rooms that are good at being rooms — proper coffee, proper sheets, proper service when you need it.',
+    eyebrow: '04',
+    title: 'No front desk. No friction. No compromise.',
+    body: 'Six neighborhoods. Dozens of spaces. One membership that unlocks them all.',
     image: '/listing-photos/33-open-streets.jpeg',
   },
 ];

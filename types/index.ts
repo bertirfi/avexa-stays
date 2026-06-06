@@ -1,11 +1,10 @@
 // ── Neighborhoods ──────────────────────────────────────────────
+// AVEXA serves Bucharest City Center, divided into 4 zones.
 export type NeighborhoodId =
-  | 'centre'
-  | 'floreasca'
-  | 'pipera'
-  | 'dorobanti'
-  | 'herastrau'
-  | 'baneasa';
+  | 'calea-victoriei'
+  | 'old-city-center'
+  | 'universitate'
+  | 'piata-romana';
 
 export interface Neighborhood {
   id: NeighborhoodId;
@@ -56,18 +55,28 @@ export interface PropertyFAQ {
   a: string;
 }
 
+export type NearbyCategory =
+  | 'Top Attractions'
+  | 'Restaurants & Cafés'
+  | 'Public Transit'
+  | 'Closest Airports';
+
 export interface PropertyNearby {
-  category: 'attraction' | 'restaurant' | 'transit' | 'airport';
+  category: NearbyCategory;
   name: string;
   distance: string;
 }
 
 export interface PropertyReview {
   author: string;
+  location?: string;
   date: string;
   rating: number;
   body: string;
 }
+
+/** Categorized amenities — section title → list of items */
+export type CategorizedAmenities = Record<string, string[]>;
 
 export interface Property {
   id: string;
@@ -76,21 +85,24 @@ export interface Property {
   subtitle: string;
   tagline: string;
   neighborhood: NeighborhoodId;
+  neighborhoodLabel: string;
+  neighborhoodColor: string;
   address: string;
   coordinates?: { lat: number; lng: number };
   stats: PropertyStat[];
   maxGuests: number;
   description: string;
   pitch?: string;
+  goodToKnow?: string;
   checkin: string;
   checkout: string;
-  cover: string; // shortcut to photos[0].src
+  cover: string; // shortcut to photos[0].src — relative path under /public
   photos: PropertyPhoto[];
   rates: PropertyRate[];
   upgrades: PropertyUpgrade[];
   amenitiesTop: string[];
-  amenitiesProperty: string[];
-  amenitiesRoom: string[];
+  amenitiesProperty: CategorizedAmenities;
+  amenitiesRoom: CategorizedAmenities;
   faqs: PropertyFAQ[];
   nearby: PropertyNearby[];
   reviews: PropertyReview[];

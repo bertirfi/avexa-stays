@@ -1,0 +1,117 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { properties, getProperty, getAllPropertyIds } from '@/lib/properties';
+import { StayGallery } from '@/components/stay/StayGallery';
+import { StayHeader } from '@/components/stay/StayHeader';
+import {
+  StayDescription,
+  StayAmenities,
+  StayGoodToKnow,
+  StayFAQ,
+  StayLocation,
+  StayTestimonials,
+} from '@/components/stay/StayContent';
+import { StayBookingSidebar } from '@/components/stay/StayBookingSidebar';
+
+interface Params {
+  id: string;
+}
+
+export function generateStaticParams(): Params[] {
+  return getAllPropertyIds().flatMap((id) => {
+    const p = getProperty(id);
+    if (!p) return [{ id }];
+    return [{ id }, { id: p.slug }];
+  });
+}
+
+export async function generateMetadata(
+  props: { params: Promise<Params> },
+): Promise<Metadata> {
+  const { id } = await props.params;
+  const property = getProperty(id);
+  if (!property) return { title: 'Stay not found' };
+  return {
+    title: `${property.name} — ${property.subtitle}`,
+    description: property.description.split('\n\n')[0],
+  };
+}
+
+export default async function StayPage(props: { params: Promise<Params> }) {
+  const { id } = await props.params;
+  const property = getProperty(id);
+  if (!property) notFound();
+
+  return (
+    <div className="bg-cream pt-24 md:pt-32">
+      <div className="mx-auto max-w-[1200px] px-6 md:px-10">
+        {/* Breadcrumb */}
+        <nav className="font-mono-label mb-4 flex items-center gap-2 text-ink-60">
+          <Link href="/locations" className="hover:text-gold-dark">Locations</Link>
+          <span aria-hidden>›</span>
+          <Link
+            href={`/locations?where=${property.neighborhood}`}
+            className="hover:text-gold-dark"
+          >
+            {property.neighborhoodLabel}
+          </Link>
+          <span aria-hidden>›</span>
+          <span className="text-ink">{property.name}</span>
+        </nav>
+
+        {/* Gallery */}
+        <StayGallery photos={property.photos} name={property.name} />
+
+        {/* Two-column layout */}
+        <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_380px]">
+          {/* Main */}
+          <div>
+            <StayHeader property={property} />
+            <StayDescription property={property} />
+            <StayAmenities property={property} />
+            <StayGoodToKnow property={property} />
+            <StayFAQ property={property} />
+            <StayLocation property={property} />
+            <StayTestimonials property={property} />
+          </div>
+
+          {/* Sticky right sidebar */}
+          <div className="lg:min-w-0">
+            <StayBookingSidebar property={property} />
+          </div>
+        </div>
+
+        {/* Other suites footer */}
+        <section className="border-t border-gray-line py-12">
+          <h2 className="font-display mb-6 text-2xl">More AVEXA suites</h2>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {properties
+              .filter((p) => p.id !== property.id)
+              .slice(0, 4)
+              .map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/stays/${p.slug}`}
+                  className="group block"
+                >
+                  <div
+                    className="relative aspect-[4/3] overflow-hidden rounded-card bg-cover bg-center"
+                    style={{ backgroundImage: `url(${p.cover})` }}
+                  >
+                    <span className="absolute right-3 top-3 rounded-full bg-white/95 px-2 py-1 font-mono-label text-ink">
+                      €{p.rates[0].perNight}
+                    </span>
+                  </div>
+                  <h3 className="font-display mt-2 text-base group-hover:text-gold-dark">
+                    {p.name}
+                  </h3>
+                  <p className="text-xs text-ink-60">{p.subtitle}</p>
+                </Link>
+              ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

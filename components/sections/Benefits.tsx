@@ -1,55 +1,21 @@
 import Link from 'next/link';
-import { Icon, type IconName } from '@/components/Icon';
 import { Reveal } from '@/components/Reveal';
 import { cn } from '@/lib/cn';
 
 interface Benefit {
   index: string;
   title: string;
-  body: string;
-  icon: IconName;
+  glyph: string;
   variant?: 'default' | 'large';
 }
 
 const benefits: Benefit[] = [
-  {
-    index: '01',
-    title: 'Best rate. No fine print.',
-    body: 'Members always book at the best available rate. We never hide it behind a coupon code.',
-    icon: 'sparkles',
-    variant: 'large',
-  },
-  {
-    index: '02',
-    title: 'Door codes by sunrise.',
-    body: 'Self check-in available 24/7. Your code lands by 6 AM on arrival day.',
-    icon: 'key',
-  },
-  {
-    index: '03',
-    title: 'Free late checkout.',
-    body: 'Until 2 PM, no questions. Subject to next-day availability.',
-    icon: 'sunrise',
-  },
-  {
-    index: '04',
-    title: 'City-grade Wi-Fi.',
-    body: '400 Mbps fibre, dedicated workspace, Eames-grade desk chair.',
-    icon: 'wifi',
-  },
-  {
-    index: '05',
-    title: 'Real coffee, real soap.',
-    body: 'Local roasts, refillable amenities, zero plastic miniatures.',
-    icon: 'coffee',
-  },
-  {
-    index: '06',
-    title: 'Join free. Stay better.',
-    body: 'Membership is free. Your first stay unlocks +10% off — forever.',
-    icon: 'heart',
-    variant: 'large',
-  },
+  { index: '01', title: 'Enjoy 15% off every booking', glyph: '%', variant: 'large' },
+  { index: '02', title: 'Enjoy 25% off 7+ nights', glyph: '7+' },
+  { index: '03', title: 'Free cancellation', glyph: '✕' },
+  { index: '04', title: 'Early check-in from 2PM', glyph: '2PM' },
+  { index: '05', title: 'Late check-out until 1PM', glyph: '1PM' },
+  { index: '06', title: 'Welcome drinks & snacks', glyph: '♢', variant: 'large' },
 ];
 
 export function Benefits() {
@@ -65,15 +31,32 @@ export function Benefits() {
 
       <div className="mx-auto max-w-[1400px] px-6 md:px-10">
         <Reveal direction="up">
-          <p className="font-mono-label mb-3 text-gold-dark">Member benefits</p>
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 className="font-display text-4xl md:text-6xl">Six reasons to book direct.</h2>
-            <Link
-              href="/member-benefits"
-              className="text-sm font-semibold text-ink underline-offset-4 hover:underline"
-            >
-              See all benefits →
-            </Link>
+          <div className="grid items-end gap-10 md:grid-cols-[1.4fr_1fr]">
+            <div>
+              <p className="font-mono-label mb-3 text-gold">— Member Club</p>
+              <h2 className="font-display text-4xl md:text-6xl">
+                Exclusive perks,
+                <br />
+                <em className="not-italic text-gold">
+                  for free
+                  <span
+                    aria-hidden
+                    className="ml-1 inline-block size-[0.14em] -translate-y-[0.04em] rounded-full bg-gold align-baseline pulse-dot"
+                  />
+                </em>
+              </h2>
+            </div>
+            <div>
+              <p className="max-w-md text-base text-ink-80">
+                Free to join, free forever. The lowest rate we offer is always reserved for members — plus a handful of extras that make every stay softer.
+              </p>
+              <Link
+                href="/login"
+                className="cta-pulse mt-6 inline-flex items-center gap-2 rounded-full bg-gold px-6 py-3 font-semibold text-ink transition hover:bg-gold-dark hover:text-cream"
+              >
+                Join free <span aria-hidden>→</span>
+              </Link>
+            </div>
           </div>
         </Reveal>
 
@@ -89,20 +72,17 @@ export function Benefits() {
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <Icon name={b.icon} size={28} />
-                  <span className="font-mono-label">{b.index}</span>
-                </div>
-                <div className="mt-12">
-                  <h3 className="font-display text-2xl">{b.title}</h3>
-                  <p
+                  <span
                     className={cn(
-                      'mt-3 text-sm',
-                      b.variant === 'large' ? 'text-ink/75 group-hover:text-cream/80' : 'text-ink-60',
+                      'grid size-12 place-items-center rounded-2xl font-display text-lg',
+                      b.variant === 'large' ? 'bg-ink/10 text-ink' : 'bg-gold-pale text-gold-dark',
                     )}
                   >
-                    {b.body}
-                  </p>
+                    {b.glyph}
+                  </span>
+                  <span className="font-mono-label">{b.index}</span>
                 </div>
+                <h3 className="mt-12 font-display text-3xl">{b.title}</h3>
               </article>
             </Reveal>
           ))}

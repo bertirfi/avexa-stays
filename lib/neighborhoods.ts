@@ -1,64 +1,50 @@
 import type { Neighborhood } from '@/types';
 
 /**
- * Bucharest neighborhoods served by AVEXA.
- * coverImage paths are placeholders pulled from existing listing-photos folder
- * until proper neighborhood hero shots are uploaded in Phase 3.
+ * AVEXA serves a single city — Bucharest City Center — divided into 4 zones.
+ *
+ * Each zone may have 1 or more suites:
+ *   Calea Victoriei  → 301, 302, 303, 202 (4 suites)
+ *   Old City Center  → 101, 201            (2 suites)
+ *   Universitate     → 203                 (1 suite)
+ *   Piața Romană     → 304                 (1 suite)
  */
 export const neighborhoods: Neighborhood[] = [
   {
-    id: 'centre',
-    label: 'City Centre',
-    area: 'Sector 1 & 3',
+    id: 'calea-victoriei',
+    label: 'Calea Victoriei',
+    area: 'Sector 1',
     color: '#2E7D32',
-    coverImage: '/listing-photos/00-cover.jpeg',
-    description: 'Heart of Bucharest. Old Town energy, Calea Victoriei elegance.',
-    propertyCount: 8,
+    coverImage: '/listings/301/00-cover.jpeg',
+    description: 'Bucharest\'s most prestigious boulevard — palaces, boutiques, embassies.',
+    propertyCount: 4,
   },
   {
-    id: 'floreasca',
-    label: 'Floreasca',
-    area: 'Sector 1',
-    color: '#FF4136',
-    coverImage: '/listing-photos/30-living-room.jpeg',
-    description: 'Lakeside calm. Corporate towers meet sycamore-lined streets.',
-    propertyCount: 0,
+    id: 'old-city-center',
+    label: 'Old City Center',
+    area: 'Sector 3',
+    color: '#B08840',
+    coverImage: '/listings/101/00-cover.jpeg',
+    description: 'Historic core, Old Town energy, nightlife at your doorstep.',
+    propertyCount: 2,
   },
   {
-    id: 'pipera',
-    label: 'Pipera',
-    area: 'Sector 1',
-    color: '#D4531A',
-    coverImage: '/listing-photos/09-hallway.jpeg',
-    description: 'Tech corridor. Modern apartment compounds near major HQs.',
-    propertyCount: 0,
-  },
-  {
-    id: 'dorobanti',
-    label: 'Dorobanți',
-    area: 'Sector 1',
+    id: 'universitate',
+    label: 'Universitate',
+    area: 'Sector 3',
     color: '#1565C0',
-    coverImage: '/listing-photos/33-open-streets.jpeg',
-    description: 'Diplomatic quarter. Quiet villas, boutique stays, embassies.',
-    propertyCount: 0,
+    coverImage: '/listings/203/00-cover.jpeg',
+    description: 'Central transit hub — Universitate metro, walkable everywhere.',
+    propertyCount: 1,
   },
   {
-    id: 'herastrau',
-    label: 'Herăstrău',
+    id: 'piata-romana',
+    label: 'Piața Romană',
     area: 'Sector 1',
     color: '#6A1B9A',
-    coverImage: '/listing-photos/30-living-room.jpeg',
-    description: 'Park-side living. Biggest urban lake, Sunday brunches.',
-    propertyCount: 0,
-  },
-  {
-    id: 'baneasa',
-    label: 'Băneasa',
-    area: 'Sector 1',
-    color: '#00695C',
-    coverImage: '/listing-photos/00-cover.jpeg',
-    description: 'Forest edge. Near the airport, suburban green respite.',
-    propertyCount: 0,
+    coverImage: '/listings/304/00-cover.jpeg',
+    description: 'Quiet residential pocket near Calea Victoriei and Romană metro.',
+    propertyCount: 1,
   },
 ];
 

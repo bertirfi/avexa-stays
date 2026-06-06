@@ -3,84 +3,72 @@
 import { motion } from 'motion/react';
 import { SearchPill } from '@/components/search/SearchPill';
 
-const words = ['Live', 'the', 'city.'];
-
 export function Hero() {
   return (
     <section
       id="top"
-      className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-ink text-cream"
+      className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-visible bg-ink text-cream"
     >
-      {/* Video placeholder — drop a real loop into /public/hero.mp4 later */}
-      <div aria-hidden className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[url('/listing-photos/00-cover.jpeg')] bg-cover bg-center opacity-40" />
-        <div className="absolute inset-0 bg-gradient-to-b from-ink/40 via-ink/30 to-ink" />
+      {/* Video placeholder — drop /public/hero.mp4 later */}
+      <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/listing-photos/00-cover.jpeg')] bg-cover bg-center opacity-25" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(ellipse 60% 40% at 30% 30%, rgba(221,185,122,.18), transparent 60%), radial-gradient(ellipse 50% 40% at 75% 70%, rgba(176,136,64,.22), transparent 60%), linear-gradient(180deg, rgba(15,15,15,.55) 0%, rgba(15,15,15,.25) 35%, rgba(15,15,15,.5) 75%, rgba(15,15,15,.85) 100%)',
+          }}
+        />
       </div>
 
       {/* Headline */}
       <div className="mx-auto max-w-[1200px] px-6 pt-40 text-center md:pt-32">
-        <p className="font-mono-label mb-8 text-gold/90">
-          <span aria-hidden className="inline-block size-2 rounded-full bg-gold align-middle pulse-dot" />
-          <span className="ml-2 align-middle">Bucharest · Members &amp; Guests</span>
-        </p>
-
-        <h1
+        <motion.h1
           className="font-display"
-          style={{ fontSize: 'clamp(56px, 9vw, 132px)' }}
+          style={{ fontSize: 'clamp(56px, 11vw, 168px)' }}
         >
-          {words.map((w, i) => (
-            <motion.span
-              key={w}
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.9,
-                delay: 0.15 + i * 0.12,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              className="mr-4 inline-block"
-            >
-              {w}
-            </motion.span>
-          ))}
-        </h1>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.9, delay: 0.7 }}
-          className="mx-auto mt-6 max-w-xl text-lg text-cream/80"
-        >
-          Apartments, suites and residences in the heart of Bucharest. Booked direct, kept honest.
-        </motion.p>
+          <motion.span
+            initial={{ opacity: 0, y: 46 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-block"
+          >
+            Bucharest City Center,
+          </motion.span>{' '}
+          <motion.span
+            initial={{ opacity: 0, y: 46 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-block italic text-gold"
+          >
+            unlocked
+            <span
+              aria-hidden
+              className="inline-block size-[0.14em] -translate-y-[0.04em] translate-x-[0.04em] rounded-full bg-gold align-baseline pulse-dot"
+            />
+          </motion.span>
+        </motion.h1>
       </div>
 
-      {/* Search pill */}
+      {/* Search pill anchored near bottom of hero */}
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, delay: 0.85, ease: [0.16, 1, 0.3, 1] }}
-        className="mt-16 w-full px-6"
+        className="absolute inset-x-0 bottom-24 z-10 mx-auto flex justify-center px-6"
       >
-        <div className="mx-auto">
-          <SearchPill variant="hero" className="mx-auto" />
-        </div>
+        <SearchPill variant="hero" />
       </motion.div>
 
-      {/* Bottom stats strip */}
-      <motion.div
+      {/* Scroll cue */}
+      <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 1.2 }}
-        className="mt-auto w-full pb-12 pt-24"
+        transition={{ duration: 1, delay: 1.5 }}
+        className="font-mono-label absolute bottom-6 left-1/2 -translate-x-1/2 text-cream/40"
       >
-        <ul className="mx-auto flex max-w-3xl flex-wrap justify-center gap-8 font-mono-label text-cream/70">
-          <li>8 Suites</li>
-          <li>1 Neighborhood live</li>
-          <li>5 more arriving</li>
-          <li>0% middleman fees</li>
-        </ul>
-      </motion.div>
+        Scroll to explore
+      </motion.span>
     </section>
   );
 }

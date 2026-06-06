@@ -22,14 +22,14 @@ export function NewsletterForm() {
           <input
             type="email"
             required
-            placeholder="you@somewhere.com"
+            placeholder="Your email"
             className="flex-1 rounded-full border border-cream/20 bg-transparent px-5 py-3 text-cream placeholder:text-cream/40 focus:border-gold focus:outline-none"
           />
           <button
             type="submit"
             className="rounded-full bg-gold px-6 py-3 font-semibold text-ink transition hover:bg-gold-pale"
           >
-            Subscribe
+            Sign me up
           </button>
         </>
       )}
