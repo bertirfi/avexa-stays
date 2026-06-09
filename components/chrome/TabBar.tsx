@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icon, type IconName } from '@/components/Icon';
+import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
 import { cn } from '@/lib/cn';
 
 const tabs: Array<{ href: string; label: string; icon: IconName }> = [
@@ -14,10 +15,14 @@ const tabs: Array<{ href: string; label: string; icon: IconName }> = [
 
 export function TabBar() {
   const pathname = usePathname();
+  const { scrollingDown } = useChromeScroll();
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-line bg-cream/95 backdrop-blur md:hidden"
+      className={cn(
+        'fixed inset-x-0 bottom-0 z-30 border-t border-gray-line bg-cream/95 backdrop-blur transition-transform duration-300 ease-[var(--ease-snap)] md:hidden',
+        scrollingDown ? 'translate-y-full' : 'translate-y-0',
+      )}
       aria-label="Quick navigation"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >

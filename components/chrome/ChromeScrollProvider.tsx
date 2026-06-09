@@ -15,12 +15,20 @@ interface ChromeScrollValue {
   pinned: boolean;
   /** True when the pinned nav is hidden (scrolling down); false when scrolling up. */
   navHidden: boolean;
+  /**
+   * True while the user is scrolling DOWN (and not near the top). Drives the
+   * mobile bottom chrome: the tab bar hides and the property booking bar drops
+   * flush to the bottom; scrolling up reveals the tab bar with the booking bar
+   * stacked above it.
+   */
+  scrollingDown: boolean;
 }
 
 const ChromeScrollContext = createContext<ChromeScrollValue>({
   scrollY: 0,
   pinned: false,
   navHidden: false,
+  scrollingDown: false,
 });
 
 /**
@@ -34,6 +42,7 @@ export function ChromeScrollProvider({ children }: { children: ReactNode }) {
     scrollY: 0,
     pinned: false,
     navHidden: false,
+    scrollingDown: false,
   });
   const lastY = useRef(0);
 
@@ -51,10 +60,23 @@ export function ChromeScrollProvider({ children }: { children: ReactNode }) {
         } else {
           navHidden = false;
         }
-        if (prev.scrollY === y && prev.pinned === pinned && prev.navHidden === navHidden) {
+
+        // Pure scroll direction (not pinned-gated). Always show bottom chrome
+        // near the very top of the page.
+        let scrollingDown = prev.scrollingDown;
+        if (y < 80) scrollingDown = false;
+        else if (delta > 4) scrollingDown = true;
+        else if (delta < -4) scrollingDown = false;
+
+        if (
+          prev.scrollY === y &&
+          prev.pinned === pinned &&
+          prev.navHidden === navHidden &&
+          prev.scrollingDown === scrollingDown
+        ) {
           return prev;
         }
-        return { scrollY: y, pinned, navHidden };
+        return { scrollY: y, pinned, navHidden, scrollingDown };
       });
       lastY.current = y;
     }

@@ -112,11 +112,44 @@ export function StayBookingSidebar({ property }: Props) {
         <span className="text-sm text-ink-60">/ night</span>
       </div>
 
-      {/* Dates */}
+      {/* Mobile: clean "Book your stay" rows — tapping opens the full-screen
+          calendar / guest bottom-sheet (same editors as desktop). */}
+      <div className="mb-2 lg:hidden">
+        <h3 className="font-display mb-1 text-lg">Book your stay</h3>
+        <button
+          type="button"
+          onClick={() => setShowCal(true)}
+          className="flex w-full items-center justify-between gap-3 border-b border-gray-line py-4 text-left"
+        >
+          <span className="text-sm text-ink-60">Arrival / departure</span>
+          <span className="flex items-center gap-2 text-sm font-semibold">
+            {startDate && endDate
+              ? `${formatDate(startDate)} – ${formatDate(endDate)}`
+              : 'Add dates'}
+            <Icon name="pencil" size={14} className="text-ink-60" />
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowGuests(true)}
+          className="flex w-full items-center justify-between gap-3 py-4 text-left"
+        >
+          <span className="text-sm text-ink-60">Room 1</span>
+          <span className="flex items-center gap-2 text-sm font-semibold">
+            {pricing.occupants} guest{pricing.occupants === 1 ? '' : 's'}
+            {guests.infants > 0
+              ? ` · ${guests.infants} infant${guests.infants === 1 ? '' : 's'}`
+              : ''}
+            <Icon name="pencil" size={14} className="text-ink-60" />
+          </span>
+        </button>
+      </div>
+
+      {/* Dates (desktop input) */}
       <button
         type="button"
         onClick={() => setShowCal((s) => !s)}
-        className="grid w-full grid-cols-2 rounded-2xl border border-gray-line text-left"
+        className="hidden w-full grid-cols-2 rounded-2xl border border-gray-line text-left lg:grid"
       >
         <span className="border-r border-gray-line p-3">
           <span className="font-mono-label block text-ink-60">Check-in</span>
@@ -141,11 +174,11 @@ export function StayBookingSidebar({ property }: Props) {
         </div>
       )}
 
-      {/* Guests */}
+      {/* Guests (desktop input) */}
       <button
         type="button"
         onClick={() => setShowGuests((s) => !s)}
-        className="mt-2 block w-full rounded-2xl border border-gray-line p-3 text-left"
+        className="mt-2 hidden w-full rounded-2xl border border-gray-line p-3 text-left lg:block"
       >
         <span className="font-mono-label block text-ink-60">Guests</span>
         <span className="text-sm font-semibold">

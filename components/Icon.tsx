@@ -34,6 +34,7 @@ import {
   Dumbbell,
   Waves,
   Check,
+  Pencil,
   type LucideProps,
 } from 'lucide-react';
 
@@ -73,6 +74,7 @@ const map = {
   car: Car,
   dumbbell: Dumbbell,
   waves: Waves,
+  pencil: Pencil,
 } as const;
 
 export type IconName = keyof typeof map;
