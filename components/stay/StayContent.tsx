@@ -34,49 +34,6 @@ export function StayDescription({ property }: { property: Property }) {
   );
 }
 
-export function StayAmenities({ property }: { property: Property }) {
-  return (
-    <section className="border-b border-gray-line py-10">
-      <h2 className="font-display mb-6 text-2xl">What this place offers</h2>
-      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {property.amenitiesTop.map((a) => (
-          <li key={a} className="flex items-center gap-3 text-ink-80">
-            <Icon name="sparkles" size={18} className="text-gold-dark" />
-            {a}
-          </li>
-        ))}
-      </ul>
-      <details className="mt-6">
-        <summary className="cursor-pointer rounded-full border border-ink px-5 py-2 text-sm font-semibold transition hover:bg-ink hover:text-cream">
-          Show all amenities
-        </summary>
-        <div className="mt-6 space-y-6">
-          {Object.entries(property.amenitiesProperty).map(([cat, items]) => (
-            <div key={cat}>
-              <h3 className="font-mono-label mb-2 text-ink-60">{cat}</h3>
-              <ul className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                {items.map((it) => (
-                  <li key={it} className="text-sm text-ink-80">{it}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-          {Object.entries(property.amenitiesRoom).map(([cat, items]) => (
-            <div key={cat}>
-              <h3 className="font-mono-label mb-2 text-ink-60">{cat}</h3>
-              <ul className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                {items.map((it) => (
-                  <li key={it} className="text-sm text-ink-80">{it}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </details>
-    </section>
-  );
-}
-
 export function StayGoodToKnow({ property }: { property: Property }) {
   return (
     <section className="border-b border-gray-line py-10">

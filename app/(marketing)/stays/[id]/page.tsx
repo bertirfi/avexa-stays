@@ -6,12 +6,12 @@ import { StayGallery } from '@/components/stay/StayGallery';
 import { StayHeader } from '@/components/stay/StayHeader';
 import {
   StayDescription,
-  StayAmenities,
   StayGoodToKnow,
   StayFAQ,
   StayLocation,
   StayTestimonials,
 } from '@/components/stay/StayContent';
+import { StayAmenities } from '@/components/stay/StayAmenities';
 import { StayBookingSidebar } from '@/components/stay/StayBookingSidebar';
 import { JsonLd } from '@/components/seo/JsonLd';
 import type { Property } from '@/types';
