@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { CalendarPopup } from '@/components/search/CalendarPopup';
 import { GuestPopup } from '@/components/search/GuestPopup';
@@ -48,11 +50,19 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
   const containerRef = useRef<HTMLDivElement>(null);
   const isThisPillOpen = activePillId === pillId;
 
+  // Portal mount guard (SSR-safe)
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   // Close on outside click / Escape when this pill owns the open dropdown
   useEffect(() => {
     if (!isThisPillOpen) return;
     function onDown(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) closePanel();
+      const target = e.target as Element | null;
+      // Mobile dropdown sheets are portaled to <body> (outside containerRef);
+      // taps inside them must NOT count as an outside click.
+      if (target?.closest('[data-avexa-search-sheet]')) return;
+      if (containerRef.current && !containerRef.current.contains(target as Node)) closePanel();
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') closePanel();
@@ -108,11 +118,62 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
   const fieldBase =
     'group flex flex-1 cursor-pointer flex-col items-start gap-0.5 rounded-full px-6 py-3.5 text-left transition';
 
+  // ── Mobile location bottom sheet (portaled to body) ──
+  // CalendarPopup and GuestPopup render their own mobile portals internally.
+  const mobileLocationSheet =
+    mounted && open('location')
+      ? createPortal(
+          <>
+            {/* Backdrop */}
+            <div
+              className="md:hidden fixed inset-0 z-[290] bg-ink/40"
+              onClick={closePanel}
+            />
+            {/* Bottom sheet */}
+            <motion.div
+              data-avexa-search-sheet
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+              className="md:hidden fixed inset-x-0 bottom-0 z-[300] rounded-t-[20px] bg-white p-5 text-ink"
+              style={{ paddingBottom: 'calc(20px + env(safe-area-inset-bottom))' }}
+            >
+              {/* Grabber */}
+              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-line" />
+              <h4 className="font-mono-label mb-2 text-ink-60">Bucharest City Center</h4>
+              <ul>
+                {neighborhoods.map((n) => (
+                  <li key={n.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLocation(n.id);
+                        openPanel('dates', pillId);
+                      }}
+                      className={cn(
+                        'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition hover:bg-cream',
+                        location === n.id && 'bg-gold-pale text-gold-dark',
+                      )}
+                    >
+                      <span className="size-2 rounded-full" style={{ background: n.color }} />
+                      {n.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </>,
+          document.body,
+        )
+      : null;
+
   return (
     <div ref={containerRef} className={cn('relative w-full max-w-[860px]', className)}>
+      {/* ── DESKTOP pill row: hidden below md ── */}
       <div
         className={cn(
-          'flex items-center rounded-full bg-white shadow-[var(--shadow-pill)] backdrop-blur',
+          'hidden md:flex items-center rounded-full bg-white shadow-[var(--shadow-pill)] backdrop-blur',
           variant === 'compact' && 'border border-gray-line',
         )}
       >
@@ -161,9 +222,27 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
         </button>
       </div>
 
-      {/* Dropdowns (z-200 so they paint over later sections) */}
+      {/* ── MOBILE single "Search" button: hidden on md+ ── */}
+      <button
+        type="button"
+        onClick={() => openPanel('location', pillId)}
+        className="flex md:hidden w-full items-center gap-3 rounded-full bg-white px-5 py-3.5 font-semibold text-ink shadow-[var(--shadow-pill)]"
+      >
+        <Icon name="search" size={18} />
+        Search
+      </button>
+
+      {/*
+        DROPDOWN STRATEGY:
+        - Location: desktop absolute dropdown (hidden md:block) + mobile portaled sheet (handled above via mobileLocationSheet)
+        - Dates/Guests: mounted without a hiding wrapper so the component itself can render
+          its desktop popup (hidden md:block inside) AND portal its mobile sheet to body (md:hidden on portal root).
+          The absolute positioning wrapper is kept for the desktop layout; on mobile it collapses to zero
+          because its only child (the desktop popup) is `hidden md:block`.
+      */}
+
       {open('location') && (
-        <div className="absolute left-0 top-[calc(100%+8px)] z-[200] w-[320px] rounded-2xl bg-white p-2 text-ink shadow-[0_16px_48px_-12px_rgba(25,25,25,0.25)]">
+        <div className="hidden md:block absolute left-0 top-[calc(100%+8px)] z-[200] w-[320px] rounded-2xl bg-white p-2 text-ink shadow-[0_16px_48px_-12px_rgba(25,25,25,0.25)]">
           <h4 className="font-mono-label px-4 py-3 text-ink-60">Bucharest City Center</h4>
           <ul>
             {neighborhoods.map((n) => (
@@ -188,6 +267,8 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
         </div>
       )}
 
+      {/* CalendarPopup: the absolute wrapper positions the desktop popup.
+          The component also portals a mobile full-screen sheet to body (md:hidden). */}
       {open('dates') && (
         <div className="absolute left-1/2 top-[calc(100%+8px)] z-[200] -translate-x-1/2">
           <CalendarPopup
@@ -195,18 +276,22 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
             endDate={endDate}
             onSelect={(s, e) => {
               setDates(s, e);
-              if (s && e) openPanel('guests', pillId); // auto-advance on check-out select
+              if (s && e) openPanel('guests', pillId);
             }}
             onClose={() => openPanel('guests', pillId)}
           />
         </div>
       )}
 
+      {/* GuestPopup: same pattern — absolute wrapper for desktop, portal for mobile. */}
       {open('guests') && (
         <div className="absolute right-0 top-[calc(100%+8px)] z-[200]">
           <GuestPopup guests={guests} onChange={setGuests} onClose={closePanel} />
         </div>
       )}
+
+      {/* Mobile location bottom sheet portaled to body */}
+      <AnimatePresence>{mobileLocationSheet}</AnimatePresence>
     </div>
   );
 }

@@ -1,10 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@/components/Icon';
 import { CalendarPopup } from '@/components/search/CalendarPopup';
 import { GuestPopup } from '@/components/search/GuestPopup';
+import { MobileBookingBar } from '@/components/stay/MobileBookingBar';
 import type { Booking, GuestCounts, Property } from '@/types';
 import { cn } from '@/lib/cn';
 
@@ -38,6 +40,9 @@ export function StayBookingSidebar({ property }: Props) {
     early_checkin: true,
   });
   const [priceOpen, setPriceOpen] = useState(false);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const rate = property.rates.find((r) => r.id === rateId)!;
   const nights = nightsBetween(startDate, endDate);
@@ -83,8 +88,22 @@ export function StayBookingSidebar({ property }: Props) {
     router.push('/checkout');
   }
 
+  const mobileBar = mounted
+    ? createPortal(
+        <MobileBookingBar
+          priceLabel={nights === 0 ? 'From' : 'Total'}
+          priceValue={nights === 0 ? `€${rate.perNight}` : `€${pricing.total}`}
+          taxNote={nights === 0 ? '/night' : 'Taxes & charges incl.'}
+          ctaLabel={nights === 0 ? 'Select dates' : 'Book best rate'}
+          onBook={book}
+        />,
+        document.body,
+      )
+    : null;
+
   return (
-    <aside className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-card border border-gray-line bg-white p-6 shadow-[var(--shadow-pill)]">
+    <>
+    <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto rounded-card border border-gray-line bg-white p-6 shadow-[var(--shadow-pill)]">
       <div className="mb-4 flex items-baseline justify-between">
         <span className="flex items-baseline gap-2">
           <span className="text-sm text-ink-60 line-through">€{pricing.rackPerNight}</span>
@@ -239,6 +258,8 @@ export function StayBookingSidebar({ property }: Props) {
         You won&apos;t be charged yet
       </p>
     </aside>
+    {mobileBar}
+    </>
   );
 }
 

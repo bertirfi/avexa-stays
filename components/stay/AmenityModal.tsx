@@ -57,9 +57,9 @@ export function AmenityModal({ open, onClose, property }: AmenityModalProps) {
             aria-hidden
           />
 
-          {/* Centered (desktop) / bottom-sheet (mobile) container */}
+          {/* Centered (desktop) / full-screen (mobile) container */}
           <div
-            className="fixed inset-0 z-[201] flex items-end justify-center sm:items-center sm:p-4"
+            className="fixed inset-0 z-[201] flex items-stretch justify-center sm:items-center sm:p-4"
             onClick={onClose}
           >
             <motion.div
@@ -71,7 +71,7 @@ export function AmenityModal({ open, onClose, property }: AmenityModalProps) {
               exit={{ opacity: 0, y: 48, scale: 0.98 }}
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="flex max-h-[90vh] w-full flex-col rounded-t-2xl bg-white sm:max-h-[85vh] sm:w-[min(700px,92vw)] sm:rounded-[20px]"
+              className="flex w-full flex-col bg-white max-sm:h-screen max-sm:max-h-screen max-sm:rounded-none sm:max-h-[85vh] sm:w-[min(700px,92vw)] sm:rounded-[20px]"
             >
               {/* Header */}
               <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-line px-6 py-5 sm:px-7">

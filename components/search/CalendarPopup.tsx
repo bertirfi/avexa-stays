@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { cn } from '@/lib/cn';
 
@@ -97,6 +99,12 @@ function MonthGrid({
   );
 }
 
+/** Formats a date as "Jun 1" style */
+function fmt(d: Date | null) {
+  if (!d) return null;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 export function CalendarPopup({
   startDate,
   endDate,
@@ -106,9 +114,13 @@ export function CalendarPopup({
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Show 2 months at a time, starting from current month
+  // Show 2 months at a time on desktop, starting from current month
   const [baseMonth, setBaseMonth] = useState(today.getMonth());
   const [baseYear, setBaseYear] = useState(today.getFullYear());
+
+  // Portal mount guard (SSR-safe)
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const nextMonth = (baseMonth + 1) % 12;
   const nextYear = baseMonth === 11 ? baseYear + 1 : baseYear;
@@ -145,61 +157,153 @@ export function CalendarPopup({
       ? Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
       : 0;
 
-  return (
-    <div className="rounded-3xl bg-white p-6 text-ink shadow-[var(--shadow-pill)]">
-      <div className="mb-4 flex items-center justify-between">
-        <button
-          onClick={() => shift(-1)}
-          aria-label="Previous month"
-          className="rounded-full p-2 hover:bg-gray-light"
-        >
-          <Icon name="chevLeft" size={18} />
-        </button>
-        <span className="font-mono-label text-ink-60">
-          {nights > 0 ? `${nights} night${nights === 1 ? '' : 's'}` : 'Select dates'}
-        </span>
-        <button
-          onClick={() => shift(1)}
-          aria-label="Next month"
-          className="rounded-full p-2 hover:bg-gray-light"
-        >
-          <Icon name="chevRight" size={18} />
-        </button>
-      </div>
+  // Build 4 consecutive months for mobile scroll view
+  function getMonthOffset(offset: number): { year: number; month: number } {
+    let m = today.getMonth() + offset;
+    let y = today.getFullYear();
+    while (m > 11) { m -= 12; y += 1; }
+    return { year: y, month: m };
+  }
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <MonthGrid
-          year={baseYear}
-          month={baseMonth}
-          startDate={startDate}
-          endDate={endDate}
-          today={today}
-          onPick={pick}
-        />
-        <MonthGrid
-          year={nextYear}
-          month={nextMonth}
-          startDate={startDate}
-          endDate={endDate}
-          today={today}
-          onPick={pick}
-        />
-      </div>
+  const rangeLabel =
+    startDate && endDate
+      ? `${fmt(startDate)} – ${fmt(endDate)} · ${nights} night${nights === 1 ? '' : 's'}`
+      : startDate
+      ? `${fmt(startDate)} – Add checkout`
+      : 'Select dates';
 
-      <div className="mt-6 flex justify-end gap-3">
+  // ── MOBILE full-screen sheet (portaled) ──
+  const mobileSheet = mounted ? createPortal(
+    <motion.div
+      data-avexa-search-sheet
+      initial={{ y: '100%' }}
+      animate={{ y: 0 }}
+      exit={{ y: '100%' }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className="md:hidden fixed inset-0 z-[300] bg-white flex flex-col"
+    >
+      {/* Header */}
+      <div className="sticky top-0 z-10 flex items-center border-b border-gray-line bg-white px-4 py-4">
         <button
-          onClick={() => onSelect(null, null)}
-          className="rounded-full px-4 py-2 text-sm text-ink-60 hover:bg-gray-light"
-        >
-          Clear
-        </button>
-        <button
+          type="button"
           onClick={onClose}
-          className="rounded-full bg-ink px-6 py-2 text-sm font-semibold text-cream hover:bg-gold hover:text-ink"
+          aria-label="Close calendar"
+          className="mr-3 rounded-full p-2 hover:bg-gray-light"
         >
-          Done
+          <Icon name="chevLeft" size={20} />
         </button>
+        <span className="flex-1 text-center text-sm font-semibold text-ink">
+          {rangeLabel}
+        </span>
+        {/* spacer to balance the back button */}
+        <div className="size-9" />
       </div>
-    </div>
+
+      {/* Scrollable months */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-8">
+        {[0, 1, 2, 3].map((offset) => {
+          const { year, month } = getMonthOffset(offset);
+          return (
+            <MonthGrid
+              key={`${year}-${month}`}
+              year={year}
+              month={month}
+              startDate={startDate}
+              endDate={endDate}
+              today={today}
+              onPick={pick}
+            />
+          );
+        })}
+      </div>
+
+      {/* Footer */}
+      <div
+        className="border-t border-gray-line bg-white px-4 pt-4"
+        style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }}
+      >
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => onSelect(null, null)}
+            className="flex-1 rounded-[12px] border border-gray-line py-4 text-sm font-semibold text-ink-60 hover:bg-gray-light"
+          >
+            Clear
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-[2] rounded-[12px] bg-ink py-4 text-sm font-semibold text-cream hover:bg-gold-dark"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </motion.div>,
+    document.body,
+  ) : null;
+
+  return (
+    <>
+      {/* ── DESKTOP two-month popup: hidden on mobile ── */}
+      <div className="hidden md:block rounded-3xl bg-white p-6 text-ink shadow-[var(--shadow-pill)]">
+        <div className="mb-4 flex items-center justify-between">
+          <button
+            onClick={() => shift(-1)}
+            aria-label="Previous month"
+            className="rounded-full p-2 hover:bg-gray-light"
+          >
+            <Icon name="chevLeft" size={18} />
+          </button>
+          <span className="font-mono-label text-ink-60">
+            {nights > 0 ? `${nights} night${nights === 1 ? '' : 's'}` : 'Select dates'}
+          </span>
+          <button
+            onClick={() => shift(1)}
+            aria-label="Next month"
+            className="rounded-full p-2 hover:bg-gray-light"
+          >
+            <Icon name="chevRight" size={18} />
+          </button>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <MonthGrid
+            year={baseYear}
+            month={baseMonth}
+            startDate={startDate}
+            endDate={endDate}
+            today={today}
+            onPick={pick}
+          />
+          <MonthGrid
+            year={nextYear}
+            month={nextMonth}
+            startDate={startDate}
+            endDate={endDate}
+            today={today}
+            onPick={pick}
+          />
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={() => onSelect(null, null)}
+            className="rounded-full px-4 py-2 text-sm text-ink-60 hover:bg-gray-light"
+          >
+            Clear
+          </button>
+          <button
+            onClick={onClose}
+            className="rounded-full bg-ink px-6 py-2 text-sm font-semibold text-cream hover:bg-gold hover:text-ink"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile sheet rendered via portal */}
+      {mobileSheet}
+    </>
   );
 }

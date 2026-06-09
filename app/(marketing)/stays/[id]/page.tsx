@@ -137,7 +137,7 @@ export default async function StayPage(props: { params: Promise<Params> }) {
   if (!property) notFound();
 
   return (
-    <div className="bg-cream pt-24 md:pt-32">
+    <div className="bg-cream pt-24 md:pt-32 pb-[150px] lg:pb-0">
       <JsonLd data={buildLodgingSchema(property)} />
       <JsonLd data={buildBreadcrumbSchema(property)} />
       <div className="mx-auto max-w-[1200px] px-6 md:px-10">

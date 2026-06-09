@@ -28,11 +28,11 @@ export function StayGallery({ photos, name }: StayGalleryProps) {
 
   return (
     <>
-      <div className="grid grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-card aspect-[2.2/1]">
+      <div className="grid grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-card aspect-[2.2/1] max-sm:grid-cols-1 max-sm:grid-rows-1 max-sm:aspect-[4/3]">
         <button
           type="button"
           onClick={() => setOpenIndex(0)}
-          className="relative col-span-2 row-span-2 overflow-hidden"
+          className="relative col-span-2 row-span-2 overflow-hidden max-sm:col-span-1 max-sm:row-span-1"
         >
           {visible[0] && (
             <Image
@@ -44,13 +44,23 @@ export function StayGallery({ photos, name }: StayGalleryProps) {
               className="object-cover transition duration-500 hover:scale-105"
             />
           )}
+          {/* Mobile-only pill — hidden on sm+ */}
+          <span
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenIndex(0);
+            }}
+            className="absolute right-4 bottom-4 hidden max-sm:flex items-center gap-1 rounded-[10px] border border-gray-line bg-white px-4 py-2 text-sm font-semibold text-ink shadow-md"
+          >
+            <Icon name="grid" size={14} /> Show all {photos.length} photos
+          </span>
         </button>
         {visible.slice(1).map((p, i) => (
           <button
             key={p.id}
             type="button"
             onClick={() => setOpenIndex(i + 1)}
-            className="relative overflow-hidden"
+            className="relative overflow-hidden max-sm:hidden"
           >
             <Image
               src={p.src}
@@ -82,18 +92,19 @@ export function StayGallery({ photos, name }: StayGalleryProps) {
             <Icon name="x" size={20} />
           </button>
 
-          <button
-            type="button"
-            aria-label="Previous"
-            disabled={openIndex === 0}
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpenIndex((i) => Math.max(0, (i ?? 0) - 1));
-            }}
-            className="absolute left-6 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-cream backdrop-blur hover:bg-white/20 disabled:opacity-30"
-          >
-            <Icon name="chevLeft" size={20} />
-          </button>
+          {openIndex > 0 && (
+            <button
+              type="button"
+              aria-label="Previous"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenIndex((i) => Math.max(0, (i ?? 0) - 1));
+              }}
+              className="absolute left-4 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-cream backdrop-blur hover:bg-white/20"
+            >
+              <Icon name="chevLeft" size={20} />
+            </button>
+          )}
 
           <div
             className="relative h-full max-h-[80vh] w-full max-w-5xl"
@@ -109,18 +120,19 @@ export function StayGallery({ photos, name }: StayGalleryProps) {
             />
           </div>
 
-          <button
-            type="button"
-            aria-label="Next"
-            disabled={openIndex === photos.length - 1}
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpenIndex((i) => Math.min(photos.length - 1, (i ?? 0) + 1));
-            }}
-            className="absolute right-6 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-cream backdrop-blur hover:bg-white/20 disabled:opacity-30"
-          >
-            <Icon name="chevRight" size={20} />
-          </button>
+          {openIndex < photos.length - 1 && (
+            <button
+              type="button"
+              aria-label="Next"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenIndex((i) => Math.min(photos.length - 1, (i ?? 0) + 1));
+              }}
+              className="absolute right-4 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-cream backdrop-blur hover:bg-white/20"
+            >
+              <Icon name="chevRight" size={20} />
+            </button>
+          )}
 
           <span className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 font-mono-label text-cream backdrop-blur">
             {openIndex + 1} / {photos.length}

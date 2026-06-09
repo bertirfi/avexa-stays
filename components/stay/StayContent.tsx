@@ -37,15 +37,34 @@ export function StayDescription({ property }: { property: Property }) {
 export function StayGoodToKnow({ property }: { property: Property }) {
   return (
     <section className="border-b border-gray-line py-10">
-      <h2 className="font-display mb-6 text-2xl">Good to know</h2>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card icon="key" title="Check-in" body={property.checkin} />
-        <Card icon="clock" title="Check-out" body={property.checkout} />
-        <Card icon="shield" title="House rules" body={`Up to ${property.maxGuests} guests. No pets. No parties.`} />
+      {/* Desktop: always-visible heading + grid */}
+      <div className="hidden md:block">
+        <h2 className="font-display mb-6 text-2xl">Good to know</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Card icon="key" title="Check-in" body={property.checkin} />
+          <Card icon="clock" title="Check-out" body={property.checkout} />
+          <Card icon="shield" title="House rules" body={`Up to ${property.maxGuests} guests. No pets. No parties.`} />
+        </div>
+        {property.goodToKnow && (
+          <p className="mt-6 rounded-card bg-cream p-5 text-sm text-ink-80">{property.goodToKnow}</p>
+        )}
       </div>
-      {property.goodToKnow && (
-        <p className="mt-6 rounded-card bg-cream p-5 text-sm text-ink-80">{property.goodToKnow}</p>
-      )}
+
+      {/* Mobile: collapsible accordion */}
+      <details className="group md:hidden">
+        <summary className="flex cursor-pointer items-center justify-between border-b border-gray-line pb-4">
+          <h2 className="font-display text-xl font-bold">Good to know</h2>
+          <Icon name="chevDown" size={20} className="shrink-0 transition group-open:rotate-180" />
+        </summary>
+        <div className="mt-4 grid grid-cols-1 gap-4">
+          <Card icon="key" title="Check-in" body={property.checkin} />
+          <Card icon="clock" title="Check-out" body={property.checkout} />
+          <Card icon="shield" title="House rules" body={`Up to ${property.maxGuests} guests. No pets. No parties.`} />
+        </div>
+        {property.goodToKnow && (
+          <p className="mt-6 rounded-card bg-cream p-5 text-sm text-ink-80">{property.goodToKnow}</p>
+        )}
+      </details>
     </section>
   );
 }
