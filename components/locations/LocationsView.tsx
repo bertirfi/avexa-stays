@@ -1,20 +1,38 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { SearchPill } from '@/components/search/SearchPill';
 import { SearchProvider } from '@/components/search/SearchContext';
 import { PropertyCard } from '@/components/locations/PropertyCard';
 import { StylizedMap } from '@/components/locations/StylizedMap';
+import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
 import { neighborhoods } from '@/lib/neighborhoods';
-import { properties, getPropertiesByNeighborhood } from '@/lib/properties';
+import { properties, getPropertiesByNeighborhood, getProperty } from '@/lib/properties';
 import { cn } from '@/lib/cn';
 
 export function LocationsView() {
   const [mapOpen, setMapOpen] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
+  // Mobile-only List/Map toggle state
+  const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
+  const [popupId, setPopupId] = useState<string | null>(null);
+  const { scrollingDown } = useChromeScroll();
+
+  // Lock body scroll while the full-screen mobile map is open
+  useEffect(() => {
+    if (mobileView !== 'map') return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileView]);
+
+  const popupProperty = popupId ? getProperty(popupId) : null;
 
   const groups = neighborhoods
     .map((n) => ({ neighborhood: n, items: getPropertiesByNeighborhood(n.id) }))
@@ -36,7 +54,7 @@ export function LocationsView() {
         )}
       >
         {/* LEFT — list */}
-        <div className="px-5 pb-24 pt-6 md:px-10">
+        <div className={cn('px-5 pb-24 pt-6 md:px-10', mobileView === 'map' && 'max-sm:hidden')}>
           <header className="mb-6">
             <span className="font-mono-label mb-2 block text-[12px] tracking-[0.16em] text-gold-dark">
               {properties.length} Stays
@@ -131,7 +149,7 @@ export function LocationsView() {
           </div>
         </div>
 
-        {/* RIGHT — map */}
+        {/* RIGHT — map (desktop split view) */}
         {mapOpen && (
           <StylizedMap
             properties={properties}
@@ -140,6 +158,105 @@ export function LocationsView() {
             onClear={() => setActiveId(null)}
           />
         )}
+      </div>
+
+      {/* ── MOBILE full-screen map overlay (≤ sm) ── */}
+      <div
+        className={cn(
+          'fixed inset-0 z-[60] sm:hidden',
+          mobileView === 'map' ? 'block' : 'hidden',
+        )}
+      >
+        <StylizedMap
+          variant="mobile"
+          properties={properties}
+          activeId={activeId}
+          onActivate={setActiveId}
+          onClear={() => setActiveId(null)}
+          onPinTap={(id) => setPopupId(id)}
+        />
+
+        {/* Pin popup card */}
+        {popupProperty && (
+          <div className="absolute inset-x-3 bottom-[calc(84px+env(safe-area-inset-bottom))] z-[65] rounded-[16px] border border-gray-line bg-white p-3 shadow-[0_16px_40px_-8px_rgba(0,0,0,0.45)]">
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={() => setPopupId(null)}
+              className="absolute right-2.5 top-2.5 z-10 grid size-7 place-items-center rounded-full bg-gray-light text-ink transition hover:bg-gray-line"
+            >
+              <Icon name="x" size={14} />
+            </button>
+            <Link href={`/stays/${popupProperty.slug}`} className="flex gap-3">
+              <div className="relative size-[84px] shrink-0 overflow-hidden rounded-[12px] bg-gray-light">
+                <Image
+                  src={popupProperty.cover}
+                  alt={popupProperty.name}
+                  fill
+                  sizes="84px"
+                  className="object-cover"
+                />
+              </div>
+              <div className="min-w-0 pr-6">
+                <span
+                  className="font-mono-label flex items-center gap-1.5 text-[11px] tracking-[0.18em]"
+                  style={{ color: popupProperty.neighborhoodColor }}
+                >
+                  <span
+                    aria-hidden
+                    className="size-1.5 rounded-full"
+                    style={{ background: popupProperty.neighborhoodColor }}
+                  />
+                  {popupProperty.neighborhoodLabel}
+                </span>
+                <h4 className="font-display mt-0.5 truncate text-base">{popupProperty.name}</h4>
+                <p className="truncate text-xs text-ink-60">{popupProperty.tagline}</p>
+                <span className="mt-1 inline-flex items-baseline gap-1 font-display text-[15px]">
+                  €{popupProperty.rates[0].perNight}
+                  <span className="text-[11px] font-medium text-ink-60">/night</span>
+                </span>
+              </div>
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* ── MOBILE List / Map toggle pill (≤ sm) ── */}
+      <div
+        className={cn(
+          'fixed left-1/2 z-[70] flex -translate-x-1/2 gap-0.5 rounded-full bg-ink p-1 shadow-[0_8px_24px_rgba(25,25,25,0.35)] transition-[bottom] duration-300 ease-[var(--ease-snap)] sm:hidden',
+          mobileView === 'map'
+            ? 'bottom-[calc(16px+env(safe-area-inset-bottom))]'
+            : scrollingDown
+              ? 'bottom-[calc(12px+env(safe-area-inset-bottom))]'
+              : 'bottom-[calc(72px+env(safe-area-inset-bottom))]',
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            setMobileView('list');
+            setPopupId(null);
+          }}
+          className={cn(
+            'flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition',
+            mobileView === 'list' ? 'bg-white text-ink' : 'text-white/60',
+          )}
+        >
+          <Icon name="menu" size={16} />
+          List
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileView('map')}
+          className={cn(
+            'flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition',
+            mobileView === 'map' ? 'bg-white text-ink' : 'text-white/60',
+          )}
+        >
+          <Icon name="pin" size={16} />
+          Map
+        </button>
       </div>
     </div>
   );

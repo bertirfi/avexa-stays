@@ -27,18 +27,41 @@ interface StylizedMapProps {
   activeId: string | null;
   onActivate: (id: string) => void;
   onClear: () => void;
+  /** 'desktop' = sticky right-column box (lg only). 'mobile' = fills a full-screen overlay. */
+  variant?: 'desktop' | 'mobile';
+  /** Mobile only: tapping a pin surfaces a card popup instead of scrolling. */
+  onPinTap?: (id: string) => void;
 }
 
-export function StylizedMap({ properties, activeId, onActivate, onClear }: StylizedMapProps) {
+export function StylizedMap({
+  properties,
+  activeId,
+  onActivate,
+  onClear,
+  variant = 'desktop',
+  onPinTap,
+}: StylizedMapProps) {
+  const isMobile = variant === 'mobile';
+
   function onPinClick(id: string) {
     onActivate(id);
+    if (isMobile) {
+      onPinTap?.(id);
+      return;
+    }
     // Desktop: scroll the matching card into view (the map only renders ≥ lg)
     const el = document.getElementById(`loc-card-${id}`);
     el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 
   return (
-    <div className="relative m-3 ml-0 hidden overflow-hidden rounded-[20px] border-l border-gray-line bg-[#242824] lg:sticky lg:top-20 lg:block lg:h-[calc(100vh-5rem)]">
+    <div
+      className={cn(
+        isMobile
+          ? 'relative h-full w-full overflow-hidden bg-[#242824]'
+          : 'relative m-3 ml-0 hidden overflow-hidden rounded-[20px] border-l border-gray-line bg-[#242824] lg:sticky lg:top-20 lg:block lg:h-[calc(100vh-5rem)]',
+      )}
+    >
       {/* Base map gradient (parks + water) */}
       <div
         className="absolute inset-0"
