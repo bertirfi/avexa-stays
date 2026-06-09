@@ -86,10 +86,10 @@ function MobileStepperBtn({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'grid size-9 place-items-center rounded-full transition',
+        'grid size-9 place-items-center rounded-[10px] transition',
         variant === 'inc'
           ? 'bg-ink text-cream border-0'
-          : 'bg-gray-light text-ink border-0',
+          : 'bg-gray-light text-ink-60 border-0',
         disabled && 'opacity-30 cursor-not-allowed',
       )}
     >

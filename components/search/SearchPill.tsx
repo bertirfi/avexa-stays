@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { CalendarPopup } from '@/components/search/CalendarPopup';
 import { GuestPopup } from '@/components/search/GuestPopup';
@@ -109,14 +109,14 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
   const open = (panel: SearchPanel) => isThisPillOpen && activePanel === panel;
   const locationLabel = location
     ? neighborhoods.find((n) => n.id === location)?.label ?? location
-    : 'Search Bucharest Stays';
+    : 'Search';
   const datesLabel =
     startDate || endDate
       ? `${formatDate(startDate) ?? 'Add date'} – ${formatDate(endDate) ?? 'Add date'}`
       : 'Add dates';
 
   const fieldBase =
-    'group flex flex-1 cursor-pointer flex-col items-start gap-0.5 rounded-full px-6 py-3.5 text-left transition';
+    'group flex flex-1 min-w-0 cursor-pointer flex-col items-start gap-0.5 rounded-full px-2.5 py-2.5 md:px-6 md:py-3.5 text-left transition';
 
   // ── Mobile location bottom sheet (portaled to body) ──
   // CalendarPopup and GuestPopup render their own mobile portals internally.
@@ -170,10 +170,10 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
 
   return (
     <div ref={containerRef} className={cn('relative w-full max-w-[860px]', className)}>
-      {/* ── DESKTOP pill row: hidden below md ── */}
+      {/* ── Search pill row: visible on every breakpoint ── */}
       <div
         className={cn(
-          'hidden md:flex items-center rounded-full bg-white shadow-[var(--shadow-pill)] backdrop-blur',
+          'flex items-center rounded-full bg-white shadow-[var(--shadow-pill)] backdrop-blur',
           variant === 'compact' && 'border border-gray-line',
         )}
       >
@@ -184,7 +184,7 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
           className={cn(fieldBase, open('location') && 'bg-cream')}
         >
           <span className="font-mono-label text-ink">Where</span>
-          <span className="max-w-[160px] truncate text-sm font-semibold text-ink">{locationLabel}</span>
+          <span className="max-w-full truncate text-[13px] font-semibold text-ink md:max-w-[160px] md:text-sm">{locationLabel}</span>
         </button>
 
         <span className="h-7 w-px bg-gray-line" />
@@ -196,7 +196,7 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
           className={cn(fieldBase, open('dates') && 'bg-cream')}
         >
           <span className="font-mono-label text-ink">When</span>
-          <span className="text-sm font-semibold text-ink">{datesLabel}</span>
+          <span className="max-w-full truncate text-[13px] font-semibold text-ink md:text-sm">{datesLabel}</span>
         </button>
 
         <span className="h-7 w-px bg-gray-line" />
@@ -208,7 +208,7 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
           className={cn(fieldBase, open('guests') && 'bg-cream')}
         >
           <span className="font-mono-label text-ink">Guests</span>
-          <span className="text-sm font-semibold text-ink">{guestSummary(guests)}</span>
+          <span className="max-w-full truncate text-[13px] font-semibold text-ink md:text-sm">{guestSummary(guests)}</span>
         </button>
 
         {/* Submit */}
@@ -216,21 +216,11 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
           type="button"
           onClick={go}
           aria-label="Search stays"
-          className="m-2 grid size-11 place-items-center rounded-full bg-ink text-cream transition hover:scale-105 hover:bg-gold-dark"
+          className="m-1.5 grid size-10 shrink-0 place-items-center rounded-full bg-ink text-cream transition hover:scale-105 hover:bg-gold-dark md:m-2 md:size-11"
         >
           <Icon name="search" size={16} />
         </button>
       </div>
-
-      {/* ── MOBILE single "Search" button: hidden on md+ ── */}
-      <button
-        type="button"
-        onClick={() => openPanel('location', pillId)}
-        className="flex md:hidden w-full items-center gap-3 rounded-full bg-white px-5 py-3.5 font-semibold text-ink shadow-[var(--shadow-pill)]"
-      >
-        <Icon name="search" size={18} />
-        Search
-      </button>
 
       {/*
         DROPDOWN STRATEGY:
@@ -291,7 +281,7 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
       )}
 
       {/* Mobile location bottom sheet portaled to body */}
-      <AnimatePresence>{mobileLocationSheet}</AnimatePresence>
+      {mobileLocationSheet}
     </div>
   );
 }
