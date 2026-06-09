@@ -11,6 +11,8 @@ interface CalendarPopupProps {
   endDate: Date | null;
   onSelect: (start: Date | null, end: Date | null) => void;
   onClose: () => void;
+  /** Mobile full-screen header back/close button. Defaults to onClose. */
+  onBack?: () => void;
 }
 
 const DOW = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
@@ -110,6 +112,7 @@ export function CalendarPopup({
   endDate,
   onSelect,
   onClose,
+  onBack,
 }: CalendarPopupProps) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -186,8 +189,8 @@ export function CalendarPopup({
       <div className="sticky top-0 z-10 flex items-center border-b border-gray-line bg-white px-4 py-4">
         <button
           type="button"
-          onClick={onClose}
-          aria-label="Close calendar"
+          onClick={onBack ?? onClose}
+          aria-label="Back"
           className="mr-3 rounded-full p-2 hover:bg-gray-light"
         >
           <Icon name="chevLeft" size={20} />

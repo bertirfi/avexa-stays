@@ -11,6 +11,11 @@ interface GuestPopupProps {
   guests: GuestCounts;
   onChange: (g: GuestCounts) => void;
   onClose: () => void;
+  /**
+   * Whether to render the mobile bottom-sheet (property booking card uses it).
+   * The search pill sets this false and renders its own full-screen "Guests" step.
+   */
+  mobileSheet?: boolean;
 }
 
 const MAX_OCCUPANTS = 6; // adults + children
@@ -98,7 +103,7 @@ function MobileStepperBtn({
   );
 }
 
-export function GuestPopup({ guests, onChange, onClose }: GuestPopupProps) {
+export function GuestPopup({ guests, onChange, onClose, mobileSheet = true }: GuestPopupProps) {
   // Portal mount guard (SSR-safe)
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -117,7 +122,7 @@ export function GuestPopup({ guests, onChange, onClose }: GuestPopupProps) {
   }
 
   // ── MOBILE bottom sheet (portaled) ──
-  const mobileSheet = mounted ? createPortal(
+  const mobileSheetEl = mounted && mobileSheet ? createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -253,7 +258,7 @@ export function GuestPopup({ guests, onChange, onClose }: GuestPopupProps) {
       </div>
 
       {/* Mobile sheet rendered via portal */}
-      {mobileSheet}
+      {mobileSheetEl}
     </>
   );
 }

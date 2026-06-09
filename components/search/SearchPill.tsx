@@ -31,6 +31,14 @@ function guestSummary(g: GuestCounts) {
   return parts.join(' · ');
 }
 
+const MAX_OCCUPANTS = 6; // adults + children
+const MAX_INFANTS = 4;
+const GUEST_ROWS = [
+  { key: 'adults' as const, label: 'Adults', sub: 'Age 13 and above', min: 1 },
+  { key: 'children' as const, label: 'Children', sub: 'Age 2–12', min: 0 },
+  { key: 'infants' as const, label: 'Infants', sub: 'Under 2 years old', min: 0 },
+];
+
 export function SearchPill({ pillId, variant = 'hero', className }: SearchPillProps) {
   const router = useRouter();
   const {
@@ -53,6 +61,21 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
   // Portal mount guard (SSR-safe)
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  // "Where" full-screen step search input
+  const [query, setQuery] = useState('');
+
+  function setGuest(key: keyof GuestCounts, delta: number) {
+    const next = { ...guests, [key]: guests[key] + delta };
+    if (key === 'infants') {
+      if (next.infants < 0 || next.infants > MAX_INFANTS) return;
+    } else {
+      const row = GUEST_ROWS.find((r) => r.key === key)!;
+      if (next[key] < row.min) return;
+      if (next.adults + next.children > MAX_OCCUPANTS) return;
+    }
+    setGuests(next);
+  }
 
   // Close on outside click / Escape when this pill owns the open dropdown
   useEffect(() => {
@@ -118,52 +141,177 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
   const fieldBase =
     'group flex flex-1 min-w-0 cursor-pointer flex-col items-start gap-0.5 rounded-full px-2.5 py-2.5 md:px-6 md:py-3.5 text-left transition';
 
-  // ── Mobile location bottom sheet (portaled to body) ──
-  // CalendarPopup and GuestPopup render their own mobile portals internally.
-  const mobileLocationSheet =
+  // ── Mobile FULL-SCREEN "Where" step (portaled to body) ──
+  const filteredNeighborhoods = neighborhoods.filter((n) =>
+    n.label.toLowerCase().includes(query.trim().toLowerCase()),
+  );
+  const mobileWhereStep =
     mounted && open('location')
       ? createPortal(
-          <>
-            {/* Backdrop */}
-            <div
-              className="md:hidden fixed inset-0 z-[290] bg-ink/40"
-              onClick={closePanel}
-            />
-            {/* Bottom sheet */}
-            <motion.div
-              data-avexa-search-sheet
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-              className="md:hidden fixed inset-x-0 bottom-0 z-[300] rounded-t-[20px] bg-white p-5 text-ink"
-              style={{ paddingBottom: 'calc(20px + env(safe-area-inset-bottom))' }}
-            >
-              {/* Grabber */}
-              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-line" />
-              <h4 className="font-mono-label mb-2 text-ink-60">Bucharest City Center</h4>
+          <motion.div
+            data-avexa-search-sheet
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden fixed inset-0 z-[300] flex flex-col bg-white text-ink"
+          >
+            {/* Header */}
+            <div className="grid grid-cols-[40px_1fr_40px] items-center border-b border-gray-line px-4 py-4">
+              <span />
+              <h3 className="font-display text-center text-[17px] font-bold">Where</h3>
+              <button
+                type="button"
+                onClick={closePanel}
+                aria-label="Close"
+                className="grid size-9 place-items-center justify-self-end rounded-full bg-gray-light"
+              >
+                <Icon name="x" size={16} />
+              </button>
+            </div>
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-5 py-5">
+              <div className="mb-6 flex items-center gap-2.5 rounded-full border border-gray-line px-4 py-3">
+                <Icon name="search" size={16} className="shrink-0 text-ink-60" />
+                <input
+                  autoFocus
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search by city, property..."
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-ink-60"
+                />
+              </div>
+              <h4 className="font-mono-label mb-1 text-ink-60">AVEXA Locations</h4>
               <ul>
-                {neighborhoods.map((n) => (
+                {filteredNeighborhoods.map((n) => (
                   <li key={n.id}>
                     <button
                       type="button"
                       onClick={() => {
                         setLocation(n.id);
+                        setQuery('');
                         openPanel('dates', pillId);
                       }}
                       className={cn(
-                        'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition hover:bg-cream',
-                        location === n.id && 'bg-gold-pale text-gold-dark',
+                        'flex w-full items-center gap-3 border-b border-gray-line py-4 text-left',
+                        location === n.id && 'text-gold-dark',
                       )}
                     >
-                      <span className="size-2 rounded-full" style={{ background: n.color }} />
-                      {n.label}
+                      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-cream">
+                        <Icon name="building" size={16} className="text-ink-60" />
+                      </span>
+                      <span className="font-semibold">{n.label}</span>
+                      <span className="ml-auto text-xs text-ink-60">{n.area}</span>
                     </button>
                   </li>
                 ))}
+                {filteredNeighborhoods.length === 0 && (
+                  <li className="py-6 text-center text-sm text-ink-60">No matches.</li>
+                )}
               </ul>
-            </motion.div>
-          </>,
+            </div>
+          </motion.div>,
+          document.body,
+        )
+      : null;
+
+  // ── Mobile FULL-SCREEN "Guests" step (portaled to body) ──
+  const mobileGuestsStep =
+    mounted && open('guests')
+      ? createPortal(
+          <motion.div
+            data-avexa-search-sheet
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden fixed inset-0 z-[300] flex flex-col bg-white text-ink"
+          >
+            {/* Header */}
+            <div className="grid grid-cols-[40px_1fr_40px] items-center border-b border-gray-line px-3 py-4">
+              <button
+                type="button"
+                onClick={() => openPanel('dates', pillId)}
+                aria-label="Back"
+                className="grid size-9 place-items-center rounded-full hover:bg-gray-light"
+              >
+                <Icon name="chevLeft" size={18} />
+              </button>
+              <h3 className="font-display text-center text-[17px] font-bold">Guests</h3>
+              <button
+                type="button"
+                onClick={closePanel}
+                aria-label="Close"
+                className="grid size-9 place-items-center justify-self-end rounded-full bg-gray-light"
+              >
+                <Icon name="x" size={16} />
+              </button>
+            </div>
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-5 py-5">
+              <p className="mb-2 flex items-center justify-center gap-2 text-sm text-ink-60">
+                <Icon name="info" size={14} /> Max 6 guests capacity
+              </p>
+              <ul className="divide-y divide-gray-line">
+                {GUEST_ROWS.map((r) => {
+                  const val = guests[r.key];
+                  const canDec = val > r.min;
+                  const canInc =
+                    r.key === 'infants'
+                      ? val < MAX_INFANTS
+                      : guests.adults + guests.children < MAX_OCCUPANTS;
+                  return (
+                    <li key={r.key} className="flex items-center justify-between py-5">
+                      <div>
+                        <div className="font-display text-base font-bold">{r.label}</div>
+                        <div className="text-[13px] text-ink-60">{r.sub}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <button
+                          type="button"
+                          aria-label={`Decrease ${r.label}`}
+                          disabled={!canDec}
+                          onClick={() => setGuest(r.key, -1)}
+                          className={cn(
+                            'grid size-11 place-items-center rounded-[10px] bg-gray-light text-ink-60 transition',
+                            !canDec && 'opacity-30',
+                          )}
+                        >
+                          <Icon name="minus" size={16} />
+                        </button>
+                        <span className="font-display w-6 text-center text-lg font-bold tabular-nums">
+                          {val}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label={`Increase ${r.label}`}
+                          disabled={!canInc}
+                          onClick={() => setGuest(r.key, 1)}
+                          className={cn(
+                            'grid size-11 place-items-center rounded-[10px] bg-ink text-cream transition',
+                            !canInc && 'opacity-30',
+                          )}
+                        >
+                          <Icon name="plus" size={16} />
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            {/* Footer */}
+            <div
+              className="border-t border-gray-line px-5 pt-3"
+              style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
+            >
+              <button
+                type="button"
+                onClick={go}
+                className="font-display w-full rounded-[12px] bg-ink py-4 text-base font-bold text-cream transition hover:bg-gold-dark"
+              >
+                Confirm
+              </button>
+            </div>
+          </motion.div>,
           document.body,
         )
       : null;
@@ -269,19 +417,21 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
               if (s && e) openPanel('guests', pillId);
             }}
             onClose={() => openPanel('guests', pillId)}
+            onBack={() => openPanel('location', pillId)}
           />
         </div>
       )}
 
-      {/* GuestPopup: same pattern — absolute wrapper for desktop, portal for mobile. */}
+      {/* GuestPopup desktop popup only — the mobile guests step is full-screen (below). */}
       {open('guests') && (
         <div className="absolute right-0 top-[calc(100%+8px)] z-[200]">
-          <GuestPopup guests={guests} onChange={setGuests} onClose={closePanel} />
+          <GuestPopup guests={guests} onChange={setGuests} onClose={closePanel} mobileSheet={false} />
         </div>
       )}
 
-      {/* Mobile location bottom sheet portaled to body */}
-      {mobileLocationSheet}
+      {/* Mobile full-screen search steps portaled to body */}
+      {mobileWhereStep}
+      {mobileGuestsStep}
     </div>
   );
 }
