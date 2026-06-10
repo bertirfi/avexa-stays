@@ -84,7 +84,7 @@ export function Hero() {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-[88px] left-1/2 z-[100] w-[min(820px,calc(100%-48px))] -translate-x-1/2"
+        className="absolute bottom-[88px] left-1/2 z-[100] hidden w-[min(820px,calc(100%-48px))] -translate-x-1/2 sm:block"
       >
         <SearchPill pillId="hero" variant="hero" />
       </motion.div>

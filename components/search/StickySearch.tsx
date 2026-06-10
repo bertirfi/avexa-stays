@@ -29,7 +29,7 @@ export function StickySearch() {
   return (
     <div
       className={cn(
-        'fixed left-1/2 z-[55] block w-[min(860px,calc(100%-32px))] -translate-x-1/2 transition-[top,opacity] duration-[400ms] ease-[var(--ease-snap)]',
+        'fixed left-1/2 z-[55] hidden w-[min(860px,calc(100%-32px))] -translate-x-1/2 transition-[top,opacity] duration-[400ms] ease-[var(--ease-snap)] sm:block',
         visible ? 'opacity-100' : 'pointer-events-none opacity-0',
       )}
       style={{ top: navHidden ? 16 : 76 }}

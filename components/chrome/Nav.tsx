@@ -19,6 +19,9 @@ export function Nav() {
   const pathname = usePathname();
   const router = useRouter();
   const isHome = pathname === '/';
+  // On the homepage + locations page, the mobile MobileSearchHeader replaces
+  // this nav (≤sm). Desktop and all other pages keep the normal nav.
+  const isSearchPage = pathname === '/' || pathname === '/locations';
 
   const { pinned, navHidden } = useChromeScroll();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -75,6 +78,7 @@ export function Nav() {
           'fixed inset-x-0 top-0 z-50 transition-[transform,background,border-color,padding] duration-300 ease-[var(--ease-snap)]',
           transparent ? 'bg-transparent' : 'border-b border-gray-line bg-cream/95 backdrop-blur',
           navHidden && !mobileOpen ? '-translate-y-full' : 'translate-y-0',
+          isSearchPage && 'max-sm:hidden',
         )}
       >
         <div

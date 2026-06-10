@@ -40,8 +40,8 @@ export function LocationsView() {
 
   return (
     <div className="bg-cream">
-      {/* Sticky search bar */}
-      <div className="sticky top-20 z-[54] px-6 pb-1.5 pt-3.5 md:px-7">
+      {/* Sticky search bar (desktop — mobile uses the MobileSearchHeader) */}
+      <div className="sticky top-20 z-[54] hidden px-6 pb-1.5 pt-3.5 sm:block md:px-7">
         <SearchProvider>
           <SearchPill pillId="locations" variant="compact" className="max-w-[820px]" />
         </SearchProvider>
@@ -163,7 +163,7 @@ export function LocationsView() {
       {/* ── MOBILE full-screen map overlay (≤ sm) ── */}
       <div
         className={cn(
-          'fixed inset-0 z-[60] sm:hidden',
+          'fixed inset-0 z-[140] sm:hidden',
           mobileView === 'map' ? 'block' : 'hidden',
         )}
       >
@@ -178,7 +178,7 @@ export function LocationsView() {
 
         {/* Pin popup card */}
         {popupProperty && (
-          <div className="absolute inset-x-3 bottom-[calc(84px+env(safe-area-inset-bottom))] z-[65] rounded-[16px] border border-gray-line bg-white p-3 shadow-[0_16px_40px_-8px_rgba(0,0,0,0.45)]">
+          <div className="absolute inset-x-3 bottom-[calc(84px+env(safe-area-inset-bottom))] z-[145] rounded-[16px] border border-gray-line bg-white p-3 shadow-[0_16px_40px_-8px_rgba(0,0,0,0.45)]">
             <button
               type="button"
               aria-label="Close"
@@ -224,7 +224,7 @@ export function LocationsView() {
       {/* ── MOBILE List / Map toggle pill (≤ sm) ── */}
       <div
         className={cn(
-          'fixed left-1/2 z-[70] flex -translate-x-1/2 gap-0.5 rounded-full bg-ink p-1 shadow-[0_8px_24px_rgba(25,25,25,0.35)] transition-[bottom] duration-300 ease-[var(--ease-snap)] sm:hidden',
+          'fixed left-1/2 z-[150] flex -translate-x-1/2 gap-0.5 rounded-full bg-ink p-1 shadow-[0_8px_24px_rgba(25,25,25,0.35)] transition-[bottom] duration-300 ease-[var(--ease-snap)] sm:hidden',
           mobileView === 'map'
             ? 'bottom-[calc(16px+env(safe-area-inset-bottom))]'
             : scrollingDown

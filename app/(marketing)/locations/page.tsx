@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function LocationsPage() {
   return (
-    <div className="pt-20">
+    <div className="pt-0 sm:pt-20">
       <LocationsView />
     </div>
   );
