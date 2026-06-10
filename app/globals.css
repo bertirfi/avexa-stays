@@ -119,3 +119,26 @@ body {
 }
 
 /* Snap utilities reuse Tailwind v4 built-ins */
+
+/* ── Mobile: prevent iOS Safari auto-zoom on input focus ──────── */
+/* Safari zooms whenever a focused control has font-size < 16px and
+   never zooms back out. Force every text control to 16px on mobile. */
+@media (max-width: 640px) {
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Avoid the 300ms double-tap-zoom delay on interactive elements. */
+button,
+a,
+label,
+summary,
+input,
+select,
+textarea,
+[role='button'] {
+  touch-action: manipulation;
+}

@@ -98,7 +98,7 @@ export function LocationsCarousel() {
           aria-label="Previous"
           onClick={() => scrollByCard(-1)}
           className={cn(
-            'absolute left-3 top-1/2 z-10 grid size-12 -translate-y-1/2 place-items-center rounded-full border border-gray-line bg-white text-ink shadow-[0_4px_16px_rgba(25,25,25,.1)] transition hover:scale-105 hover:bg-ink hover:text-white md:left-6',
+            'absolute left-3 top-1/2 z-10 hidden size-12 -translate-y-1/2 place-items-center rounded-full border border-gray-line bg-white text-ink shadow-[0_4px_16px_rgba(25,25,25,.1)] transition hover:scale-105 hover:bg-ink hover:text-white sm:grid md:left-6',
             atStart && 'pointer-events-none opacity-0',
           )}
         >
@@ -111,7 +111,7 @@ export function LocationsCarousel() {
           ref={carouselRef}
           onScroll={updateArrows}
           onMouseDown={onMouseDown}
-          className="no-scrollbar flex cursor-grab snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-6 active:cursor-grabbing md:px-10"
+          className="no-scrollbar flex cursor-grab snap-x snap-mandatory gap-3.5 overflow-x-auto px-6 pb-2 active:cursor-grabbing sm:gap-5 sm:pb-6 md:px-10"
         >
           {neighborhoods.map((n) => (
             <Link
@@ -122,26 +122,41 @@ export function LocationsCarousel() {
                 if (drag.current.moved > 5) e.preventDefault();
               }}
               draggable={false}
-              className="group relative h-[440px] flex-[0_0_min(420px,78vw)] snap-start overflow-hidden rounded-[22px] transition-all duration-[400ms] ease-[var(--ease-snap)] hover:-translate-y-2 hover:shadow-[0_28px_56px_-20px_rgba(25,25,25,.35)]"
+              className={cn(
+                'group relative snap-start',
+                // Mobile: compact card, text below the photo
+                'flex-[0_0_200px]',
+                // Desktop (≥sm): full-bleed big card, text overlaid
+                'sm:h-[440px] sm:flex-[0_0_min(420px,78vw)] sm:overflow-hidden sm:rounded-[22px] sm:transition-all sm:duration-[400ms] sm:ease-[var(--ease-snap)] sm:hover:-translate-y-2 sm:hover:shadow-[0_28px_56px_-20px_rgba(25,25,25,.35)]',
+              )}
             >
-              <div className="absolute inset-0" style={{ background: cardBackground(n.color) }} />
-              <div className="absolute inset-0 bg-gradient-to-t from-ink/40 to-transparent" />
+              {/* Photo — compact rounded block on mobile, full-bleed on desktop */}
+              <div className="relative h-[200px] overflow-hidden rounded-[16px] sm:absolute sm:inset-0 sm:h-auto sm:rounded-none">
+                <div className="absolute inset-0" style={{ background: cardBackground(n.color) }} />
+                <div className="absolute inset-0 hidden bg-gradient-to-t from-ink/40 to-transparent sm:block" />
 
-              {/* Neighborhood pill */}
-              <span className="font-mono-label absolute left-6 top-6 z-[2] flex items-center gap-2 rounded-full bg-white/95 px-3.5 py-2 text-[11px] text-ink">
-                <span className="pulse-dot size-[7px] rounded-full" style={{ background: n.color }} />
-                {n.area}
-              </span>
+                {/* Neighborhood pill (desktop only) */}
+                <span className="font-mono-label absolute left-6 top-6 z-[2] hidden items-center gap-2 rounded-full bg-white/95 px-3.5 py-2 text-[11px] text-ink sm:flex">
+                  <span className="pulse-dot size-[7px] rounded-full" style={{ background: n.color }} />
+                  {n.area}
+                </span>
 
-              {/* Bottom text */}
-              <div className="absolute bottom-7 left-6 right-6 z-[2] text-white">
-                <div className="font-display text-[32px] leading-[1.1] tracking-[-0.01em]">{n.label}</div>
-                <div className="mt-1.5 max-w-[280px] text-sm text-white/70">{n.description}</div>
+                {/* Overlaid text (desktop only) */}
+                <div className="absolute bottom-7 left-6 right-6 z-[2] hidden text-white sm:block">
+                  <div className="font-display text-[32px] leading-[1.1] tracking-[-0.01em]">{n.label}</div>
+                  <div className="mt-1.5 max-w-[280px] text-sm text-white/70">{n.description}</div>
+                </div>
+
+                {/* Count (desktop only) */}
+                <div className="font-display absolute bottom-7 right-7 z-[2] hidden text-[80px] leading-none tracking-[-0.03em] text-white/15 sm:block">
+                  {String(n.propertyCount).padStart(2, '0')}
+                </div>
               </div>
 
-              {/* Count */}
-              <div className="font-display absolute bottom-7 right-7 z-[2] text-[80px] leading-none tracking-[-0.03em] text-white/15">
-                {String(n.propertyCount).padStart(2, '0')}
+              {/* Text below the photo (mobile only) */}
+              <div className="pt-2.5 sm:hidden">
+                <div className="font-display text-[16px] leading-[1.2] text-ink">{n.label}</div>
+                <div className="mt-[3px] text-[12px] leading-snug text-ink-60">{n.description}</div>
               </div>
             </Link>
           ))}
@@ -152,7 +167,7 @@ export function LocationsCarousel() {
           aria-label="Next"
           onClick={() => scrollByCard(1)}
           className={cn(
-            'absolute right-3 top-1/2 z-10 grid size-12 -translate-y-1/2 place-items-center rounded-full border border-gray-line bg-white text-ink shadow-[0_4px_16px_rgba(25,25,25,.1)] transition hover:scale-105 hover:bg-ink hover:text-white md:right-6',
+            'absolute right-3 top-1/2 z-10 hidden size-12 -translate-y-1/2 place-items-center rounded-full border border-gray-line bg-white text-ink shadow-[0_4px_16px_rgba(25,25,25,.1)] transition hover:scale-105 hover:bg-ink hover:text-white sm:grid md:right-6',
             atEnd && 'pointer-events-none opacity-0',
           )}
         >
@@ -162,8 +177,8 @@ export function LocationsCarousel() {
         </button>
       </div>
 
-      {/* Drag hint */}
-      <div className="font-mono-label mt-6 flex items-center justify-center gap-3 text-[10px] text-ink-60">
+      {/* Drag hint (desktop only — swipe is obvious on mobile) */}
+      <div className="font-mono-label mt-6 hidden items-center justify-center gap-3 text-[10px] text-ink-60 sm:flex">
         <span className="h-px w-7 bg-gray-line" />
         Drag to explore
         <span className="h-px w-7 bg-gray-line" />

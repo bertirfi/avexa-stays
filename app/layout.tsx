@@ -33,6 +33,10 @@ export const viewport: Viewport = {
   themeColor: '#191919',
   width: 'device-width',
   initialScale: 1,
+  // App-like, stable mobile: no accidental zoom on input focus / double-tap.
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
