@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
 
@@ -75,7 +76,8 @@ export function Editorial() {
 
   return (
     <section id="editorial" className="bg-gold text-ink">
-      <div ref={tunnelRef} className="relative" style={{ height: '400vh' }}>
+      {/* Desktop: pinned scroll-story (hidden on mobile) */}
+      <div ref={tunnelRef} className="relative hidden sm:block" style={{ height: '400vh' }}>
         <div className="sticky top-0 flex h-screen items-center overflow-hidden">
           <div
             className="mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-10 px-6 md:grid-cols-[1fr_1.4fr_1fr] md:px-10"
@@ -157,6 +159,49 @@ export function Editorial() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Mobile: plain editorial stack — no scroll-jack, just scroll through. */}
+      <div className="px-6 pb-14 pt-12 sm:hidden">
+        <p className="font-mono-label mb-5 text-ink-60">— STAYS THAT FIT THE TRIP</p>
+        {STEPS.map((s, i) => {
+          const alt = i % 2 === 1;
+          return (
+            <motion.article
+              key={s.title}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="mb-9 last:mb-0"
+            >
+              <div
+                className={cn(
+                  'relative overflow-hidden rounded-[20px] shadow-[0_20px_40px_-18px_rgba(25,25,25,0.3)]',
+                  alt ? 'ml-7 h-[200px]' : 'mr-7 h-[260px]',
+                )}
+              >
+                <Image src={LEFT_IMAGES[i]} alt="" fill sizes="100vw" className="object-cover" />
+              </div>
+              <h3
+                className={cn(
+                  'font-display mt-3.5 text-[26px] leading-[1.05] tracking-[-0.02em] text-ink',
+                  alt ? 'ml-7' : 'mr-7',
+                )}
+              >
+                {s.title}
+              </h3>
+              <p
+                className={cn(
+                  'mt-2 text-[14px] leading-[1.55] text-ink-80',
+                  alt ? 'ml-7' : 'mr-7',
+                )}
+              >
+                {s.sub}
+              </p>
+            </motion.article>
+          );
+        })}
       </div>
     </section>
   );
