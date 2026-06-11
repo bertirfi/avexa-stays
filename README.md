@@ -1,22 +1,97 @@
-# CODING AGENTS: READ THIS FIRST
+# AVEXA STAYS
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+> Premium short-term apartments in Bucharest city center.
+> No front desk. No friction. No compromise.
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+**Live:** [avexastays.com](https://avexastays.com)
 
-## What you should do — IMPORTANT
+---
 
-**Find the primary design file under `avexa-full-design/project/` and read it top to bottom.** Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+## Tech Stack
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+- **Framework:** Next.js 15 (App Router) + TypeScript
+- **Styling:** Tailwind CSS v4 + Framer Motion
+- **Database:** Supabase (PostgreSQL)
+- **Auth:** Supabase Auth + Google OAuth
+- **Payments:** Stripe
+- **PMS:** Hostaway
+- **Maps:** Google Maps + Places API
+- **Email:** Brevo
+- **Hosting:** Vercel
+- **Analytics:** PostHog + Google Analytics 4
 
-## About the design files
+---
 
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
+## Getting Started
 
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
+```bash
+# Install dependencies
+pnpm install
 
-## Bundle contents
+# Copy env template and fill in values
+cp .env.example .env.local
 
-- `avexa-full-design/README.md` — this file
-- `avexa-full-design/project/` — the `avexa full design` project files (HTML prototypes, assets, components)
+# Run development server
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+---
+
+## Documentation
+
+| File | Purpose |
+|------|---------|
+| [CLAUDE.md](./CLAUDE.md) | AI assistant context (tech stack, rules, conventions) |
+| [PLAN.md](./PLAN.md) | Implementation roadmap and phases |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture, schemas, data flow |
+| [BRAND.md](./BRAND.md) | Brand system, copy, colors, voice |
+| [INTEGRATIONS.md](./INTEGRATIONS.md) | API setup for all third-party services |
+| [LEARNINGS.md](./LEARNINGS.md) | Self-improving session knowledge |
+
+---
+
+## Development Workflow
+
+For non-trivial features, follow:
+
+1. **Research** — understand existing code
+2. **Plan** — design before coding
+3. **Implement** — execute one phase at a time
+4. **Validate** — test, lint, verify
+
+Use slash commands in Claude Code:
+```
+/research [topic]
+/plan [feature]
+/implement [plan]
+/validate
+/seo-audit [page]
+```
+
+---
+
+## Commands
+
+```bash
+pnpm dev          # Start dev server
+pnpm build        # Production build
+pnpm lint --fix   # Fix linting issues
+pnpm typecheck    # TypeScript check
+pnpm test         # Run tests
+```
+
+---
+
+## Project Status
+
+**Current phase:** Phase 1 — Foundation + SEO Core
+
+See [PLAN.md](./PLAN.md) for detailed roadmap.
+
+---
+
+## License
+
+Proprietary. © 2026 AVEXA Stays.
