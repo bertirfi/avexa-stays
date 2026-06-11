@@ -66,3 +66,5 @@ db/types.ts
 
 # Stripe CLI
 stripe.log
+
+.claude/worktrees/
