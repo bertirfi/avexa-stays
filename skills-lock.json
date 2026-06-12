@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "efficient-fable": {
+      "source": "BuilderIO/skills",
+      "sourceType": "github",
+      "skillPath": "skills/efficient-fable/SKILL.md",
+      "computedHash": "f7df885c2d4332a09a6eb07d2636a29286b955fdf414c89508b436ded8453650"
+    }
+  }
+}
