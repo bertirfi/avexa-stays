@@ -41,120 +41,185 @@ AVEXA stands for: **No front desk. No friction. No compromise.**
 
 ## Colors (CSS Variables)
 
+> Source of truth: `app/globals.css` (Tailwind v4 `@theme` block). Tokens are
+> defined as `--color-*` and consumed via Tailwind utilities (`bg-ink`,
+> `text-gold`, `border-gray-line`, ...).
+
 ```css
---ink: #191919          /* Primary text + dark backgrounds */
---ink-80: rgba(25,25,25,0.82)
---ink-60: rgba(25,25,25,0.6)
+--color-ink: #191919          /* Primary text + dark backgrounds */
+--color-ink-80: rgba(25,25,25,0.82)   /* Body text on light */
+--color-ink-60: rgba(25,25,25,0.6)    /* Muted/secondary text */
 
---gold: #DDB97A         /* Primary accent — Soft Gold C */
---gold-dark: #B08840    /* Hover state, secondary text on gold */
---gold-pale: #F7EDDB    /* Subtle gold backgrounds */
+--color-gold: #DDB97A         /* Primary accent — Soft Gold C */
+--color-gold-dark: #B08840    /* Hover/active states, icon accents */
+--color-gold-pale: #F7EDDB    /* Subtle gold backgrounds, selections */
 
---cream: #FAF9F5        /* Light background alternative */
---white: #FFFFFF
---gray-line: #E6E4DD    /* Borders, dividers */
+--color-cream: #FAF9F5        /* Default page background */
+--color-gray-light: #F1F1F1   /* Skeletons, input backgrounds */
+--color-gray-line: #E6E4DD    /* Borders, dividers */
 
-/* Neighborhood accent colors (for cards/maps) */
---c-floreasca: #FF4136
---c-pipera: #D4531A
---c-centre: #2E7D32
---c-dorobanti: #1565C0
---c-herastrau: #6A1B9A
---c-baneasa: #00695C
+/* Neighborhood accents (cards/map pins) */
+--color-nbh-floreasca: #FF4136
+--color-nbh-pipera: #D4531A
+--color-nbh-centre: #2E7D32
+--color-nbh-dorobanti: #1565C0
+--color-nbh-herastrau: #6A1B9A
+--color-nbh-baneasa: #00695C
 ```
+
+There is **no `--white` token** — plain white uses Tailwind's `white`/`bg-white`.
+
+**Known drift (normalize during Phase 5 polish):** components hardcode
+near-token values that should be replaced with tokens — `#0f0f0f`/`#1a1a1a`
+(vs ink) in Hero/LoginForm/MemberHero gradients; three different gold RGBA
+approximations (`221,185,122` / `201,160,94` / `176,136,64`) in gradient
+strings; one-off darks `#14110d` (LocationsCarousel), `#242824`/`#2e332d`
+(StylizedMap); status colors `#2E7D32` (TripsList), `#FF4136` (ProfileApp
+danger), `#25D366` (WhatsApp).
 
 ---
 
 ## Typography
 
-**Display:** Plus Jakarta Sans 800 (Extra Bold)
-- Letter-spacing: -0.02em
-- Line-height: 0.96
+> Source of truth: `lib/fonts.ts` (next/font/google) + utilities in
+> `app/globals.css`.
+
+**Display:** Plus Jakarta Sans — weights loaded: 500 / 700 / 800
+- Utility `.font-display`: weight 800, letter-spacing -0.02em, line-height 0.96
 - Use for H1, H2, large numbers, stats
 
-**Body:** Manrope 300 (Light)
-- Letter-spacing: normal
-- Line-height: 1.72
+**Body:** Manrope — weights loaded: 300 / 400 / 500 / 600 / 700
+- `body` default: **weight 400**, line-height 1.72 (300 is loaded but not the default)
 - Use for paragraphs, descriptions
 
-**Mono/Labels:** DM Mono 500 (Medium)
-- Font-size: 11px (labels) or 13px (small text)
-- Letter-spacing: 0.2em (labels), 0.1em (text)
-- Text-transform: uppercase (for labels)
-- Use for: section labels, dates, numbers, metadata
+**Mono/Labels:** DM Mono — weights loaded: 400 / 500
+- Utility `.font-mono-label`: weight 500, **font-size 10px**, letter-spacing 0.2em, uppercase
+- Use for: section labels (eyebrows), dates, metadata
+- CSS variable is `--font-dm-mono` (mapped to `--font-mono` family token in `@theme`)
 
-**Loading:**
+**Loading (actual code, `lib/fonts.ts`):**
 ```typescript
-import { Plus_Jakarta_Sans, Manrope, DM_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans, Manrope, DM_Mono } from 'next/font/google';
 
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  weight: ['500', '700', '800'],
-  variable: '--font-jakarta',
-  display: 'swap',
-})
-
-const manrope = Manrope({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-manrope',
-  display: 'swap',
-})
-
-const mono = DM_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-mono',
-  display: 'swap',
-})
+export const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'], weight: ['500', '700', '800'],
+  variable: '--font-jakarta', display: 'swap',
+});
+export const manrope = Manrope({
+  subsets: ['latin'], weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-manrope', display: 'swap',
+});
+export const dmMono = DM_Mono({
+  subsets: ['latin'], weight: ['400', '500'],
+  variable: '--font-dm-mono', display: 'swap',
+});
 ```
+
+**Heading scale in practice:** large display headings use fluid
+`clamp()` values (e.g. hero `clamp(36px,6vw,52px)`, member hero
+`clamp(56px,10vw,140px)`, section H2s `clamp(42px,5.5vw,72px)`); content
+headings use Tailwind steps (`text-2xl`–`text-6xl`).
+
+**Known drift (normalize during Phase 5 polish):** `.font-mono-label`
+tracking is overridden per-component with 8 distinct values (0.04em–0.25em) —
+pick canonical values per context. `MemberFAQ` uses `font-mono` (system mono)
+instead of `font-mono-label` for the +/− glyph.
+
+---
+
+## Spacing, Radii, Shadows
+
+> Source of truth: `app/globals.css` `@theme` + component usage.
+
+**Radius tokens:**
+```css
+--radius-pill: 9999px       /* buttons, search pill */
+--radius-card: 22px         /* cards, gallery, sidebar */
+--radius-card-sm: 14px      /* icon boxes, small surfaces */
+```
+
+**Shadow tokens:**
+```css
+--shadow-pill: 0 16px 42px -18px rgba(25,25,25,0.28), 0 2px 8px rgba(25,25,25,0.06);
+--shadow-card-hover: 0 28px 56px -20px rgba(25,25,25,0.35);
+```
+
+**Layout patterns in use:**
+- Horizontal padding: `px-6 md:px-10` (canonical)
+- Section vertical rhythm: homepage `py-24 md:py-32`; member pages fluid `py-[clamp(90px,11vw,150px)]` (two coexisting systems)
+- Container max-widths: 1400px (homepage sections/nav/footer), 1200px (stay page, checkout), 800–900px (narrow editorial/member blocks)
+
+**Known drift (normalize during Phase 5 polish):** bespoke radii
+(`rounded-[10px]`…`rounded-[26px]`) alongside `rounded-card`; six ad-hoc
+container widths (1400/1360/1300/1200/1100/900); two section-padding systems.
+
+---
+
+## Icons
+
+> Source of truth: `components/Icon.tsx` — lucide-react behind a typed wrapper.
+
+- All icons go through `<Icon name="..." />`; **never import lucide-react directly** in components.
+- 36 mapped names (search, pin, calendar, user, x, menu, heart, chevrons, check, info, key, clock, shield, star, bed, bath, sofa, users, building, sparkles, wifi, tv, car, etc.).
+- Defaults: `size={20}`, `strokeWidth={1.6}`. Sizes in use: 16 / 18 / 20 / 22 / 24 / 32.
+- Per-context stroke overrides exist: TabBar 1.8, StayAmenities 1.6, MobileSearchHeader 2.2, LoginForm check 3.
+
+**KNOWN ISSUE (fix in Phase 5 polish):** icons rendered inside tiles/boxes
+(e.g. `rounded-[14px]` icon boxes, checkout gate circles) read optically
+small — lucide glyphs carry built-in padding inside their 24px viewBox, and
+at strokeWidth 1.6 with a 16–20px size in a 40–48px container the glyph
+occupies too little of the tile. Fix direction: larger size and/or heavier
+stroke inside containers, or a wrapper that scales the glyph to ~60–70% of
+the tile. Audit all icon-in-tile call sites when addressed.
 
 ---
 
 ## Logo
 
+> Source of truth: `components/chrome/Logo.tsx` — the logo is a React
+> component, not a static asset.
+
 **Primary Mark:**
-- Square icon: dark gray (#474747) background, rounded corners (radius 22px on 88px)
-- Inside icon: white X stroke + gray X stroke + small gold pulsing dot center
-- Wordmark: "AVEXA" in Plus Jakarta Sans 800, gold color (--gold)
+- Square tile: dark gray `#474747` background, `rounded-[26%]`
+- Inside: white X stroke + gray (`#8a8a8a`) X stroke + small gold pulsing dot (`.pulse-dot`)
+- Wordmark: "AVEXA" in Plus Jakarta Sans 800, gold (`--color-gold`)
 
-**Spacing:**
-- Icon to wordmark gap: 18px on large, 10px on compact
-- Minimum size: 32px icon
+**Note:** `#474747` is intentionally outside the color token set (logo-only gray).
 
-**Variants available:**
-- Dark background
-- Light background
-- Gold background
-- Gray background
-- Transparent (all 4 styles)
-
-**Files in /public/logos/:**
-- `logo-dark.svg`
-- `logo-light.svg`
-- `logo-gold.svg`
-- `logo-icon-only.svg`
-- `logo-wordmark.svg`
+**Static exports:** `/public/logos/` does **not exist yet** in the repo — the
+30+ PNG export kit lives outside the codebase. Add exported SVG/PNG variants
+(dark/light/gold/icon-only/wordmark) before launch for OG images, favicons,
+and email templates.
 
 ---
 
 ## Animations
 
-**Easing:** `cubic-bezier(.16, 1, .3, 1)` (use everywhere)
+> Source of truth: `app/globals.css` keyframes + `components/Reveal.tsx`.
 
-**Common timings:**
-- Hover: 0.2s
-- Section reveals: 0.9s
-- Page transitions: 0.4s
-- Pulse animation (gold dot): 2.4s
+**Easing:** `--ease-snap: cubic-bezier(0.16, 1, 0.3, 1)` — the canonical ease,
+used by Reveal, hero mounts, accordions, and most transitions.
 
-**Pulse keyframe:**
-```css
-@keyframes pulse {
-  0%, 100% { opacity: 0.55; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.35); }
-}
-```
+**Scroll reveals — `<Reveal />` component:**
+- Directions: `up` (y 24→0), `left`, `right`, `fade`
+- Duration 0.9s, ease `[0.16, 1, 0.3, 1]`, `whileInView` with `once: true, amount: 0.25`
+
+**Keyframes defined in globals.css:**
+- `pulse` — gold dot: 2.4s ease-in-out infinite (opacity 0.55→1, scale 1→1.35)
+- `ctaPulse` — gold glow ring on CTAs (`.cta-pulse`): 2.4s
+- `drift` — hero background blob: 18–20s alternate
+- `rise` / `heroWord` — entrance translations for hero text
+
+**Timings in practice:**
+- Hero mount: 0.9–1.0s with 0.18–0.7s stagger delays
+- Overlays/sheets (mobile search): 0.22s enter/exit
+- Hover transitions: 200–500ms (drifted — see below)
+- Page transitions: none implemented
+
+**Known drift (normalize during Phase 5 polish):** card hover-lift durations
+vary (300/400/500ms/default) for the same interaction; `cta-pulse` is applied
+to some primary CTAs but not others (missing on LoggedOutHero, booking
+sidebar Reserve, Nav signup) — define one rule.
 
 ---
 

@@ -1,7 +1,16 @@
 # AVEXA STAYS — Implementation Plan
 
-> Last updated: 2026-06-06
-> Current phase: **Phase 1 — Foundation + SEO Core**
+> Last updated: 2026-06-12 (full audit against code — docs previously lagged reality)
+> Current phase: **Phase 5 — Production Booking Platform** (spec in progress, see `/thoughts/plans/`)
+>
+> **Branch state:** `feat/nextjs-platform` is ~26 commits ahead of `main`.
+> `main` still serves `coming-soon.html` on the root domain (do not touch until launch).
+> Vercel previews of the feature branch run the full Next.js app.
+>
+> **Reality note:** the entire UI (Phases 1–4 surface) shipped in **demo mode** —
+> data hardcoded in `lib/properties.ts` (8 properties), auth is localStorage-only,
+> payment is mocked, there are **zero API routes and zero integrations** (no
+> Supabase/Stripe/Hostaway/Maps/Brevo code). Phase 5 makes it real.
 
 ---
 
@@ -33,421 +42,125 @@
 
 ## Completed ✅
 
+### Pre-platform (April–May 2026)
 - [x] Brand identity finalized (Gold Editorial V4)
-- [x] Coming soon page live on avexastays.com
+- [x] Static HTML prototypes for all pages (now legacy, repo root)
+- [x] Coming soon page live on avexastays.com (root rewrite on `main`)
 - [x] DNS propagated, Google Workspace configured (MX + DKIM)
-- [x] Logo export kit (30+ PNG variants)
-- [x] Final copywriting written for homepage + locations
+- [x] Logo export kit (30+ PNG variants — outside repo; `/public/logos/` not yet populated)
+- [x] Final copywriting written (in BRAND.md)
 - [x] Google Maps API created + restricted + $50 budget alert
 - [x] Supabase organization created (client = Owner)
 - [x] Vercel project deployed (avexa-stays)
-- [x] Tech stack chosen (Next.js + Supabase + Hostaway + Stripe + Brevo)
 - [x] CLAUDE.md, PLAN.md, ARCHITECTURE.md, BRAND.md, INTEGRATIONS.md created
-- [x] .claude/commands/ slash commands configured
+
+### Next.js platform — UI layer (June 6–10, 2026, `feat/nextjs-platform`)
+- [x] Next.js 15 App Router scaffold (TypeScript strict, Tailwind v4, Motion)
+- [x] Homepage: hero (gradient + photo backdrop), editorial scroll story (400vh pinned, stacked on mobile), locations carousel, how-it-works panels, benefits, footer with AVEXA watermark
+- [x] `/locations`: 8 suites / 4 zones, stylized CSS map (NOT Google Maps), card↔pin interaction, mobile List/Map toggle with price-pin popups
+- [x] `/stays/[id]`: gallery + lightbox, amenities modal (Property/Room tabs), booking sidebar (rates, upgrades, price breakdown), FAQs, JSON-LD (LodgingBusiness + BreadcrumbList)
+- [x] `/member-benefits`: hero, statement, 6 perks, loyalty reward (3 trips → +10%), compare table, FAQ, CTA
+- [x] Checkout: 3-step demo flow (contact → mocked payment → confirmation), auth gate
+- [x] Auth UI: login page (email + Google/Apple buttons), demo mode via localStorage (D-key toggle)
+- [x] Member area: `/my-trips` (logged-out / empty / with-trips states, mosaic, contact), `/profile` (details edit, preference toggles)
+- [x] Mobile overhaul: bottom sheets, full-screen search overlay (Airbnb-style), sticky search header, tab bar, scroll-aware chrome, iOS zoom lock
+- [x] SEO foundation: `sitemap.ts`, `robots.ts`, per-page metadata, JSON-LD on stays
+- [x] Search system: dual synced pills (hero + sticky), calendar + guest popups, SearchContext
+
+### Tooling (June 11–12, 2026)
+- [x] Project context docs committed; efficient-fable orchestration convention adopted
+- [x] ESLint migrated to flat config CLI (next lint deprecated); `typecheck` script aligned
+- [x] npm standardized as package manager (package-lock.json is source of truth)
+- [x] Docs trued up to audited code reality (PLAN, BRAND, LEARNINGS, CLAUDE)
 
 ---
 
 ## In Progress 🔄
 
-- [ ] Push project to GitHub repository
-- [ ] Initialize Next.js 15 project
-- [ ] Gather final API keys (Hostaway, Stripe, Supabase)
+- [ ] **Phase 5 build spec** — interview + spec doc in `/thoughts/plans/`, awaiting Robert's approval. NO build work before approval.
+- [x] API keys gathered (Google Maps, Stripe live, Hostaway, Supabase) — to be added to Vercel during Phase 5 setup
 
 ---
 
-## Phase 1 — Foundation + SEO Core (4 weeks)
+## Phase 1 — Foundation + SEO Core — ✅ LARGELY DONE (audited 2026-06-12)
 
-**Goal:** Functional homepage + locations + member benefits on Next.js with complete SEO infrastructure.
+Shipped: scaffold, fonts via `next/font` (Jakarta/Manrope/DM Mono), `sitemap.ts`,
+`robots.ts`, `components/seo/JsonLd.tsx`, all marketing pages, mobile-first
+responsive, image optimization via `next/image`.
 
-### 1.1 Project Setup
+### Remaining Phase-1 gaps (fold into Phase 5 work)
 
-- [ ] Create Next.js 15 project: `pnpm create next-app avexa-stays --typescript --tailwind --app`
-- [ ] Configure TypeScript strict mode
-- [ ] Setup Tailwind v4 with brand colors as CSS variables
-- [ ] Configure `next.config.ts`:
-  - Image domains (Supabase storage, Hostaway CDN)
-  - Security headers (HSTS, X-Frame-Options, CSP)
-  - Compression
-- [ ] Setup ESLint + Prettier
-- [ ] Install dependencies:
-  - `@supabase/supabase-js @supabase/ssr`
-  - `stripe`
-  - `@googlemaps/js-api-loader`
-  - `framer-motion`
-  - `zod` (validation)
-  - `lucide-react` (icons)
-- [ ] Setup root layout with:
-  - `metadataBase` URL
-  - Default OG image
-  - Twitter card defaults
-  - Font loading via `next/font/google`
-  - Theme color meta tag
-
-### 1.2 SEO Infrastructure
-
-- [ ] Create `/app/sitemap.ts` auto-generating:
-  - Static marketing pages (priority 1.0)
-  - All location pages (priority 0.9)
-  - All active properties from Supabase (priority 0.8)
-  - All blog articles (priority 0.7)
-- [ ] Create `/app/robots.ts`:
-  - Allow all marketing pages
-  - Disallow /api/*, /member/*, /admin/*, /book/*
-  - Sitemap URL reference
-- [ ] Create `/components/seo/` directory:
-  - `OrganizationSchema.tsx` (used in root layout)
-  - `LodgingBusinessSchema.tsx` (homepage)
-  - `PropertySchema.tsx` (property pages)
-  - `BreadcrumbSchema.tsx` (interior pages)
-  - `FAQSchema.tsx` (FAQ sections)
-  - `ReviewSchema.tsx` (property reviews)
-- [ ] Create `/app/not-found.tsx` (custom 404)
-- [ ] Create `/app/error.tsx` (custom error boundary)
-- [ ] Add Google Search Console verification meta tag
-- [ ] Add Google Analytics 4 via `next/script`
-- [ ] Add PostHog initialization (EU region for GDPR)
-
-### 1.3 Homepage (`/app/(marketing)/page.tsx`)
-
-- [ ] SSG rendering (no client-only logic)
-- [ ] Metadata:
-  - Title: "AVEXA STAYS — Premium Apartments in Bucharest City Center"
-  - Description: "Premium short-term apartments in Bucharest city center. Digital check-in, no front desk, hotel-grade quality. Book direct for the lowest guaranteed rate."
-  - Canonical URL
-  - Open Graph image (1200x630)
-  - Twitter Card large
-- [ ] H1: "Bucharest City Center, Unlocked."
-- [ ] First paragraph contains primary keyword naturally
-- [ ] Sections (per BRAND.md copy):
-  - Hero with search form
-  - Editorial cycling text
-  - Locations preview
-  - How it works (3 steps)
-  - Member benefits preview
-  - Footer
-- [ ] All images via `next/image` with descriptive alt text
-- [ ] Mobile responsive 360px to 1440px+
-- [ ] Schemas embedded:
-  - Organization (root layout, all pages)
-  - LodgingBusiness (homepage specific)
-  - FAQPage (if FAQ section added)
-
-### 1.4 Locations Overview (`/app/(marketing)/locations/page.tsx`)
-
-- [ ] SSG rendering
-- [ ] Metadata with keyword "Bucharest neighborhoods"
-- [ ] H1 with primary keyword
-- [ ] Section title: "Location isn't everything. Until it is."
-- [ ] 4 neighborhood cards (Calea Victoriei, Universitate, Old Town, Piața Romană)
-- [ ] Each card links to `/locations/[slug]`
-- [ ] BreadcrumbList schema
-- [ ] LocalBusiness schema per neighborhood
-
-### 1.5 Location Detail Pages (`/app/(marketing)/locations/[slug]/page.tsx`)
-
-- [ ] SSG with `generateStaticParams`
-- [ ] `generateMetadata` per location
-- [ ] 800+ words unique content per location
-- [ ] Embedded Google Map
-- [ ] List of properties in that neighborhood
-- [ ] Local attractions and transit info
-- [ ] BreadcrumbList schema
-- [ ] Place + TouristAttraction schema
-
-### 1.6 Member Benefits Page (`/app/(marketing)/member-benefits/page.tsx`)
-
-- [ ] SSG rendering
-- [ ] H1: "The best rate is yours."
-- [ ] Sections per BRAND.md:
-  - Hero stat block
-  - "No tiers. No catch." statement
-  - 6 benefits cards
-  - Loyalty reward (3 trips = 10% more)
-  - Guest vs Member comparison table
-  - Joining is instant (3 steps)
-  - FAQ section
-  - Final CTA
-- [ ] FAQPage schema
-- [ ] CTA buttons trigger signup flow
-
-### 1.7 Technical SEO Foundation
-
-- [ ] HTTPS enforced ✅ (via Vercel)
-- [ ] HSTS header in `next.config.ts`
-- [ ] Security headers (CSP, X-Frame-Options, Referrer-Policy)
-- [ ] Mobile-first design
-- [ ] Image optimization via `next/image` (WebP/AVIF auto)
-- [ ] Font optimization via `next/font/google` (preload critical fonts)
-- [ ] Lazy loading below-fold images
-- [ ] Preconnect to critical domains (fonts.googleapis.com, etc.)
-- [ ] No render-blocking resources
-- [ ] LCP target: < 2.5s
-- [ ] CLS target: < 0.1
-- [ ] INP target: < 200ms
-
-### 1.8 Google Search Console Setup
-
-- [ ] Property verification via DNS TXT
-- [ ] Sitemap submitted: `avexastays.com/sitemap.xml`
-- [ ] Email alerts to hello@avexastays.com
-- [ ] Performance monitoring enabled
-- [ ] Manual URL inspection for homepage
-
-### 1.9 Analytics Setup
-
-- [ ] Google Analytics 4 property created
-- [ ] GA4 measurement ID in env vars
-- [ ] PostHog project created (EU region)
-- [ ] Track conversion events:
-  - `page_view` (automatic)
-  - `search_initiated`
-  - `property_viewed`
-  - `booking_started`
-  - `booking_completed`
-  - `newsletter_signup`
-  - `member_signup`
-- [ ] UTM parameter tracking
-- [ ] Cookie consent banner (Romanian GDPR + EU)
-
-### 1.10 Routing Switch (READY FOR LAUNCH)
-
-- [ ] Verify all pages working on /app preview
-- [ ] Update vercel.json: remove rewrite for /
-- [ ] Coming soon goes to /coming-soon (or removed)
-- [ ] New homepage becomes root /
-- [ ] Test all redirects
+- [ ] `not-found.tsx` (custom 404) + `error.tsx` (error boundary)
+- [ ] Canonical URLs per page (`alternates.canonical` — only `metadataBase` set today)
+- [ ] OG image 1200×630 + Twitter card image (none configured)
+- [ ] Security headers in `next.config.ts` (HSTS, X-Frame-Options, CSP, Referrer-Policy) — none today
+- [ ] GA4 + PostHog (EU) + cookie consent banner — zero analytics today
+- [ ] Google Search Console verification + sitemap submission
+- [ ] Homepage metadata: current title is root-layout default "AVEXA Stays — Live the city." — needs keyword title + meta description with primary keyword
+- [ ] H1 copy check: code renders "Bucharest City Center, unlocked" vs approved "Bucharest City Center, Unlocked."
+- [ ] Route naming decision: today `/stays/[id]` (accepts both id and slug); plan was `/properties/[slug]` + `/locations/[slug]` detail pages. Decide in Phase 5 spec (SEO impact, redirects)
+- [ ] Location DETAIL pages (`/locations/[slug]` with 800+ words, embedded map) — do not exist; only the overview exists
 
 ---
 
-## Phase 2 — Booking System (6 weeks)
+## Phases 2–4 (original backend plan) — absorbed into Phase 5
 
-**Goal:** Full booking flow from search to confirmation email.
+> The UI surface of these phases exists in demo mode. The backend checklists
+> below are KEPT AS INPUT for the Phase 5 spec — do not execute them directly;
+> the approved spec supersedes them.
 
-### 2.1 Supabase Database
+### Phase 2 — Booking System (UI ✅ demo / backend ❌)
 
-- [ ] Create tables per ARCHITECTURE.md:
-  - `users` (extends auth.users)
-  - `properties`
-  - `availability`
-  - `bookings`
-  - `price_details`
-- [ ] Create RLS policies:
-  - bookings: users see only their own
-  - properties: public read
-  - availability: public read
-- [ ] Create indexes for performance
-- [ ] Generate TypeScript types: `pnpm db:types`
+- Supabase tables per ARCHITECTURE.md: profiles, properties, availability, bookings (+ RLS, indexes, generated types)
+- `/lib/hostaway/client.ts`: listings, calendar, priceDetails, reservations; 60 req/min rate limit; retries
+- Sync system: `/app/api/sync/hostaway/route.ts`, Vercel cron 15 min, manual trigger with Bearer auth
+- Property pages on real data (ISR 15 min), availability calendar, live Hostaway price check before payment
+- Stripe: checkout session creation, webhook (signature verify → create Hostaway reservation → confirm booking → Brevo email)
+- Brevo transactional templates: confirmation, pre-arrival (PIN), checkout reminder, cancellation
 
-### 2.2 Hostaway Integration
+### Phase 3 — Auth + Member Area (UI ✅ demo / backend ❌)
 
-- [ ] Create `/lib/hostaway/client.ts`
-- [ ] Implement endpoints wrapper:
-  - `GET /v1/listings`
-  - `GET /v1/listings/{id}/calendar`
-  - `POST /v1/listings/{id}/priceDetails`
-  - `POST /v1/reservations`
-- [ ] Implement rate limiting (60 req/min max)
-- [ ] Error handling and retries
+- Supabase Auth: Google OAuth + email (+ Apple per Phase 5 decision)
+- Replace localStorage demo auth in: Nav, LoginForm, CheckoutApp gate, MyTripsApp, ProfileApp
+- Real trips from bookings table; profile persistence; `noindex` on member pages
+- Member rate (15%), 7+ night discount, loyalty tracking (3 trips → +10%)
 
-### 2.3 Sync System
+### Phase 4 — Polish + Launch (not started)
 
-- [ ] Create `/app/api/sync/hostaway/route.ts`
-- [ ] Sync logic:
-  - Fetch all listings
-  - Fetch availability next 90 days
-  - Fetch prices
-  - Upsert into Supabase
-- [ ] Vercel cron job (every 15 min)
-- [ ] Logging and error reporting
-- [ ] Manual trigger endpoint with Bearer auth
-
-### 2.4 Property Pages
-
-- [ ] `/app/properties/page.tsx` (browse all)
-  - Filter by neighborhood, dates, guests
-  - Grid layout with cards
-  - Price "from €X" from Supabase cache
-- [ ] `/app/properties/[slug]/page.tsx` (single)
-  - ISR with revalidation every 15 min
-  - Image gallery
-  - Amenities list
-  - Calendar component
-  - Booking CTA
-  - Property schema (JSON-LD)
-  - Internal links to neighborhood + other properties
-  - Reviews from Hostaway (when API supports)
-
-### 2.5 Booking Flow
-
-- [ ] `/app/book/[propertyId]/page.tsx`
-- [ ] Date/guest validation
-- [ ] Live Hostaway price check (not cached)
-- [ ] Member discount applied if logged in
-- [ ] Guest details form
-- [ ] Stripe Checkout session creation
-- [ ] Redirect to Stripe Checkout
-
-### 2.6 Stripe Integration
-
-- [ ] `/lib/stripe/client.ts`
-- [ ] `/app/api/checkout/route.ts`:
-  - Validate booking data
-  - Create Stripe Checkout session
-  - Store pending booking in Supabase
-- [ ] `/app/api/webhooks/stripe/route.ts`:
-  - Verify signature
-  - Handle `checkout.session.completed`
-  - Handle `payment_intent.succeeded`
-  - Handle `payment_intent.payment_failed`
-  - Create Hostaway reservation
-  - Update booking status
-  - Trigger confirmation email
-
-### 2.7 Email Templates (Brevo)
-
-- [ ] Booking confirmation
-- [ ] Pre-arrival email (24h before with PIN code)
-- [ ] Check-out reminder
-- [ ] Welcome series for members
-- [ ] Cancellation confirmation
-
-### 2.8 Phase 2 SEO Additions
-
-- [ ] Property pages added to sitemap dynamically
-- [ ] Property schema validated on every property page
-- [ ] Image alt text auto-generated from property data
-- [ ] Internal linking strategy implemented
-- [ ] Breadcrumbs on all property pages
+- Performance audit (Lighthouse 95+, bundle analysis, real device testing)
+- SEO QA (Rich Results, schema validation, alt text, 404 check, canonicals)
+- Production checklist (env vars, Stripe LIVE, webhooks, backups, Vercel Pro, crons)
+- Launch day: switch root from coming-soon → app, submit sitemap, monitor
 
 ---
 
-## Phase 3 — Auth + Member Area (3 weeks)
+## Phase 5 — Production Booking Platform (NEXT)
 
-**Goal:** Full authentication system and member dashboard.
+**Spec:** `/thoughts/plans/` — written after the 2026-06-12 interview, requires
+Robert's explicit approval before any build work.
 
-### 3.1 Supabase Auth Setup
+**Scope (from project owner):** Hostaway as source of truth (prices/availability),
+Stripe payments + extra services, Supabase (DB + Google/Apple/email auth + storage),
+Google Maps embed, video hero, multi-room booking (same-building suites),
+Member Club discounts, mobile-first Airbnb-class UX/perf, SEO for
+"Bucharest city center apartments". Plus the Phase-1 gap list above and the
+design-system drift cleanup (see BRAND.md "Known drift" notes).
 
-- [ ] Configure auth providers
-- [ ] Setup Google OAuth credentials
-- [ ] Email templates configured in Supabase
-- [ ] Password reset flow
-- [ ] Magic link option
-
-### 3.2 Auth Pages
-
-- [ ] `/app/(auth)/login/page.tsx`
-- [ ] `/app/(auth)/signup/page.tsx`
-- [ ] OAuth callback handlers
-- [ ] `noindex` on auth pages
-
-### 3.3 Member Dashboard
-
-- [ ] `/app/(member)/my-trips/page.tsx`
-  - List active bookings
-  - List past trips
-  - Quick rebook
-- [ ] `/app/(member)/profile/page.tsx`
-  - Edit personal info
-  - Payment methods
-  - Preferences
-- [ ] Server-side auth checks
-- [ ] `noindex` on member pages
-
-### 3.4 Member-Specific Features
-
-- [ ] 15% member rate display
-- [ ] 7+ night discount auto-apply
-- [ ] Loyalty tracking (trip count)
-- [ ] 10% bonus after 3 trips
-- [ ] Welcome package opt-in
+**Known UI gaps vs legacy prototypes (verify & decide in spec):** hero video
+background, real Google Maps embeds (stay page map modal + inline nearby grid),
+locations announcement bar, desktop "Show map" toggle, "Add another room" in
+booking sidebar, business invoice fields (VAT/CUI/Reg. Com.) in checkout,
+promo-code button, Apple Pay/Google Pay rows, icon-in-tile sizing issue.
 
 ---
 
-## Phase 4 — Polish + Launch (2 weeks)
+## Phase 6 — Content + Growth (post-launch, ongoing)
 
-**Goal:** Production-ready site with all integrations live.
-
-### 4.1 Performance Audit
-
-- [ ] Lighthouse 95+ all pages
-- [ ] PageSpeed Insights field data "Good"
-- [ ] CrUX monitoring enabled
-- [ ] Vercel Speed Insights enabled
-- [ ] Real device testing (iPhone, Samsung)
-- [ ] Bundle size analysis
-- [ ] Lazy load all below-fold content
-
-### 4.2 SEO QA
-
-- [ ] Rich Results Test on every page template
-- [ ] Schema.org validator clean
-- [ ] No duplicate meta tags
-- [ ] All images have alt text
-- [ ] All internal links work (404 check)
-- [ ] XML sitemap valid
-- [ ] robots.txt correctly configured
-- [ ] Mobile usability passes
-- [ ] Canonical URLs on every page
-
-### 4.3 Production Checklist
-
-- [ ] All env vars in Vercel Production
-- [ ] Stripe switched to LIVE mode
-- [ ] Stripe webhooks configured for production URL
-- [ ] Brevo sender domain verified
-- [ ] Database backups configured
-- [ ] Error monitoring (Sentry optional)
-- [ ] Vercel Pro plan active (commercial use)
-- [ ] Domain SSL active
-- [ ] Cron jobs running
-
-### 4.4 Launch Day
-
-- [ ] Switch vercel.json: `/` → app instead of coming-soon
-- [ ] Submit updated sitemap to Search Console
-- [ ] Manual indexing requests for top pages
-- [ ] Monitor error logs
-- [ ] Monitor analytics
-- [ ] Announce on social media
-
-### 4.5 Off-Page SEO
-
-- [ ] Google My Business profile (if applicable)
-- [ ] Local citations consistent (Booking.com, Airbnb, TripAdvisor)
-- [ ] Press release for launch
-- [ ] Social media profiles complete with links back
-- [ ] Outreach to Bucharest travel bloggers
-
----
-
-## Phase 5 — Content + Growth (ongoing)
-
-### 5.1 Blog/Guides
-
-- [ ] `/app/(marketing)/guides/page.tsx`
-- [ ] `/app/(marketing)/guides/[slug]/page.tsx`
-- [ ] First 5 articles:
-  - "Where to stay in Bucharest city center"
-  - "Best Bucharest neighborhoods for business travel"
-  - "Bucharest 3-day itinerary"
-  - "Calea Victoriei complete guide"
-  - "Old Town Bucharest survival guide"
-- [ ] Article schema with author
-- [ ] Internal links to properties
-- [ ] Outbound links to authorities
-
-### 5.2 Internationalization (Optional)
-
-- [ ] hreflang setup en/ro
-- [ ] Romanian translation
-- [ ] /ro/ subpath routing
-
-### 5.3 PWA Features
-
-- [ ] Manifest.json
-- [ ] Service worker
-- [ ] Add to home screen
-- [ ] Offline page
+- Guides/blog (`/guides`, `/guides/[slug]`): first 5 articles per original list
+- Article schema, internal links to properties, outreach to Bucharest travel bloggers
+- Off-page SEO: Google Business Profile, citations, press release, social profiles
+- i18n (hreflang en/ro, /ro/ subpath) — optional
+- PWA (manifest, service worker, offline page) — optional
 
 ---
 
@@ -463,6 +176,11 @@
 | 2026-06-06 | Brevo for emails | Already have account |
 | 2026-06-06 | "No front desk. No friction. No compromise." | Differentiator vs NUMA |
 | 2026-06-06 | "Bucharest City Center, Unlocked." H1 | Primary keyword + brand voice |
+| 2026-06-07 | `motion` package (motion/react), not framer-motion | Standalone Motion release; same API |
+| 2026-06-07 | Routes shipped as `/stays/[id]` | De facto during port; revisit vs `/properties/[slug]` in Phase 5 spec |
+| 2026-06-12 | npm is the package manager | `package-lock.json` tracked; pnpm references in docs were aspirational |
+| 2026-06-12 | ESLint CLI flat config | `next lint` deprecated, removed in Next 16 |
+| 2026-06-12 | Phases renumbered | Production build = Phase 5; Content+Growth → Phase 6 |
 
 ---
 
@@ -475,3 +193,5 @@
 | SEO ranking takes longer than 6 months | Medium | Medium | Content strategy + outreach |
 | Vercel costs exceed budget | Low | Medium | Monitor with budget alerts |
 | Hostaway price/availability mismatch | Low | High | Live check before payment |
+| Demo → real data migration breaks UI | Medium | High | Keep `Property` type stable; adapter layer Hostaway→type |
+| Usage-limit pauses mid-build | High | Medium | Wave protocol: every chunk commits clean + resume note in LEARNINGS.md |

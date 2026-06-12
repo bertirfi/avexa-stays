@@ -1,153 +1,155 @@
 # AVEXA — Session Learnings
 
-> Self-improving knowledge base. Read at the start of every session, 
+> Self-improving knowledge base. Read at the start of every session,
 > update at the end. Captures patterns, mistakes, and useful snippets.
+> Populated 2026-06-12 from full git-history + code audit.
 
 ---
 
-## How to Use This File
+## ⏯ Session Resume Notes (newest first)
 
-**At session start:**
-- Read this file before doing anything
-- Note any relevant patterns for current task
-
-**At session end:**
-- Add new learnings under appropriate section
-- Be specific (what worked, why, where)
-- Include code snippets when useful
-- Reference files with /path/file.ts:line
+### 2026-06-12 — Docs trued up; Phase 5 interview next
+- **Done:** Full audit of docs vs code (5 parallel agents + direct verification).
+  PLAN.md rewritten to reality (UI Phases 1–4 = demo mode, zero integrations;
+  Phase 5 = production build). BRAND.md token sections corrected from
+  `globals.css`/`fonts.ts`/`Icon.tsx` (body is Manrope 400 not 300, mono labels
+  10px not 11px, `--font-dm-mono` var, `--color-nbh-*` tokens, no `--white`,
+  `/public/logos/` doesn't exist, icon-in-tile sizing issue documented).
+  CLAUDE.md commands fixed (npm, real scripts). This file populated.
+- **Next:** Phase 5 interview with Robert → ONE comprehensive build spec in
+  `/thoughts/plans/2026-06-12-phase-5-*.md` → his approval → only then build.
+- **Open threads:** env vars list delivered to Robert (he adds to Vercel);
+  route naming decision (/stays/[id] vs /properties/[slug]); icon fix direction.
+- **Constraints to respect:** never touch `coming-soon.html` / `vercel.json` on
+  main; work in waves (commit clean + resume note before every possible pause);
+  efficient-fable delegation for token-heavy work.
 
 ---
 
 ## Patterns That Work Well
 
-(Empty — will be populated as we work)
-
-Examples of what to add here:
-- "Supabase queries are faster when you select() specific columns"
-- "Next.js generateMetadata works best with parent params"
-- "Stripe webhooks require raw body for signature verification"
-
----
+- **`<Reveal />` wrapper for scroll animations** — one component, 4 directions,
+  canonical 0.9s + `cubic-bezier(0.16,1,0.3,1)`, `once: true`. Reused across
+  13+ sections. Add variants there, not per-component.
+- **Typed `Icon` wrapper over lucide-react** (`components/Icon.tsx`) — single
+  import point, typed names, consistent defaults (size 20 / stroke 1.6).
+- **3-field search pill kept on mobile** with bottom-sheet expansion (Airbnb
+  pattern) — discoverability beats minimalism (single-button version was
+  reverted, commit d7550d5).
+- **Keeping the `Property` type stable** while data is hardcoded — Phase 5 can
+  swap `lib/properties.ts` for a Hostaway→Supabase adapter without UI changes.
+- **Efficient-fable fan-out** — 5 parallel cheap agents inventoried the entire
+  repo+docs+history (~430k subagent tokens) while Fable kept judgment/synthesis.
 
 ## Patterns to Avoid
 
-(Empty — will be populated as we work)
-
-Examples:
-- "Don't call Hostaway from middleware — too slow"
-- "Don't use NEXT_PUBLIC_ for any secret"
-- "Don't fetch in client useEffect when server component would work"
-
----
+- **Never wrap `createPortal` children in `AnimatePresence`** — the portal
+  escapes the React tree and presence detection breaks (fix e1c85dd).
+- **Portal-rendered dropdowns don't inherit colors** from trigger context — set
+  explicit text/bg on the panel (fix a5906ab).
+- **Don't collapse the search pill to one button on mobile** — kills
+  discoverability (revert d7550d5).
+- **Don't build display letterforms from custom SVG/skew transforms** — browser
+  font rendering is more reliable; the coming-soon "X" burned 16 commits
+  (revert 3a5eb34).
+- **Gradient-only hero feels flat** — layer a faded photo under the gradient
+  (bc7fba7).
 
 ## Recurring Mistakes (Don't Repeat)
 
-(Empty — will be populated as we work)
-
-Examples:
-- "Forgot to add new env var to Vercel after adding locally"
-- "Missing 'use client' on component using hooks"
-- "Wrong Hostaway field name — it's 'price', not 'rate'"
+- **Docs drifting from code** — PLAN/BRAND claimed things code contradicted
+  (fonts weights, phases, env names). After every shipped phase, true up docs
+  (or run /document-release).
+- **Package-manager ambiguity** — repo is **npm** (`package-lock.json`
+  tracked). Running `corepack pnpm` once hijacked `node_modules` and created
+  stray pnpm lockfiles; required full clean reinstall. Don't "follow the docs"
+  into pnpm.
+- **Script naming** — it's `npm run typecheck` (renamed from `type-check`
+  2026-06-12 to match docs).
 
 ---
 
 ## Useful Code Snippets
+
+### Quality gate before every commit
+```bash
+npm run lint && npm run typecheck    # add: npm run lint -- --fix to auto-fix
+```
 
 ### Generate secrets
 ```bash
 openssl rand -base64 32
 ```
 
-### Check Vercel deployment logs
+### Planned (Phase 5 — scripts don't exist yet)
 ```bash
-vercel logs [deployment-url] --follow
+# pnpm-era docs mentioned db:types / db:migrate / test — NOT implemented.
+# Add as npm scripts when Supabase lands.
 ```
-
-### Force re-sync Hostaway manually
-```bash
-curl -X POST https://avexastays.com/api/sync/hostaway \
-  -H "Authorization: Bearer $SYNC_SECRET"
-```
-
-### Supabase TypeScript types regeneration
-```bash
-pnpm db:types
-# Runs: supabase gen types typescript --linked > db/types.ts
-```
-
----
-
-## Hostaway API Quirks
-
-(Empty — will be populated as we discover them)
-
-Things to document here:
-- Specific field names that differ from documentation
-- Rate limit behavior
-- Edge cases in calendar response
-- Reservation creation gotchas
-
----
-
-## Stripe Integration Notes
-
-(Empty — will be populated)
-
-Things to document:
-- Webhook event ordering issues
-- Idempotency key strategy
-- Test card numbers for specific scenarios
-- 3DS challenge handling
-
----
-
-## SEO Discoveries
-
-(Empty — will be populated)
-
-Things to document:
-- What schemas actually showed in Search Console
-- Which keywords ranked surprisingly
-- Page speed bottlenecks identified
-- Specific structured data issues
-
----
-
-## Performance Insights
-
-(Empty — will be populated)
-
-- LCP optimizations that worked
-- Bundle size wins
-- Image format decisions
-- Cache strategies
 
 ---
 
 ## Build/Deploy Issues
 
-(Empty — will be populated)
+- **`next lint` is deprecated (removed in Next 16)** — we use ESLint CLI flat
+  config (`eslint.config.mjs`, FlatCompat + next/core-web-vitals +
+  next/typescript). Legacy root prototypes are in `ignores`.
+- **npm audit shows 2 moderate vulns (postcss <8.5.10, GHSA-qx2v-qp2m-jg93)** —
+  it's Next's own pinned nested copy; no fix without `--force` downgrade to
+  next@9 (absurd). Low real risk (only our own CSS is processed). Ignore until
+  Next bumps it.
+- **`vercel.json` legacy rewrites break Next.js App Router routes** — on the
+  feature branch it must stay `{"framework":"nextjs"}` only (fix 5035f7d).
+  `main` keeps the coming-soon rewrite until launch.
+- **Never name a static landing page `index.html`** alongside Vercel rewrites —
+  clashes with default routing (fix 7dd0a1f).
 
-- Vercel deployment failures and fixes
-- TypeScript errors and resolutions
-- Package version conflicts
+## Mobile/UI Learnings
 
----
+- **iOS Safari input zoom:** lock viewport (`maximumScale: 1, userScalable:
+  false`) AND force `font-size: 16px` on all text controls under 640px
+  (globals.css @media block) — both are needed (fix 19b59e3).
+- **`touch-action: manipulation`** on all interactive elements kills the 300ms
+  double-tap delay (globals.css).
+- **Map popups in CSS maps:** `overflow:hidden` on the parent does NOT hide
+  absolutely-positioned children — reset visibility/z-index explicitly on close
+  (fixes 72afa14, d8aca08).
+- **Icon-in-tile optics:** lucide glyphs have built-in padding in the 24px
+  viewBox; at stroke 1.6, size 16–20 inside a 40–48px tile the glyph reads
+  small. Fix globally in Phase 5 polish (documented in BRAND.md → Icons).
 
-## User Feedback Patterns
+## SEO Discoveries
 
-(Empty — will be populated after launch)
-
-- Common questions
-- Friction points in booking flow
-- Mobile vs desktop behavior differences
+- JSON-LD ships only on `/stays/[id]` (LodgingBusiness + BreadcrumbList).
+  Homepage/locations/member pages have no schemas yet.
+- No canonicals, no OG image, no GA4/PostHog, no security headers yet — full
+  gap list in PLAN.md → "Remaining Phase-1 gaps".
 
 ---
 
 ## Decisions That Required Backtracking
 
-(Empty — will be populated)
+- Single search button on mobile → reverted to 3-field pill (d7550d5).
+- Custom SVG "X" letterform on coming-soon → reverted to plain font (3a5eb34).
+- Gradient-only hero → added photographic backdrop (bc7fba7).
+- `avexa-design-system.html` (Cormorant Garamond + #C9A84C gold, "dark luxury")
+  → discarded direction; production system is Jakarta/Manrope/DM Mono +
+  #DDB97A. Don't resurrect tokens from that file.
 
-- "Initially used X, switched to Y because Z"
-- Lessons learned from technical pivots
+---
+
+## Hostaway API Quirks
+
+(Empty — populate during Phase 5 integration.)
+
+## Stripe Integration Notes
+
+(Empty — populate during Phase 5 integration.)
+
+## Performance Insights
+
+(Empty — populate during Phase 4-style audit after Phase 5.)
+
+## User Feedback Patterns
+
+(Empty — populate after launch.)

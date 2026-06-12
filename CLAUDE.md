@@ -45,7 +45,7 @@ AVEXA is a premium short-term rental platform for Bucharest city center apartmen
 - **Framework:** Next.js 15 (App Router)
 - **Language:** TypeScript strict mode
 - **Styling:** Tailwind CSS v4
-- **Animations:** Framer Motion
+- **Animations:** Motion (`motion` package — import from `'motion/react'`, not framer-motion)
 - **Database:** Supabase (PostgreSQL)
 - **Auth:** Supabase Auth + Google OAuth (Apple later)
 - **Payments:** Stripe (Checkout + webhooks)
@@ -75,29 +75,27 @@ AVEXA is a premium short-term rental platform for Bucharest city center apartmen
 ## Commands (HOW)
 
 ```bash
+# Package manager: npm (package-lock.json is the source of truth — NOT pnpm)
+
 # Setup
-pnpm install
+npm install
 cp .env.example .env.local  # then fill in values
 
 # Development
-pnpm dev                    # local dev server
-pnpm build                  # production build
-pnpm start                  # run production locally
+npm run dev                 # local dev server
+npm run build               # production build
+npm run start               # run production locally
 
-# Quality
-pnpm lint --fix             # ESLint with auto-fix
-pnpm typecheck              # TypeScript checking
-pnpm test                   # unit tests
-pnpm test:e2e               # Playwright e2e
+# Quality (run both before EVERY commit)
+npm run lint                # ESLint flat config; auto-fix: npm run lint -- --fix
+npm run typecheck           # TypeScript checking
 
-# Database
-pnpm db:migrate             # apply Supabase migrations
-pnpm db:seed                # seed test data
-pnpm db:types               # regenerate TypeScript types from schema
+# Not yet implemented (add during Phase 5):
+# test, test:e2e, db:migrate, db:seed, db:types
 
 # Deployment
-git push origin main        # Vercel auto-deploys to production
 git push origin feat/xyz    # Vercel creates preview URL
+# main auto-deploys production — main serves coming-soon.html until launch switch
 ```
 
 ---
@@ -110,7 +108,7 @@ git push origin feat/xyz    # Vercel creates preview URL
 4. **NEVER** call Hostaway API directly from client-side code
 5. **ALL** availability checks must go through Supabase, not direct Hostaway calls
 6. **ALL** prices shown to users must match Hostaway exact pricing at booking moment (live check before payment)
-7. **ALWAYS** run `pnpm lint --fix && pnpm typecheck` before every commit
+7. **ALWAYS** run `npm run lint && npm run typecheck` before every commit
 8. **ALWAYS** use server components by default, client components only when needed
 9. **NEVER** use `<img>`, always use `next/image` for automatic optimization
 10. **NEVER** use `<a href>` for internal navigation, use Next.js `<Link>`
@@ -240,9 +238,9 @@ Quick reference colors:
 ```
 
 Quick reference fonts:
-- Display: Plus Jakarta Sans 800
-- Body: Manrope 300
-- Mono: DM Mono 500
+- Display: Plus Jakarta Sans 800 (`.font-display`)
+- Body: Manrope 400 default (300–700 loaded)
+- Mono: DM Mono 500, 10px uppercase labels (`.font-mono-label`)
 
 ---
 
@@ -303,8 +301,8 @@ After every session, update **LEARNINGS.md** with what worked, what broke, and p
 
 ## Pre-Commit Checklist
 
-- [ ] `pnpm lint --fix` passes
-- [ ] `pnpm typecheck` passes
+- [ ] `npm run lint` passes (auto-fix: `npm run lint -- --fix`)
+- [ ] `npm run typecheck` passes
 - [ ] No console.log in production code
 - [ ] No commented-out code
 - [ ] Environment variables documented
