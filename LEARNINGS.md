@@ -8,6 +8,27 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-12 (later) — Spec APPROVED ("ok go"); Wave 0 shipped
+- **Done (Wave 0 — Foundations):** `db/migrations/001_init.sql` (9 tables, RLS,
+  triggers incl. auto-profile on signup) + `db/README.md`;
+  `types/database.types.ts` (hand-written, regen via `npm run db:types` once CLI
+  linked); `lib/supabase/{client,server,admin}.ts` (@supabase/ssr installed;
+  admin = lazy, server-only); `lib/fx.ts` (BNR XML parse, +3% margin,
+  per-night ceil to whole EUR, 4-day staleness fallback);
+  `/api/cron/fx` route (Bearer CRON_SECRET); `.env.example` cleaned
+  (NEXTAUTH removed); build green (28 pages).
+- **NOT done / needs Robert:** `.env.local` doesn't exist yet — no Supabase
+  keys locally, so migration NOT applied to the real project. Robert must:
+  (1) create `.env.local` from `.env.example` + add the same vars in Vercel,
+  (2) run `db/migrations/001_init.sql` in Supabase SQL Editor (or link CLI).
+- **Next (Wave 1):** Hostaway client + sync route + cron + adapter
+  Hostaway→`Property`; stays/locations read from Supabase (ISR 15 min).
+  Wave 1 can START without keys (client code + adapter), but end-to-end sync
+  test needs HOSTAWAY_* and Supabase keys in `.env.local`.
+- **Conventions set in Wave 0:** prices stored RON; `rate_plan` neutral values
+  `non_refundable`/`flexible` (marketing names in UI only, naming pending §10);
+  `order_id` groups multi-room; vercel.json crons deferred to Wave 7.
+
 ### 2026-06-12 — Docs trued up; Phase 5 interview next
 - **Done:** Full audit of docs vs code (5 parallel agents + direct verification).
   PLAN.md rewritten to reality (UI Phases 1–4 = demo mode, zero integrations;
