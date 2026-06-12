@@ -16,10 +16,19 @@
   10px not 11px, `--font-dm-mono` var, `--color-nbh-*` tokens, no `--white`,
   `/public/logos/` doesn't exist, icon-in-tile sizing issue documented).
   CLAUDE.md commands fixed (npm, real scripts). This file populated.
-- **Next:** Phase 5 interview with Robert → ONE comprehensive build spec in
-  `/thoughts/plans/2026-06-12-phase-5-*.md` → his approval → only then build.
-- **Open threads:** env vars list delivered to Robert (he adds to Vercel);
-  route naming decision (/stays/[id] vs /properties/[slug]); icon fix direction.
+- **Done (later same day):** Phase 5 interview completed (3 rounds). Spec written:
+  `/thoughts/plans/2026-06-12-phase-5-production-booking-platform.md` —
+  **AWAITING ROBERT'S APPROVAL, no build before sign-off.**
+  Key decisions: Stripe deferred (no access yet → PaymentProvider stub, Wave 5);
+  RON→EUR at BNR daily +3%, round up to whole EUR; account required to book;
+  member −15% vs OTA (provisional); 2 rate plans renamed (NOT Saver/Flex — NUMA
+  uses those; shortlist in spec §10); multi-room = sibling suites section +
+  add-another-room, one payment → N Hostaway reservations; /stays/[slug] kept +
+  /locations/[slug] new; reviews sync from Hostaway; video-ready hero slot.
+- **Next:** Robert approves/edits spec → start Wave 0 (Supabase schema + fx engine).
+- **Open threads:** spec §10 list (rate naming, building mapping, services list,
+  member mechanics, door PIN source, GA4/PostHog IDs, Stripe timing); Robert adds
+  env vars to Vercel (list delivered in chat + spec §7).
 - **Constraints to respect:** never touch `coming-soon.html` / `vercel.json` on
   main; work in waves (commit clean + resume note before every possible pause);
   efficient-fable delegation for token-heavy work.
