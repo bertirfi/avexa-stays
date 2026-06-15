@@ -80,7 +80,7 @@ never on the client:
 5. **Charge time** — before Stripe, re-fetch base from Hostaway live, recompute
    effective server-side, charge that exact amount. Client price math is never trusted.
 
-> ⚠️ Confirm with Robert: markup (18%) and FX margin (3%) currently STACK →
+> ⚠️ CONFIRMED (Robert, 2026-06-16): markup (18%, business margin) and FX margin (3%, Stripe conversion cost) are SEPARATE and STACK →
 > effective ≈ base × 1.18 × 1.03 ≈ **base × 1.215**. If 18% is meant to be all-in,
 > set `AVEXA_FX_MARGIN_PERCENT=0`. Both are independent config knobs.
 
@@ -181,5 +181,5 @@ Studio initially), Hostaway webhooks (poll-sync first; webhooks if plan supports
 6. **GA4 + PostHog accounts** — create and provide IDs (Wave 6).
 7. **Stripe access timing** (gates Wave 5).
 8. Free-cancellation window: 5 days OK, or different?
-9. **Pricing stack confirmation (§3.1)** — markup 18% and FX 3% currently STACK (~+21.5% over base). All-in 18% instead? Then set `AVEXA_FX_MARGIN_PERCENT=0`.
+9. **Pricing stack confirmation (§3.1)** — 18% business margin + 3% FX margin are SEPARATE and STACK (~+21.5% over base) -- CONFIRMED by Robert 2026-06-16. Escape hatch if ever all-in: set `AVEXA_FX_MARGIN_PERCENT=0`.
 10. **Multi-room partial-failure policy** — if 1 of N reservations fails after charge: refund just that room (others stand) or refund the whole order? Default: refund failed room + alert ops.

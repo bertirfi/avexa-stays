@@ -17,8 +17,8 @@
   default 18) = effective RON; ÷ BNR × (1 + AVEXA_FX_MARGIN_PERCENT, default 3), ceil to
   whole EUR/night = effective EUR = CHARGED amount = the "member rate". Member 15% is
   PRESENTATION only: rack = effective ÷ 0.85, struck-through. NEVER subtract 15% twice.
-  Markup in ONE place (env var), never per-listing, never inline. OPEN: confirm 18%×3%
-  STACK (~+21.5%) vs all-in 18% (→ set fx margin 0).
+  Markup in ONE place (env var), never per-listing, never inline. CONFIRMED 2026-06-16:
+  18% business margin + 3% FX margin are SEPARATE and STACK intentionally (~+21.5%).
 - **Hostaway auth confirmed:** POST /v1/accessTokens (client_credentials,
   client_id=HOSTAWAY_ACCOUNT_ID, client_secret=HOSTAWAY_API_KEY, scope=general); token
   valid **24 months** → store in Supabase, wait 1s after issuing, 403 → refresh once;
