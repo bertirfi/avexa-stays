@@ -8,6 +8,16 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-16 (later) — Pricing switched to FIXED FX rate 5.2 (Robert)
+- Replaced dynamic BNR with **fixed `AVEXA_FX_RATE` (default 5.2)**.
+  `effectiveEurPerNight(ron)` no longer takes a rate — reads env. Kept markup 18% +
+  FX margin 3% (Robert can make 5.2 all-in by setting `AVEXA_FX_MARGIN_PERCENT=0`).
+- Pricing is now fully deterministic/offline (no rate read in render). `getCachedEurRate`
+  is now unused; `/api/cron/fx` + `exchange_rates` kept ONLY to monitor real BNR vs 5.2.
+  **fx cron run is no longer needed for pricing.**
+- From-prices (5.2 / 18% / 3%): 101 €37, 203 €45, 302 €48, 202 €53, 303 €53,
+  201 €57, 301 €57, 304 €53.
+
 ### 2026-06-16 (later) — Wave 3 chunk-1: real EUR prices on stay pages
 - **Shipped (build green, /stays/[id] = SSG + ISR 15m):**
   - `lib/pricing.ts`: effectiveEurPerNight(ron,bnr)=ceil(ron×(1+markup)/bnr×(1+fx)),

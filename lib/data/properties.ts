@@ -1,6 +1,5 @@
 import { properties as staticProperties } from '@/lib/properties';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { getCachedEurRate } from '@/lib/fx';
 import { effectiveEurPerNight } from '@/lib/pricing';
 import type { Property } from '@/types';
 
@@ -13,15 +12,11 @@ import type { Property } from '@/types';
  */
 
 /** Rebuild rates[].perNight from the live RON price; rates[0] = effective EUR. */
-function applyLivePricing(
-  property: Property,
-  priceFromRon: number | null,
-  bnrRate: number,
-): Property {
+function applyLivePricing(property: Property, priceFromRon: number | null): Property {
   const base = property.rates[0]?.perNight;
   if (!priceFromRon || priceFromRon <= 0 || !base || base <= 0) return property;
 
-  const effective = effectiveEurPerNight(priceFromRon, bnrRate);
+  const effective = effectiveEurPerNight(priceFromRon);
   const factor = effective / base;
   return {
     ...property,
@@ -43,9 +38,8 @@ export async function getAllPropertiesData(): Promise<Property[]> {
     if (error || !data || data.length === 0) {
       throw new Error(error?.message ?? 'no property rows');
     }
-    const { rate } = await getCachedEurRate();
     return data.map((row) =>
-      applyLivePricing(row.content as unknown as Property, row.price_from_ron, rate),
+      applyLivePricing(row.content as unknown as Property, row.price_from_ron),
     );
   } catch {
     return staticProperties;
@@ -61,12 +55,7 @@ export async function getPropertyData(idOrSlug: string): Promise<Property | null
       .or(`id.eq.${safe},slug.eq.${safe}`)
       .maybeSingle();
     if (error || !data) throw new Error(error?.message ?? 'not found');
-    const { rate } = await getCachedEurRate();
-    return applyLivePricing(
-      data.content as unknown as Property,
-      data.price_from_ron,
-      rate,
-    );
+    return applyLivePricing(data.content as unknown as Property, data.price_from_ron);
   } catch {
     return staticProperties.find((p) => p.id === safe || p.slug === safe) ?? null;
   }

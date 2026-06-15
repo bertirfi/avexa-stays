@@ -58,8 +58,12 @@ connection state, see Open Questions).
 
 ## 3.1 Pricing pipeline (CRITICAL — single markup, no double discount)
 
-Per-night price is built **server-side** in one module (`lib/pricing.ts`, Wave 3),
+Per-night price is built **server-side** in one module (`lib/pricing.ts`),
 never on the client:
+
+> UPDATE 2026-06-16: the FX rate is now FIXED at `AVEXA_FX_RATE` (default 5.2),
+> not live BNR — for deterministic prices. Step 3 below otherwise unchanged.
+> The BNR cron/`exchange_rates` are kept only to monitor drift vs the fixed rate.
 
 1. **Base** — Hostaway live base price in RON (`listing.price`; for date-specific
    totals use the "Calculate reservation price" endpoint). We use Hostaway's BASE,
