@@ -8,6 +8,19 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-16 (later) — Wave 3 chunk-2: locations real prices + Vercel self-verify
+- LocationsView refactored to receive `properties` as a prop (was importing static
+  lib/properties). `locations/page.tsx` → async, getAllPropertiesData(), ISR 900.
+  PropertyCard / StylizedMap / mobile popup now show real EUR (all prop-driven).
+- Only other static importer = MosaicSection (trips page, photos only, no price → left).
+- **Vercel self-verify works:** MCP deployment-list is cross-scope (403 for berti8), BUT
+  the branch preview pages are PUBLIC → WebFetch reads real rendered data. Verified
+  stays 101 €37/rack €44, 201 €57/rack €67, footer prices all correct. After each push
+  I can WebFetch the preview to verify rendered pages myself (guarded API routes still
+  need the bearer / Robert). Preview: avexa-stays-git-feat-nextjs-platform-berti8.vercel.app
+- **Open (product):** "from" price = cheapest available night over 180d (€37 for 101).
+  Robert to confirm if that basis is right or wants typical/base price.
+
 ### 2026-06-16 (later) — Pricing switched to FIXED FX rate 5.2 (Robert)
 - Replaced dynamic BNR with **fixed `AVEXA_FX_RATE` (default 5.2)**.
   `effectiveEurPerNight(ron)` no longer takes a rate — reads env. Kept markup 18% +

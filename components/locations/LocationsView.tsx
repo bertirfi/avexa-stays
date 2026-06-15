@@ -11,10 +11,10 @@ import { PropertyCard } from '@/components/locations/PropertyCard';
 import { StylizedMap } from '@/components/locations/StylizedMap';
 import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
 import { neighborhoods } from '@/lib/neighborhoods';
-import { properties, getPropertiesByNeighborhood, getProperty } from '@/lib/properties';
 import { cn } from '@/lib/cn';
+import type { Property } from '@/types';
 
-export function LocationsView() {
+export function LocationsView({ properties }: { properties: Property[] }) {
   const [mapOpen, setMapOpen] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
   // Mobile-only List/Map toggle state
@@ -32,10 +32,15 @@ export function LocationsView() {
     };
   }, [mobileView]);
 
-  const popupProperty = popupId ? getProperty(popupId) : null;
+  const popupProperty = popupId
+    ? (properties.find((p) => p.id === popupId) ?? null)
+    : null;
 
   const groups = neighborhoods
-    .map((n) => ({ neighborhood: n, items: getPropertiesByNeighborhood(n.id) }))
+    .map((n) => ({
+      neighborhood: n,
+      items: properties.filter((p) => p.neighborhood === n.id),
+    }))
     .filter((g) => g.items.length > 0);
 
   return (
