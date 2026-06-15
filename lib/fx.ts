@@ -8,8 +8,8 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
  */
 export const FX_MARGIN = 0.03;
 export const BNR_RATES_URL = 'https://www.bnr.ro/nbrfxrates.xml';
-/** BNR skips weekends/holidays — accept a cached rate up to this many days old. */
-const MAX_RATE_AGE_DAYS = 4;
+/** Last-resort EUR/RON if the cached rate is unavailable. */
+export const FALLBACK_EUR_RON = 5.06;
 
 export interface BnrEurRate {
   /** Publication date, YYYY-MM-DD */
@@ -58,31 +58,27 @@ export async function fetchBnrEurRate(): Promise<BnrEurRate> {
  * Current EUR rate from the exchange_rates cache; falls back to a live BNR
  * fetch (and stores it) when the cache is empty or stale.
  */
-export async function getCurrentEurRate(): Promise<BnrEurRate> {
-  const supabase = getSupabaseAdmin();
-
-  const { data } = await supabase
-    .from('exchange_rates')
-    .select('date, rate')
-    .eq('currency', 'EUR')
-    .order('date', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (data) {
-    const ageDays = (Date.now() - new Date(data.date).getTime()) / 86_400_000;
-    if (ageDays <= MAX_RATE_AGE_DAYS) {
-      return { date: data.date, rate: Number(data.rate) };
-    }
+/**
+ * EUR/RON rate for pricing — reads ONLY the Supabase cache (kept fresh by the
+ * daily /api/cron/fx job). Never does a live BNR fetch, so it is safe to call
+ * during static/ISR rendering (a no-store fetch would force the route dynamic).
+ * Falls back to a constant when the cache is empty (e.g. cron hasn't run yet).
+ */
+export async function getCachedEurRate(): Promise<BnrEurRate> {
+  try {
+    const { data } = await getSupabaseAdmin()
+      .from('exchange_rates')
+      .select('date, rate')
+      .eq('currency', 'EUR')
+      .order('date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data) return { date: data.date, rate: Number(data.rate) };
+  } catch (e) {
+    console.error(
+      'getCachedEurRate read failed:',
+      e instanceof Error ? e.message : e,
+    );
   }
-
-  const fresh = await fetchBnrEurRate();
-  const { error } = await supabase
-    .from('exchange_rates')
-    .upsert({ date: fresh.date, currency: 'EUR', rate: fresh.rate });
-  if (error) {
-    // Cache write failure must not break pricing — log and serve the rate.
-    console.error('exchange_rates upsert failed:', error.message);
-  }
-  return fresh;
+  return { date: 'fallback', rate: FALLBACK_EUR_RON };
 }

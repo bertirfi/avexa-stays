@@ -8,6 +8,30 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-16 (later) — Wave 3 chunk-1: real EUR prices on stay pages
+- **Shipped (build green, /stays/[id] = SSG + ISR 15m):**
+  - `lib/pricing.ts`: effectiveEurPerNight(ron,bnr)=ceil(ron×(1+markup)/bnr×(1+fx)),
+    rackEurPerNight=round(eff/0.85). markup/fx from env (18/3 default).
+  - `lib/fx.ts`: NEW `getCachedEurRate()` reads ONLY Supabase exchange_rates (no live
+    BNR fetch in render). `getCurrentEurRate` removed. `fetchBnrEurRate` stays (cron only).
+    FALLBACK_EUR_RON=5.06.
+  - `lib/data/properties.ts`: getAllPropertiesData / getPropertyData read Supabase
+    (content JSONB + price_from_ron) → applyLivePricing sets rates[0].perNight =
+    effective EUR. Graceful fallback to static lib/properties on ANY error (offline
+    builds + outages don't break). getAllPropertySlugIds (static) for generateStaticParams.
+  - `app/(marketing)/stays/[id]/page.tsx`: async, reads data layer, `revalidate=900`.
+    Booking sidebar + other-suites footer now show real EUR (101 ≈ from €38, rack €45).
+- **LESSON:** never `fetch(..., {cache:'no-store'})` in an ISR/static render path — it
+  throws Next "dynamic server usage". Read cached data (Supabase) in render; do live
+  external fetches only in route handlers/crons.
+- **Robert TODO:** run `/api/cron/fx` once (Bearer CRON_SECRET) to populate the real BNR
+  rate — until then prices use FALLBACK 5.06 (close, not exact). Then stay pages show
+  exact EUR. Dev: `npm run dev` → open /stays/the-little-gem → sidebar shows real price.
+- **Next (chunk-2):** locations page shows real prices — refactor LocationsView (client,
+  imports static `properties` + getPropertiesByNeighborhood + getProperty) to receive
+  live-priced properties as a prop from the server page. PropertyCard/StylizedMap then
+  show real prices automatically. Homepage carousel shows no price (skip).
+
 ### 2026-06-16 (later) — Wave 1 COMPLETE & validated end-to-end ✅
 - **Ran in Robert's terminal, all green:** migration 002 applied; seed → 8 properties
   in Supabase with correct hostaway_listing_id; diagnostic + sync → 181 days/property

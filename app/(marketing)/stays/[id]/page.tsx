@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { properties, getProperty, getAllPropertyIds } from '@/lib/properties';
+import {
+  getPropertyData,
+  getAllPropertiesData,
+  getAllPropertySlugIds,
+} from '@/lib/data/properties';
 import { StayGallery } from '@/components/stay/StayGallery';
 import { StayHeader } from '@/components/stay/StayHeader';
 import {
@@ -15,6 +19,9 @@ import { StayAmenities } from '@/components/stay/StayAmenities';
 import { StayBookingSidebar } from '@/components/stay/StayBookingSidebar';
 import { JsonLd } from '@/components/seo/JsonLd';
 import type { Property } from '@/types';
+
+// ISR — refresh live price/availability from Supabase every 15 minutes.
+export const revalidate = 900;
 
 const SITE_URL = 'https://avexastays.com';
 
@@ -112,18 +119,14 @@ function buildBreadcrumbSchema(property: Property) {
 }
 
 export function generateStaticParams(): Params[] {
-  return getAllPropertyIds().flatMap((id) => {
-    const p = getProperty(id);
-    if (!p) return [{ id }];
-    return [{ id }, { id: p.slug }];
-  });
+  return getAllPropertySlugIds().flatMap(({ id, slug }) => [{ id }, { id: slug }]);
 }
 
 export async function generateMetadata(
   props: { params: Promise<Params> },
 ): Promise<Metadata> {
   const { id } = await props.params;
-  const property = getProperty(id);
+  const property = await getPropertyData(id);
   if (!property) return { title: 'Stay not found' };
   return {
     title: `${property.name} — ${property.subtitle}`,
@@ -133,8 +136,12 @@ export async function generateMetadata(
 
 export default async function StayPage(props: { params: Promise<Params> }) {
   const { id } = await props.params;
-  const property = getProperty(id);
+  const property = await getPropertyData(id);
   if (!property) notFound();
+
+  const others = (await getAllPropertiesData())
+    .filter((p) => p.id !== property.id)
+    .slice(0, 4);
 
   return (
     <div className="bg-cream pt-24 md:pt-32 pb-[150px] lg:pb-0">
@@ -181,10 +188,7 @@ export default async function StayPage(props: { params: Promise<Params> }) {
         <section className="border-t border-gray-line py-12">
           <h2 className="font-display mb-6 text-2xl">More AVEXA suites</h2>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {properties
-              .filter((p) => p.id !== property.id)
-              .slice(0, 4)
-              .map((p) => (
+            {others.map((p) => (
                 <Link
                   key={p.id}
                   href={`/stays/${p.slug}`}
