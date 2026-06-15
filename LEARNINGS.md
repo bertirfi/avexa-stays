@@ -8,6 +8,35 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-16 — Setup VALIDATED live; starting Wave 1
+- **All green (validated from Robert's terminal — my sandbox has no network):**
+  - Migration IS applied (anon read on `properties` → 200 empty). Wave 0 live in DB.
+  - service_role key works (read `bookings` OK). Supabase fully wired.
+  - Hostaway auth OK: token len 678, **expires_in 63158400s ≈ 24 months** (matches docs);
+    `GET /v1/listings` → **count 8** (our 8 suites). First: id 473889 "Little Heaven 1R |
+    Calea Victoriei | Old Town", **price 260 currency RON** (confirms RON→EUR pipeline).
+- **Hostaway listing field shape (for the adapter):** id, propertyTypeId, name,
+  externalListingName, internalListingName, description, thumbnailUrl, houseRules,
+  keyPickup, specialInstruction, doorSecurityCode, country, countryCode, state, city,
+  street, address, publicAddress, zipcode, price, starRating, weeklyDiscount,
+  monthlyDiscount, propertyRentTax, guestPerPersonPerNightTax, guestStayTax,
+  guestNightlyTax, refundableDamageDeposit, isDepositStayCollected, personCapacity,
+  maxChildrenAllowed, maxInfantsAllowed, maxPetsAllowed, lat, lng, checkInTimeStart,
+  checkInTimeEnd, checkOutTime, cancellationPolicy, squareMeters, roomType,
+  bathroomType, bedroomsNumber, bedsNumber, bathroomsNumber. (Amenities/photos come
+  from separate listing sub-resources — verify endpoints during Wave 1.)
+  → `doorSecurityCode` exists at listing level (relevant to §10.5 pre-arrival PIN, but
+  likely want per-reservation code — verify Wave 5). `cancellationPolicy` informs rate plans.
+- **GOTCHA — Vercel "Sensitive" env vars are write-only:** `vercel env pull` returns
+  them EMPTY. SUPABASE_SERVICE_ROLE_KEY + HOSTAWAY_API_KEY were marked Sensitive, so the
+  pull gave `""`. Fix: paste secret values directly into `.env.local` once (Vercel still
+  has them for deploys). Non-sensitive vars pull fine.
+- **SECURITY TODO:** Robert pasted the Hostaway client secret in chat → rotate it in
+  Hostaway, update `.env.local` + Vercel. Code is value-agnostic (reads from env).
+- **My-sandbox limitation:** the Bash/PowerShell tool has NO network (even sandbox-off
+  background tasks hang). Any live API check must run in Robert's terminal. Build/lint/
+  typecheck work fine locally (no network needed).
+
 ### 2026-06-12 (env + model) — Vercel link fixed; Fable→Opus rename
 - **Model context:** Fable 5 suspended for this user (US export-control directive,
   2026-06-12, foreign national). Orchestrator is now **Opus 4.8**. efficient-fable

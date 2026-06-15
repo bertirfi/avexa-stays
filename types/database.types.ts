@@ -82,6 +82,7 @@ export interface Database {
         Row: {
           id: string;
           building_id: string | null;
+          hostaway_listing_id: string | null;
           slug: string;
           name: string;
           subtitle: string | null;
@@ -100,6 +101,7 @@ export interface Database {
         Insert: {
           id: string;
           building_id?: string | null;
+          hostaway_listing_id?: string | null;
           slug: string;
           name: string;
           subtitle?: string | null;
@@ -118,6 +120,7 @@ export interface Database {
         Update: {
           id?: string;
           building_id?: string | null;
+          hostaway_listing_id?: string | null;
           slug?: string;
           name?: string;
           subtitle?: string | null;
@@ -354,6 +357,30 @@ export interface Database {
           stayed_at?: string | null;
           published?: boolean;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      integration_tokens: {
+        Row: {
+          provider: string;
+          access_token: string;
+          token_type: string;
+          expires_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          provider: string;
+          access_token: string;
+          token_type?: string;
+          expires_at: string;
+          updated_at?: string;
+        };
+        Update: {
+          provider?: string;
+          access_token?: string;
+          token_type?: string;
+          expires_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };
