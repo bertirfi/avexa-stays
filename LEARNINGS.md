@@ -8,6 +8,30 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-16 (later) — 8-way mapping resolved; Wave 1b shipped (seed + sync)
+- **Mapping CONFIRMED** via owner's Drive folder names (building codes D2/C5/C7/B35)
+  cross-checked with Hostaway internal listing names. In `lib/hostaway/mapping.ts`:
+  101→473889, 201→473898, 202→473904, 203→502511, 301→473896,
+  302→473895 (D2 Sapphire), 303→499679 (C7 Oak), 304→473905.
+  9th unit Suite 102 (CV142-B34) is IN RENOVATION → excluded. Drive calls 301
+  "Amber Gem" vs site "Ultracentral Gem & Palace View" (site name = source of truth).
+- **Wave 1b code (build green, NOT yet run against DB — needs Robert):**
+  - `POST /api/admin/seed` (SYNC_SECRET): upserts the 8 properties from
+    lib/properties.ts into Supabase (full editorial content as JSONB +
+    hostaway_listing_id). Idempotent.
+  - `GET /api/sync/hostaway` (SYNC_SECRET or CRON_SECRET): 1 listings call + per-
+    property calendar (180 days) → upserts `availability` (available, price_ron,
+    min_stay) + updates price_from_ron, bedrooms, bathrooms, last_synced_at.
+- **⚠️ UNCONFIRMED: Hostaway calendar field shape.** Sync parses defensively
+  (`isAvailable===1 || status==='available'`, `price`, `minimumStay`) but I could
+  NOT verify field names (no network). Robert must run /api/hostaway/diagnostic and
+  paste `calendarSample`; adjust the parser in sync route if names differ.
+- **Robert's run order:** (1) apply `db/migrations/002_hostaway.sql` in Supabase SQL
+  Editor, (2) `npm run dev`, (3) POST /api/admin/seed, (4) GET /api/hostaway/diagnostic
+  (paste calendarSample), (5) GET /api/sync/hostaway (paste summary).
+- **Next (chunk 1c):** rewire stays/locations pages to read price/availability from
+  Supabase (keep editorial content; ISR 15 min). Pages still read lib/properties.ts today.
+
 ### 2026-06-16 — Setup VALIDATED live; starting Wave 1
 - **All green (validated from Robert's terminal — my sandbox has no network):**
   - Migration IS applied (anon read on `properties` → 200 empty). Wave 0 live in DB.
