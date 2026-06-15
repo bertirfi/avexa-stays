@@ -14,14 +14,14 @@ Every decision must support these 4 goals.
 
 ## Orchestration — Efficient Fable (ALWAYS)
 
-Apply the `efficient-fable` convention (`.claude/skills/efficient-fable/SKILL.md`) on every non-trivial task:
+The orchestrating model is **Opus 4.8** (Fable 5 unavailable as of 2026-06-12). Apply the model-agnostic `efficient-fable` convention (`.claude/skills/efficient-fable/SKILL.md`) on every non-trivial task, automatically each session:
 
-- **Fable keeps judgment:** decomposition, architecture, tradeoffs, shared-file coordination, integration, final review, and user-facing synthesis.
-- **Delegate to cheaper subagents:** token-heavy repo/doc scans, bounded code edits, test/browser passes, and log reduction — in parallel when slices are independent.
+- **Opus 4.8 (orchestrator) keeps judgment:** decomposition, architecture, tradeoffs, integration strategy, shared-file coordination, final review, and user-facing synthesis.
+- **Delegate to cheaper agents (Sonnet/Haiku):** token-heavy repo/doc scans, bounded code edits, test/browser passes, and log reduction — in parallel when slices are independent.
 - **Handoff packets:** delegated prompts must be self-contained — repo path, exact objective, in/out of scope, evidence format (files, line refs, commands, diffs), verification steps, and stop conditions.
 - **Vet before trusting:** treat subagent reports as leads. Reopen important cited files and review the final diff before high-impact decisions, PRs, or telling the user it's done.
 
-Keep tiny tasks and judgment-sensitive validation with Fable.
+Keep tiny tasks and judgment-sensitive validation with the orchestrator.
 
 ---
 

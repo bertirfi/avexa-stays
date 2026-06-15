@@ -8,6 +8,29 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-12 (env + model) — Vercel link fixed; Fable→Opus rename
+- **Model context:** Fable 5 suspended for this user (US export-control directive,
+  2026-06-12, foreign national). Orchestrator is now **Opus 4.8**. efficient-fable
+  convention unchanged (model-agnostic); docs scrubbed of "Fable as the build model"
+  (skill name kept).
+- **Pricing pipeline LOCKED (spec §3.1):** Hostaway base RON × (1 + AVEXA_MARKUP_PERCENT,
+  default 18) = effective RON; ÷ BNR × (1 + AVEXA_FX_MARGIN_PERCENT, default 3), ceil to
+  whole EUR/night = effective EUR = CHARGED amount = the "member rate". Member 15% is
+  PRESENTATION only: rack = effective ÷ 0.85, struck-through. NEVER subtract 15% twice.
+  Markup in ONE place (env var), never per-listing, never inline. OPEN: confirm 18%×3%
+  STACK (~+21.5%) vs all-in 18% (→ set fx margin 0).
+- **Hostaway auth confirmed:** POST /v1/accessTokens (client_credentials,
+  client_id=HOSTAWAY_ACCOUNT_ID, client_secret=HOSTAWAY_API_KEY, scope=general); token
+  valid **24 months** → store in Supabase, wait 1s after issuing, 403 → refresh once;
+  limits 15 req/10s per IP, 20 req/10s per account → cache hard. Feeds Wave 1.
+- **Vercel env fix:** `vercel link` had run in `C:\Users\berti` (home), creating the
+  pulled `.env.local` there + linking the home dir. Fixed: linked the PROJECT dir
+  (copied `.vercel`), merged the pulled values into the project `.env.local`, removed
+  the stray home `.env.local`/`.vercel`. Still MISSING (Robert must add to Vercel
+  + they'll flow to local): SUPABASE_SERVICE_ROLE_KEY, HOSTAWAY_API_KEY,
+  NEXT_PUBLIC_GOOGLE_MAPS_API_KEY, CRON_SECRET. Add for ALL environments.
+- **Next:** once those 4 land, `go wave 1` (Hostaway client + sync + adapter).
+
 ### 2026-06-12 (later) — Spec APPROVED ("ok go"); Wave 0 shipped
 - **Done (Wave 0 — Foundations):** `db/migrations/001_init.sql` (9 tables, RLS,
   triggers incl. auto-profile on signup) + `db/README.md`;
@@ -69,7 +92,7 @@
 - **Keeping the `Property` type stable** while data is hardcoded — Phase 5 can
   swap `lib/properties.ts` for a Hostaway→Supabase adapter without UI changes.
 - **Efficient-fable fan-out** — 5 parallel cheap agents inventoried the entire
-  repo+docs+history (~430k subagent tokens) while Fable kept judgment/synthesis.
+  repo+docs+history (~430k subagent tokens) while the orchestrator (Opus 4.8) kept judgment/synthesis.
 
 ## Patterns to Avoid
 
