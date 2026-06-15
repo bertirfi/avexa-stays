@@ -8,6 +8,25 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-16 (later) — Wave 1 COMPLETE & validated end-to-end ✅
+- **Ran in Robert's terminal, all green:** migration 002 applied; seed → 8 properties
+  in Supabase with correct hostaway_listing_id; diagnostic + sync → 181 days/property
+  of availability + price_from_ron.
+- **Calendar shape CONFIRMED** (parser was correct, no change): day = { date,
+  isAvailable (0/1), status ('available'/'reserved'), price (RON, per-night DYNAMIC),
+  minimumStay, maximumStay, countAvailableUnits, ... }.
+- **price_from_ron (cheapest available night / 180d):** 101=155, 201=240, 202=225,
+  203=190, 301=240, 302=205, 303=225, 304=225.
+- **Notes:** Hostaway calendar has dynamic pricing (use per-night calendar price, not
+  listing base). All 8 cancellationPolicy='flexible' in Hostaway (our Saver/non-refundable
+  rate is OUR construct — Wave 3). lat/lng captured per listing (for maps).
+- **Next:** Wave 2 (Supabase Auth — needs Google OAuth configured in Supabase dashboard
+  first) OR Wave 3 (pricing pipeline lib/pricing.ts + rewire stays/locations pages to
+  read price/availability from Supabase, show real EUR). Page rewire caveat: pages that
+  fetch at build need network; add graceful fallback to lib/properties.ts so offline
+  builds don't break. Run `/api/cron/fx` (Bearer CRON_SECRET) once to populate the BNR
+  rate before pricing display.
+
 ### 2026-06-16 (later) — 8-way mapping resolved; Wave 1b shipped (seed + sync)
 - **Mapping CONFIRMED** via owner's Drive folder names (building codes D2/C5/C7/B35)
   cross-checked with Hostaway internal listing names. In `lib/hostaway/mapping.ts`:
