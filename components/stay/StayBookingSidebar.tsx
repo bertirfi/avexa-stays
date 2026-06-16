@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -53,6 +53,28 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  // Anchor the desktop calendar popup to the dates input via fixed positioning,
+  // so the sidebar's `overflow-y-auto` cannot clip it.
+  const datesBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [calPos, setCalPos] = useState<{ top: number; right: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!showCal) return;
+    function place() {
+      const el = datesBtnRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      setCalPos({ top: r.bottom + 8, right: window.innerWidth - r.right });
+    }
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [showCal]);
 
   const rate = property.rates.find((r) => r.id === rateId)!;
   const nights = nightsBetween(startDate, endDate);
@@ -170,6 +192,36 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
       )
     : null;
 
+  // Portal the DESKTOP calendar popup to body so the sidebar's overflow
+  // doesn't clip it. Anchored via fixed positioning to the dates button.
+  const desktopCalPortal =
+    mounted && showCal && calPos
+      ? createPortal(
+          <div className="pointer-events-none fixed inset-0 z-[200] hidden lg:block">
+            <div
+              className="pointer-events-auto absolute inset-0"
+              onClick={() => setShowCal(false)}
+              aria-hidden
+            />
+            <div
+              className="pointer-events-auto absolute"
+              style={{ top: calPos.top, right: calPos.right }}
+            >
+              <CalendarPopup
+                startDate={startDate}
+                endDate={endDate}
+                onSelect={(s, e) => {
+                  setStart(s);
+                  setEnd(e);
+                }}
+                onClose={() => setShowCal(false)}
+              />
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <>
     <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto rounded-card border border-gray-line bg-white p-6 shadow-[var(--shadow-pill)]">
@@ -210,43 +262,22 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
         </button>
       </div>
 
-      {/* Dates (desktop input) */}
-      <div className="relative hidden lg:block">
-        <button
-          type="button"
-          onClick={() => setShowCal((s) => !s)}
-          className="grid w-full grid-cols-2 rounded-2xl border border-gray-line text-left"
-        >
-          <span className="border-r border-gray-line p-3">
-            <span className="font-mono-label block text-ink-60">Check-in</span>
-            <span className="text-sm font-semibold">{formatDate(startDate) ?? 'Add date'}</span>
-          </span>
-          <span className="p-3">
-            <span className="font-mono-label block text-ink-60">Check-out</span>
-            <span className="text-sm font-semibold">{formatDate(endDate) ?? 'Add date'}</span>
-          </span>
-        </button>
-        {showCal && (
-          <>
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setShowCal(false)}
-              aria-hidden
-            />
-            <div className="absolute right-0 top-full z-50 mt-2">
-              <CalendarPopup
-                startDate={startDate}
-                endDate={endDate}
-                onSelect={(s, e) => {
-                  setStart(s);
-                  setEnd(e);
-                }}
-                onClose={() => setShowCal(false)}
-              />
-            </div>
-          </>
-        )}
-      </div>
+      {/* Dates (desktop input) — anchor for portaled popup */}
+      <button
+        ref={datesBtnRef}
+        type="button"
+        onClick={() => setShowCal((s) => !s)}
+        className="hidden w-full grid-cols-2 rounded-2xl border border-gray-line text-left lg:grid"
+      >
+        <span className="border-r border-gray-line p-3">
+          <span className="font-mono-label block text-ink-60">Check-in</span>
+          <span className="text-sm font-semibold">{formatDate(startDate) ?? 'Add date'}</span>
+        </span>
+        <span className="p-3">
+          <span className="font-mono-label block text-ink-60">Check-out</span>
+          <span className="text-sm font-semibold">{formatDate(endDate) ?? 'Add date'}</span>
+        </span>
+      </button>
       {/* Mobile: CalendarPopup self-portals a full-screen sheet (md:hidden inside) */}
       {showCal && (
         <div className="lg:hidden">
@@ -520,6 +551,7 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
       </p>
     </aside>
     {mobileBar}
+    {desktopCalPortal}
     </>
   );
 }
