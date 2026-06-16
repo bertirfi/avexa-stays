@@ -105,10 +105,7 @@ export function StayBookingSidebar({ property }: Props) {
     <>
     <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto rounded-card border border-gray-line bg-white p-6 shadow-[var(--shadow-pill)]">
       <div className="mb-4 flex items-baseline justify-between">
-        <span className="flex items-baseline gap-2">
-          <span className="text-sm text-ink-60 line-through">€{pricing.rackPerNight}</span>
-          <span className="font-display text-2xl">€{rate.perNight}</span>
-        </span>
+        <span className="font-display text-[26px] text-gold-dark">€{rate.perNight}</span>
         <span className="text-sm text-ink-60">/ night</span>
       </div>
 
@@ -264,8 +261,7 @@ export function StayBookingSidebar({ property }: Props) {
           </button>
           {priceOpen && (
             <ul className="mt-3 space-y-1.5 text-sm">
-              <Row label={`€${pricing.rackPerNight} × ${nights} night${nights === 1 ? '' : 's'}`} value={`€${pricing.subtotal}`} />
-              <Row label={`Member discount (${rate.discount}%)`} value={`-€${pricing.discount}`} muted />
+              <Row label={`€${rate.perNight} × ${nights} night${nights === 1 ? '' : 's'}`} value={`€${rate.perNight * nights}`} />
               {pricing.breakfastTotal > 0 && (
                 <Row label={`Breakfast (${pricing.occupants}p × ${nights}n)`} value={`€${pricing.breakfastTotal}`} />
               )}
@@ -274,7 +270,7 @@ export function StayBookingSidebar({ property }: Props) {
           )}
           <div className="mt-3 flex items-center justify-between border-t border-gray-line pt-3">
             <span className="font-semibold">Total</span>
-            <span className="font-display text-xl">€{pricing.total}</span>
+            <span className="font-display text-xl text-gold-dark">€{pricing.total}</span>
           </div>
         </div>
       )}
