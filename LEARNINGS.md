@@ -8,6 +8,31 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-16 (later) — Mobile non-issue + booking price polish (Chunk A)
+- **Mobile "broken" was a STALE deployment** — Robert was testing avexa-stays-3hkykgzxb
+  (old). On the latest branch preview it's fine. Still shipped real improvements:
+  `main` pb now `calc(5rem+env(safe-area-inset-bottom))` (clears TabBar on notched
+  iPhones); `100vh`→`100dvh` (LocationsView, ProfileApp, StylizedMap, StayBookingSidebar).
+  Mobile UX (scroll-chrome) confirmed working on latest. (commit 58d3df4)
+- **Chunk A done (commit 32e19e3):** StayBookingSidebar — removed the struck-through rack
+  price (only struck price in production TSX; rest was legacy stay-sidebar.jsx). Member
+  nightly + total now `text-gold-dark`. Breakdown = single member×nights line (no
+  rack/discount lines). "Member Benefits" badge + "15% off" perk text KEPT (Robert: photo-3
+  style, no struck number). Verify on Vercel after rebuild.
+- **OPEN — booking→checkout still rack-based:** `book()` still writes pricePerNight=
+  rackPerNight + discount to the Booking/localStorage → checkout (BookingSummary) still
+  shows rack+discount. Align to member values when reworking checkout (Wave 4 / demo flow).
+- **NEXT — Chunk B (date pricing + calendar):** when dates selected, show per-day prices
+  from the `availability` table (price_ron/date already synced, 180d) + total; "Book now"
+  opens a 2-month calendar (availability + price tiers $/$$/$$$ like Robert's photo 2),
+  sticky on locations. "from €X" (min) when no dates = already correct.
+- **NEXT — Chunk C (multi-room "add room"):** Robert grouped by NEIGHBORHOOD (not strict
+  building): Old City Center = 101 + 201; Calea Victoriei = 202 + 301 + 302 + 303 + 201
+  (201 Golden Forest appears in BOTH — reconcile: it's CV2, edge of Old Town + on Calea
+  Victoriei); Universitate = 203; Piața Romană = 304. On a stay page: "Add room" + sibling
+  suites in the same group with "+", price for selected period + total. Verify current
+  neighborhood field values vs this grouping before building.
+
 ### 2026-06-16 (later) — Wave 3 chunk-2: locations real prices + Vercel self-verify
 - LocationsView refactored to receive `properties` as a prop (was importing static
   lib/properties). `locations/page.tsx` → async, getAllPropertiesData(), ISR 900.
