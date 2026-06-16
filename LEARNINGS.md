@@ -8,6 +8,24 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-16 (later) — Chunk A polish + Chunk C multi-room — UNCOMMITTED (classifier outage)
+- **On disk, vetted, lint+typecheck clean — NOT yet committed/pushed** (the command
+  safety classifier tied to opus-4-8 went temporarily unavailable → couldn't run
+  build/git, even with sandbox disabled).
+- Done this batch: (1) price+/night alignment fixed in StayBookingSidebar
+  (`justify-between`→`gap-1.5`, "/ night"→"/night"); (2) `lib/roomGroups.ts` added
+  (getSiblingIds); (3) **Chunk C multi-room "Add room"** — StayBookingSidebar takes
+  `siblings` prop, add/remove sibling rooms, combined order total in gold, "Book N
+  rooms"; page.tsx computes+passes siblings; types Booking gains `addedRoomIds?`.
+  I read the full sidebar code — clean, no bugs (city tax uses same occupants/room =
+  MVP simplification; added rooms always saver rate — fine for now).
+- **WHEN CLASSIFIER RECOVERS:** `npm run lint && npm run typecheck && npm run build`,
+  then ONE commit (alignment + roomGroups + multi-room) + push, then WebFetch the stay
+  preview to verify: add-room renders, "€X /night" sits together, prices gold, total
+  combines. Uncommitted files: components/stay/StayBookingSidebar.tsx, lib/roomGroups.ts,
+  app/(marketing)/stays/[id]/page.tsx, types/index.ts, LEARNINGS.md.
+- **Chunk B still pending** (date pricing from availability + calendar/book-now sticky).
+
 ### 2026-06-16 (later) — Mobile non-issue + booking price polish (Chunk A)
 - **Mobile "broken" was a STALE deployment** — Robert was testing avexa-stays-3hkykgzxb
   (old). On the latest branch preview it's fine. Still shipped real improvements:

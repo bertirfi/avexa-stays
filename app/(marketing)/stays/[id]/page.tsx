@@ -18,6 +18,7 @@ import {
 import { StayAmenities } from '@/components/stay/StayAmenities';
 import { StayBookingSidebar } from '@/components/stay/StayBookingSidebar';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { getSiblingIds } from '@/lib/roomGroups';
 import type { Property } from '@/types';
 
 // ISR — refresh live price/availability from Supabase every 15 minutes.
@@ -139,9 +140,11 @@ export default async function StayPage(props: { params: Promise<Params> }) {
   const property = await getPropertyData(id);
   if (!property) notFound();
 
-  const others = (await getAllPropertiesData())
-    .filter((p) => p.id !== property.id)
-    .slice(0, 4);
+  const allOthers = await getAllPropertiesData();
+  const others = allOthers.filter((p) => p.id !== property.id).slice(0, 4);
+
+  const siblingIds = getSiblingIds(property.id);
+  const siblings = allOthers.filter((p) => siblingIds.includes(p.id));
 
   return (
     <div className="bg-cream pt-24 md:pt-32 pb-[150px] lg:pb-0">
@@ -180,7 +183,7 @@ export default async function StayPage(props: { params: Promise<Params> }) {
 
           {/* Sticky right sidebar */}
           <div className="lg:min-w-0">
-            <StayBookingSidebar property={property} />
+            <StayBookingSidebar property={property} siblings={siblings} />
           </div>
         </div>
 
@@ -198,7 +201,7 @@ export default async function StayPage(props: { params: Promise<Params> }) {
                     className="relative aspect-[4/3] overflow-hidden rounded-card bg-cover bg-center"
                     style={{ backgroundImage: `url(${p.cover})` }}
                   >
-                    <span className="absolute right-3 top-3 rounded-full bg-white/95 px-2 py-1 font-mono-label text-ink">
+                    <span className="font-display absolute right-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold tracking-normal text-ink">
                       €{p.rates[0].perNight}
                     </span>
                   </div>

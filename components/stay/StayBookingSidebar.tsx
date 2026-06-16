@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Icon } from '@/components/Icon';
 import { CalendarPopup } from '@/components/search/CalendarPopup';
 import { GuestPopup } from '@/components/search/GuestPopup';
@@ -12,6 +13,7 @@ import { cn } from '@/lib/cn';
 
 interface Props {
   property: Property;
+  siblings?: Property[];
 }
 
 const CITY_TAX_PER_PERSON = 3;
@@ -26,7 +28,12 @@ function nightsBetween(s: Date | null, e: Date | null) {
   return Math.max(0, Math.round((e.getTime() - s.getTime()) / 86_400_000));
 }
 
-export function StayBookingSidebar({ property }: Props) {
+/** Saver (rates[0]) perNight for a sibling property. Returns null when rates are empty. */
+function siblingPerNight(sib: Property): number | null {
+  return sib.rates[0]?.perNight ?? null;
+}
+
+export function StayBookingSidebar({ property, siblings = [] }: Props) {
   const router = useRouter();
   const [startDate, setStart] = useState<Date | null>(null);
   const [endDate, setEnd] = useState<Date | null>(null);
@@ -41,26 +48,73 @@ export function StayBookingSidebar({ property }: Props) {
   });
   const [priceOpen, setPriceOpen] = useState(false);
 
+  // Multi-room state
+  const [addedRoomIds, setAddedRoomIds] = useState<string[]>([]);
+
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
   const rate = property.rates.find((r) => r.id === rateId)!;
   const nights = nightsBetween(startDate, endDate);
 
+  // Siblings that have valid pricing (guard against missing rates[0])
+  const validSiblings = useMemo(
+    () => siblings.filter((s) => siblingPerNight(s) !== null),
+    [siblings],
+  );
+
+  const addedRooms = useMemo(
+    () => validSiblings.filter((s) => addedRoomIds.includes(s.id)),
+    [validSiblings, addedRoomIds],
+  );
+
+  const availableToAdd = useMemo(
+    () => validSiblings.filter((s) => !addedRoomIds.includes(s.id)),
+    [validSiblings, addedRoomIds],
+  );
+
+  function addRoom(id: string) {
+    if (validSiblings.some((s) => s.id === id)) {
+      setAddedRoomIds((prev) => [...prev, id]);
+    }
+  }
+
+  function removeRoom(id: string) {
+    setAddedRoomIds((prev) => prev.filter((x) => x !== id));
+  }
+
+  const roomCount = 1 + addedRoomIds.length;
+
   const pricing = useMemo(() => {
-    // Anchor the breakdown to a rack ("regular") rate, matching the Claude Design
-    // sidebar. The member rate IS that rack minus the rate's discount, so the
-    // discount line is a real saving — not a second discount on top of the rate.
     const rackPerNight = Math.round(rate.perNight / (1 - rate.discount / 100));
     const subtotal = rackPerNight * nights; // at rack rate
     const afterDiscount = rate.perNight * nights; // member price
-    const discount = subtotal - afterDiscount; // savings vs rack
+    const discount = subtotal - afterDiscount;
     const occupants = guests.adults + guests.children;
     const breakfastTotal = upgrades.breakfast ? 20 * nights * occupants : 0;
-    const cityTax = CITY_TAX_PER_PERSON * nights * occupants;
-    const total = afterDiscount + breakfastTotal + cityTax;
-    return { rackPerNight, subtotal, discount, afterDiscount, breakfastTotal, cityTax, total, occupants };
-  }, [rate, nights, guests, upgrades]);
+    const mainCityTax = CITY_TAX_PER_PERSON * nights * occupants;
+    const mainRoomTotal = afterDiscount + breakfastTotal + mainCityTax;
+
+    // Added rooms: saver rate × nights + city tax (breakfast is main-room only)
+    const addedRoomsTotal = addedRooms.reduce((sum, sib) => {
+      const pn = siblingPerNight(sib)!;
+      return sum + pn * nights + CITY_TAX_PER_PERSON * nights * occupants;
+    }, 0);
+
+    const combinedTotal = mainRoomTotal + addedRoomsTotal;
+
+    return {
+      rackPerNight,
+      subtotal,
+      discount,
+      afterDiscount,
+      breakfastTotal,
+      cityTax: mainCityTax,
+      total: mainRoomTotal,
+      combinedTotal,
+      occupants,
+    };
+  }, [rate, nights, guests, upgrades, addedRooms]);
 
   function book() {
     if (!startDate || !endDate || nights === 0) {
@@ -80,7 +134,8 @@ export function StayBookingSidebar({ property }: Props) {
       discount: pricing.discount,
       breakfastTotal: pricing.breakfastTotal,
       cityTax: pricing.cityTax,
-      total: pricing.total,
+      total: roomCount > 1 ? pricing.combinedTotal : pricing.total,
+      addedRoomIds: addedRoomIds.length > 0 ? addedRoomIds : undefined,
     };
     try {
       window.localStorage.setItem('avexa_booking', JSON.stringify(booking));
@@ -88,13 +143,27 @@ export function StayBookingSidebar({ property }: Props) {
     router.push('/checkout');
   }
 
+  const mobileBarPrice =
+    nights === 0
+      ? `€${rate.perNight}`
+      : roomCount > 1
+        ? `€${pricing.combinedTotal}`
+        : `€${pricing.total}`;
+
+  const mobileBarLabel =
+    nights === 0
+      ? 'Select dates'
+      : roomCount > 1
+        ? `Book ${roomCount} rooms →`
+        : 'Book best rate →';
+
   const mobileBar = mounted
     ? createPortal(
         <MobileBookingBar
           priceLabel={nights === 0 ? 'From' : 'Total'}
-          priceValue={nights === 0 ? `€${rate.perNight}` : `€${pricing.total}`}
+          priceValue={mobileBarPrice}
           taxNote={nights === 0 ? '/night' : 'Taxes & charges incl.'}
-          ctaLabel={nights === 0 ? 'Select dates' : 'Book best rate'}
+          ctaLabel={mobileBarLabel}
           onBook={book}
         />,
         document.body,
@@ -104,13 +173,12 @@ export function StayBookingSidebar({ property }: Props) {
   return (
     <>
     <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto rounded-card border border-gray-line bg-white p-6 shadow-[var(--shadow-pill)]">
-      <div className="mb-4 flex items-baseline justify-between">
+      <div className="mb-4 flex items-baseline gap-1.5">
         <span className="font-display text-[26px] text-gold-dark">€{rate.perNight}</span>
-        <span className="text-sm text-ink-60">/ night</span>
+        <span className="text-sm text-ink-60">/night</span>
       </div>
 
-      {/* Mobile: clean "Book your stay" rows — tapping opens the full-screen
-          calendar / guest bottom-sheet (same editors as desktop). */}
+      {/* Mobile: clean "Book your stay" rows */}
       <div className="mb-2 lg:hidden">
         <h3 className="font-display mb-1 text-lg">Book your stay</h3>
         <button
@@ -248,7 +316,129 @@ export function StayBookingSidebar({ property }: Props) {
         ))}
       </div>
 
-      {/* Price breakdown */}
+      {/* ── Add another room ─────────────────────────────────── */}
+      {validSiblings.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-gray-line p-4">
+          <p className="font-mono-label mb-3 text-ink-60">Add another room</p>
+
+          {/* Added rooms list */}
+          {addedRooms.length > 0 && (
+            <div className="mb-3 space-y-2">
+              {/* Room 1 = current property (always first, no remove) */}
+              <div className="flex items-center gap-3 rounded-xl bg-gold-pale px-3 py-2.5">
+                <div className="relative size-10 shrink-0 overflow-hidden rounded-lg">
+                  <Image
+                    src={property.cover}
+                    alt={property.name}
+                    fill
+                    className="object-cover"
+                    sizes="40px"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-semibold">{property.name}</p>
+                  <p className="text-[10px] text-ink-60">Room 1 · this suite</p>
+                </div>
+                <span className="shrink-0 text-xs font-semibold text-gold-dark">
+                  {nights > 0 ? `€${rate.perNight * nights}` : `€${rate.perNight}/n`}
+                </span>
+              </div>
+
+              {/* Added sibling rooms */}
+              {addedRooms.map((sib, idx) => {
+                const pn = siblingPerNight(sib)!;
+                return (
+                  <div key={sib.id} className="flex items-center gap-3 rounded-xl bg-gold-pale px-3 py-2.5">
+                    <div className="relative size-10 shrink-0 overflow-hidden rounded-lg">
+                      <Image
+                        src={sib.cover}
+                        alt={sib.name}
+                        fill
+                        className="object-cover"
+                        sizes="40px"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold">{sib.name}</p>
+                      <span
+                        className="inline-block size-1.5 rounded-full"
+                        style={{ backgroundColor: sib.neighborhoodColor }}
+                        aria-hidden
+                      />
+                      <span className="ml-1 text-[10px] text-ink-60">{sib.neighborhoodLabel}</span>
+                    </div>
+                    <span className="shrink-0 text-xs font-semibold text-gold-dark">
+                      {nights > 0 ? `€${pn * nights}` : `€${pn}/n`}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={`Remove ${sib.name}`}
+                      onClick={() => removeRoom(sib.id)}
+                      className="ml-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-ink/10 transition hover:bg-ink/20"
+                    >
+                      <Icon name="x" size={12} />
+                    </button>
+                    {/* Suppress unused idx variable */}
+                    <span className="sr-only">Room {idx + 2}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Available to add */}
+          {availableToAdd.length > 0 && (
+            <div className="space-y-2">
+              {availableToAdd.map((sib) => {
+                const pn = siblingPerNight(sib)!;
+                return (
+                  <div key={sib.id} className="flex items-center gap-3">
+                    <div className="relative size-10 shrink-0 overflow-hidden rounded-lg">
+                      <Image
+                        src={sib.cover}
+                        alt={sib.name}
+                        fill
+                        className="object-cover"
+                        sizes="40px"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold">{sib.name}</p>
+                      <div className="flex items-center gap-1">
+                        <span
+                          className="inline-block size-1.5 rounded-full"
+                          style={{ backgroundColor: sib.neighborhoodColor }}
+                          aria-hidden
+                        />
+                        <span className="text-[10px] text-ink-60">{sib.neighborhoodLabel}</span>
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-xs font-semibold text-gold-dark">
+                      {nights > 0 ? `€${pn * nights}` : `from €${pn}/n`}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={`Add ${sib.name}`}
+                      onClick={() => addRoom(sib.id)}
+                      className="ml-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-ink text-cream transition hover:bg-gold-dark"
+                    >
+                      <Icon name="plus" size={14} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Hint when no dates selected */}
+          {nights === 0 && (
+            <p className="mt-3 text-[11px] text-ink-60">Select dates to see stay prices.</p>
+          )}
+        </div>
+      )}
+      {/* ── /Add another room ────────────────────────────────── */}
+
+      {/* Price breakdown — single room */}
       {nights > 0 && (
         <div className="mt-4 rounded-2xl border border-gray-line p-4">
           <button
@@ -262,15 +452,29 @@ export function StayBookingSidebar({ property }: Props) {
           {priceOpen && (
             <ul className="mt-3 space-y-1.5 text-sm">
               <Row label={`€${rate.perNight} × ${nights} night${nights === 1 ? '' : 's'}`} value={`€${rate.perNight * nights}`} />
+              {addedRooms.map((sib) => {
+                const pn = siblingPerNight(sib)!;
+                return (
+                  <Row
+                    key={sib.id}
+                    label={`${sib.name} × ${nights}n`}
+                    value={`€${pn * nights}`}
+                  />
+                );
+              })}
               {pricing.breakfastTotal > 0 && (
                 <Row label={`Breakfast (${pricing.occupants}p × ${nights}n)`} value={`€${pricing.breakfastTotal}`} />
               )}
-              <Row label={`City tax (€${CITY_TAX_PER_PERSON}/p/night)`} value={`€${pricing.cityTax}`} muted />
+              <Row label={`City tax (€${CITY_TAX_PER_PERSON}/p/night)`} value={`€${pricing.cityTax * roomCount}`} muted />
             </ul>
           )}
           <div className="mt-3 flex items-center justify-between border-t border-gray-line pt-3">
-            <span className="font-semibold">Total</span>
-            <span className="font-display text-xl text-gold-dark">€{pricing.total}</span>
+            <span className="font-semibold">
+              {roomCount > 1 ? `Order total (${roomCount} rooms)` : 'Total'}
+            </span>
+            <span className="font-display text-xl text-gold-dark">
+              €{roomCount > 1 ? pricing.combinedTotal : pricing.total}
+            </span>
           </div>
         </div>
       )}
@@ -280,7 +484,11 @@ export function StayBookingSidebar({ property }: Props) {
         onClick={book}
         className="mt-5 w-full rounded-full bg-ink py-3 text-center font-semibold text-cream transition hover:bg-gold hover:text-ink"
       >
-        {nights === 0 ? 'Select dates' : 'Book best rate →'}
+        {nights === 0
+          ? 'Select dates'
+          : roomCount > 1
+            ? `Book ${roomCount} rooms →`
+            : 'Book best rate →'}
       </button>
 
       <p className="mt-3 text-center text-[11px] text-ink-60">

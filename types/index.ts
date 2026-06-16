@@ -146,4 +146,6 @@ export interface Booking {
   breakfastTotal: number;
   cityTax: number;
   total: number;
+  /** Sibling property ids added via "Add room" (multi-room booking). */
+  addedRoomIds?: string[];
 }
