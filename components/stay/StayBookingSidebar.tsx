@@ -103,7 +103,7 @@ export function StayBookingSidebar({ property }: Props) {
 
   return (
     <>
-    <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto rounded-card border border-gray-line bg-white p-6 shadow-[var(--shadow-pill)]">
+    <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto rounded-card border border-gray-line bg-white p-6 shadow-[var(--shadow-pill)]">
       <div className="mb-4 flex items-baseline justify-between">
         <span className="flex items-baseline gap-2">
           <span className="text-sm text-ink-60 line-through">€{pricing.rackPerNight}</span>

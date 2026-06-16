@@ -93,7 +93,7 @@ export function ProfileApp() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-68px)] bg-cream px-4 pt-28 pb-15 min-[641px]:px-5 min-[641px]:pt-28 min-[641px]:pb-20 min-[981px]:px-6 min-[981px]:pt-32 min-[981px]:pb-25">
+    <div className="min-h-[calc(100dvh-68px)] bg-cream px-4 pt-28 pb-15 min-[641px]:px-5 min-[641px]:pt-28 min-[641px]:pb-20 min-[981px]:px-6 min-[981px]:pt-32 min-[981px]:pb-25">
       <div className="mx-auto max-w-[720px]">
         {/* Header */}
         <div className="mb-8 flex items-center gap-3.5 sm:mb-11 sm:gap-5">

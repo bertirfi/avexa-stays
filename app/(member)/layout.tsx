@@ -10,7 +10,7 @@ export default function MemberLayout({
   return (
     <>
       <Nav />
-      <main className="pb-20 md:pb-0">{children}</main>
+      <main className="pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
       <Footer />
       <TabBar />
     </>

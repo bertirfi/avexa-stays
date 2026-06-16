@@ -54,7 +54,7 @@ export function LocationsView({ properties }: { properties: Property[] }) {
 
       <div
         className={cn(
-          'grid min-h-[calc(100vh-104px)]',
+          'grid min-h-[calc(100dvh-104px)]',
           mapOpen ? 'lg:grid-cols-[1.7fr_1fr]' : 'lg:grid-cols-1',
         )}
       >

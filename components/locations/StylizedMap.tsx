@@ -59,7 +59,7 @@ export function StylizedMap({
       className={cn(
         isMobile
           ? 'relative h-full w-full overflow-hidden bg-[#242824]'
-          : 'relative m-3 ml-0 hidden overflow-hidden rounded-[20px] border-l border-gray-line bg-[#242824] lg:sticky lg:top-20 lg:block lg:h-[calc(100vh-5rem)]',
+          : 'relative m-3 ml-0 hidden overflow-hidden rounded-[20px] border-l border-gray-line bg-[#242824] lg:sticky lg:top-20 lg:block lg:h-[calc(100dvh-5rem)]',
       )}
     >
       {/* Base map gradient (parks + water) */}
