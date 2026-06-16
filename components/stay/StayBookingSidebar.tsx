@@ -211,22 +211,45 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
       </div>
 
       {/* Dates (desktop input) */}
-      <button
-        type="button"
-        onClick={() => setShowCal((s) => !s)}
-        className="hidden w-full grid-cols-2 rounded-2xl border border-gray-line text-left lg:grid"
-      >
-        <span className="border-r border-gray-line p-3">
-          <span className="font-mono-label block text-ink-60">Check-in</span>
-          <span className="text-sm font-semibold">{formatDate(startDate) ?? 'Add date'}</span>
-        </span>
-        <span className="p-3">
-          <span className="font-mono-label block text-ink-60">Check-out</span>
-          <span className="text-sm font-semibold">{formatDate(endDate) ?? 'Add date'}</span>
-        </span>
-      </button>
+      <div className="relative hidden lg:block">
+        <button
+          type="button"
+          onClick={() => setShowCal((s) => !s)}
+          className="grid w-full grid-cols-2 rounded-2xl border border-gray-line text-left"
+        >
+          <span className="border-r border-gray-line p-3">
+            <span className="font-mono-label block text-ink-60">Check-in</span>
+            <span className="text-sm font-semibold">{formatDate(startDate) ?? 'Add date'}</span>
+          </span>
+          <span className="p-3">
+            <span className="font-mono-label block text-ink-60">Check-out</span>
+            <span className="text-sm font-semibold">{formatDate(endDate) ?? 'Add date'}</span>
+          </span>
+        </button>
+        {showCal && (
+          <>
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setShowCal(false)}
+              aria-hidden
+            />
+            <div className="absolute right-0 top-full z-50 mt-2">
+              <CalendarPopup
+                startDate={startDate}
+                endDate={endDate}
+                onSelect={(s, e) => {
+                  setStart(s);
+                  setEnd(e);
+                }}
+                onClose={() => setShowCal(false)}
+              />
+            </div>
+          </>
+        )}
+      </div>
+      {/* Mobile: CalendarPopup self-portals a full-screen sheet (md:hidden inside) */}
       {showCal && (
-        <div className="mt-2">
+        <div className="lg:hidden">
           <CalendarPopup
             startDate={startDate}
             endDate={endDate}
@@ -235,6 +258,7 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
               setEnd(e);
             }}
             onClose={() => setShowCal(false)}
+            onBack={() => setShowCal(false)}
           />
         </div>
       )}

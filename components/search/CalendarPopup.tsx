@@ -61,15 +61,15 @@ function MonthGrid({
 
   return (
     <div>
-      <div className="mb-3 px-2 font-display text-lg">
+      <div className="mb-4 text-center font-display text-base font-semibold">
         {MONTH_NAMES[month]} {year}
       </div>
-      <div className="mb-2 grid grid-cols-7 gap-1 px-2 text-center text-[11px] text-ink-60">
+      <div className="mb-2 grid grid-cols-7 text-center text-[11px] uppercase tracking-wider text-ink-60">
         {DOW.map((d) => (
-          <div key={d}>{d}</div>
+          <div key={d} className="py-2">{d}</div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-1 px-2">
+      <div className="grid grid-cols-7 gap-y-1">
         {cells.map((d, i) => {
           if (!d) return <div key={i} />;
           const isPast = d < today && !sameDay(d, today);
@@ -77,23 +77,34 @@ function MonthGrid({
           const isEnd = endDate && sameDay(d, endDate);
           const inRange =
             startDate && endDate && d > startDate && d < endDate;
+          const isEndpoint = isStart || isEnd;
 
           return (
-            <button
-              type="button"
+            <div
               key={i}
-              disabled={isPast}
-              onClick={() => onPick(d)}
               className={cn(
-                'aspect-square rounded-full text-sm transition',
-                isPast && 'text-ink-60/40 cursor-not-allowed',
-                !isPast && !isStart && !isEnd && !inRange && 'hover:bg-gold-pale',
-                inRange && 'bg-gold-pale text-ink',
-                (isStart || isEnd) && 'bg-ink text-cream font-semibold',
+                'relative flex h-11 items-center justify-center',
+                // Range fill that bridges between cells (no gap-x so the bar is continuous)
+                inRange && 'bg-gold-pale/60',
+                isStart && endDate && 'bg-gradient-to-r from-transparent from-50% to-gold-pale/60 to-50%',
+                isEnd && startDate && 'bg-gradient-to-r from-gold-pale/60 from-50% to-transparent to-50%',
               )}
             >
-              {d.getDate()}
-            </button>
+              <button
+                type="button"
+                disabled={isPast}
+                onClick={() => onPick(d)}
+                className={cn(
+                  'flex size-10 items-center justify-center rounded-full text-[15px] transition',
+                  isPast && 'text-ink-60/40 cursor-not-allowed line-through',
+                  !isPast && !isEndpoint && !inRange && 'hover:bg-ink/10 font-medium',
+                  inRange && 'text-ink font-medium',
+                  isEndpoint && 'bg-ink text-cream font-semibold',
+                )}
+              >
+                {d.getDate()}
+              </button>
+            </div>
           );
         })}
       </div>
@@ -249,8 +260,8 @@ export function CalendarPopup({
   return (
     <>
       {/* ── DESKTOP two-month popup: hidden on mobile ── */}
-      <div className="hidden md:block rounded-3xl bg-white p-6 text-ink shadow-[var(--shadow-pill)]">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="hidden md:block w-[640px] rounded-3xl bg-white p-7 text-ink shadow-[var(--shadow-pill)]">
+        <div className="mb-5 flex items-center justify-between">
           <button
             onClick={() => shift(-1)}
             aria-label="Previous month"
@@ -270,7 +281,7 @@ export function CalendarPopup({
           </button>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-8">
           <MonthGrid
             year={baseYear}
             month={baseMonth}
@@ -289,7 +300,7 @@ export function CalendarPopup({
           />
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="mt-6 flex justify-end gap-3 border-t border-gray-line pt-5">
           <button
             onClick={() => onSelect(null, null)}
             className="rounded-full px-4 py-2 text-sm text-ink-60 hover:bg-gray-light"
