@@ -31,6 +31,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.6,
     },
+    {
+      url: `${BASE_URL}/faq`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
     // Legal pages — indexable trust signals, low priority.
     ...['/privacy', '/terms', '/imprint', '/cancellation'].map((path) => ({
       url: `${BASE_URL}${path}`,

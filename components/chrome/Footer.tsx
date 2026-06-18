@@ -3,6 +3,7 @@ import { NewsletterForm } from '@/components/chrome/NewsletterForm';
 import { Logo } from '@/components/chrome/Logo';
 
 const contactLinks = [
+  { label: 'FAQ', href: '/faq' },
   { label: 'Contact us', href: 'mailto:hello@avexastays.com' },
   { label: 'Cancellation policy', href: '/cancellation' },
 ];
