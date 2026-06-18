@@ -5,6 +5,7 @@ import { LoginForm } from '@/components/auth/LoginForm';
 export const metadata: Metadata = {
   title: 'Log in or sign up',
   description: 'Join AVEXA and unlock your best rate. Free to join, always.',
+  robots: { index: false, follow: false },
 };
 
 export default function LoginPage() {

@@ -129,9 +129,19 @@ export async function generateMetadata(
   const { id } = await props.params;
   const property = await getPropertyData(id);
   if (!property) return { title: 'Stay not found' };
+  const description = property.description.split('\n\n')[0];
   return {
     title: `${property.name} — ${property.subtitle}`,
-    description: property.description.split('\n\n')[0],
+    description,
+    // Canonical always points to the slug URL (the id form is a duplicate).
+    alternates: { canonical: `/stays/${property.slug}` },
+    openGraph: {
+      title: `${property.name} — ${property.subtitle}`,
+      description,
+      url: `${SITE_URL}/stays/${property.slug}`,
+      type: 'website',
+      images: [{ url: absoluteUrl(property.cover), width: 1200, height: 800, alt: property.name }],
+    },
   };
 }
 

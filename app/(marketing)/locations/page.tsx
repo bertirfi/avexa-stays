@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: 'Locations in Bucharest',
   description:
     'Member rates and fully digital check-in at every AVEXA address across Bucharest City Center — Calea Victoriei, Old City Center, Universitate, and Piața Romană.',
+  alternates: { canonical: '/locations' },
 };
 
 // ISR — refresh live prices from Supabase every 15 minutes.

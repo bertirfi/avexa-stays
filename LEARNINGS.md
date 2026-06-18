@@ -8,6 +8,40 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-17 — Wave 4A-trimmed: SEO + launch hardening (committed)
+- **Scope cut per Robert:** no Twitter account → removed twitter card from root
+  layout entirely. No GA4/PostHog accounts yet → analytics + cookie consent
+  DEFERRED (drop-in when accounts exist). No Stripe test keys → Wave 4B (payments)
+  stays BLOCKED.
+- **Shipped (build green, 29 static pages):**
+  - Homepage metadata: keyword-first `title.absolute` = "Bucharest City Center
+    Apartments | AVEXA Stays" + keyword meta description + `canonical: '/'` +
+    OG override. (Was inheriting root default "Live the city.")
+  - Canonicals added: `/locations`, `/member-benefits`, `/stays/[id]` (→ slug URL,
+    the id form is the duplicate). Stay page also got OG (cover image).
+  - `noindex` (robots index:false, follow:false) on member/auth pages:
+    my-trips, profile, checkout, login.
+  - `app/opengraph-image.tsx`: dynamic 1200×630 via next/og ImageResponse —
+    ink bg + gold AVEXA wordmark + keyword subtitle. **No external font fetch**
+    (Satori default font) so it builds offline-safe. Route `/opengraph-image`.
+  - `app/not-found.tsx` (branded 404) + `app/error.tsx` (client error boundary,
+    console.error → real monitoring later). Both ink/gold, avoid apostrophes
+    (eslint react/no-unescaped-entities is ON — use no-contraction copy or &apos;).
+  - `next.config.ts` security headers via `async headers()`: HSTS, nosniff,
+    X-Frame SAMEORIGIN, Referrer-Policy, Permissions-Policy.
+- **CSP intentionally deferred** — needs full 3rd-party origin set (Maps/Stripe/
+  Supabase/analytics) + nonce middleware for Next inline hydration. Build it at
+  launch hardening, not before (would just be rewritten). Noted inline in config.
+- **H1 left as-is:** "Bucharest City Center, *unlocked*" (lowercase italic gold +
+  pulse-dot for the period) is a deliberate brand choice and already contains the
+  "Bucharest City Center" keyword (SEO rule #8 satisfied). Did NOT jam "apartments"
+  into the hero — that is a brand call.
+- **Deferred-but-easy when accounts land:** GA4 + PostHog(EU) + consent banner;
+  Twitter card (only if they ever make an account); CSP.
+- **NEXT no-gate option:** Wave 5 `/locations/[slug]` detail pages (800+ words +
+  Google Maps embed — Maps key already exists). Auth (Wave 2) is partially gated
+  (email works; Google OAuth needs Supabase dashboard config). Chunk B still parked.
+
 ### 2026-06-16 (later) — Chunk A polish + Chunk C multi-room — UNCOMMITTED (classifier outage)
 - **On disk, vetted, lint+typecheck clean — NOT yet committed/pushed** (the command
   safety classifier tied to opus-4-8 went temporarily unavailable → couldn't run

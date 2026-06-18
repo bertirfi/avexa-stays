@@ -21,12 +21,6 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'AVEXA Stays — Live the city.',
-    description:
-      'Premium short and medium-stay apartments in the heart of Bucharest. Booked direct, kept honest.',
-  },
 };
 
 export const viewport: Viewport = {

@@ -5,7 +5,8 @@
       "Bash(git merge:*)",
       "Bash(git checkout:*)",
       "Bash(git pull:*)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "PowerShell(Get-Command pnpm, npm, node, corepack -ErrorAction SilentlyContinue)"
     ]
   }
 }
