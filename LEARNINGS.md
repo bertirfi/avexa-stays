@@ -8,6 +8,21 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-17 (later) — /guide Bucharest city guide built (committed, verified live)
+- Built `/guide` (was deferred). Real original Bucharest content: neighbourhoods,
+  what to see, eat & drink, getting around, day trips, when to visit, Good-to-know
+  tips, CTA → /locations. Brand voice, links to /locations. ~1000 words, accurate.
+- **Zoom-stable hero (Robert's spec):** hero height in viewport units (`h-[82svh]`)
+  + next/image `object-cover`. Because the viewport's apparent size is constant
+  under browser zoom, the hero image keeps its on-screen size when zooming; only
+  rem/clamp TEXT scales. This is the technique for "image fixed, text changes on
+  zoom" — viewport-unit sizing, NOT background-attachment:fixed (breaks on iOS).
+  Hero image: /listing-photos/20-palace-view.jpeg.
+- SEO: keyword title/desc, canonical, OG, Article + BreadcrumbList JSON-LD, in
+  sitemap, /guide link restored in footer Discover.
+- **Footer dead links now:** only /help, /accessibility, /careers, /press, /partners
+  remain removed (about + long-stays still not built; guide now IS built).
+
 ### 2026-06-17 (later) — Legal pages + FAQPage + footer dead-link cleanup (committed)
 - **FAQPage** on /member-benefits: schema built from the `faqs[]` array now EXPORTED
   from MemberFAQ.tsx (import the data, don't duplicate → schema always matches text).
