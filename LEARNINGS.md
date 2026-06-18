@@ -8,6 +8,25 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-17 (later) — Legal pages + FAQPage + footer dead-link cleanup (committed)
+- **FAQPage** on /member-benefits: schema built from the `faqs[]` array now EXPORTED
+  from MemberFAQ.tsx (import the data, don't duplicate → schema always matches text).
+- **4 legal pages built** with PRIME GOLD LIVING SRL data (Robert provided):
+  /imprint, /privacy (GDPR), /terms, /cancellation. Company: PRIME GOLD LIVING SRL,
+  CUI 52265361, Reg.Com J2025057993006, EUID ROONRC.J2025057993006, founded 2025-08-01,
+  Str. Fibrei 28, Sector 2, 020342 Bucharest. Shared `components/legal/LegalShell.tsx`
+  (scoped typography via `[&_h2]:` arbitrary variants — NO global CSS). English to match
+  site. Cancellation aligned to member FAQ (free until arrival day, 1-night on arrival
+  date) + Saver(non-refundable)/Flex split. **Boilerplate — Robert should have counsel
+  review before launch** (told him; no "draft" disclaimer on the live pages).
+  Indexable, canonical'd, added to sitemap; removed noindex /login from sitemap.
+- **Footer dead links removed** (Robert: "exclude le pe acestea"): help, accessibility,
+  guide, long-stays, about, careers, press, partners all 404'd → removed. Empty "AVEXA"
+  column dropped (grid 4→3). Discover gained /member-benefits (real page, internal link).
+  These 8 pages are now DEFERRED — /guide is the biggest SEO long-tail opportunity but
+  needs real original Bucharest content (dedicated session); /about + /long-stays can be
+  assembled from existing data when wanted.
+
 ### 2026-06-17 (later) — Structured-data sweep (committed)
 - **Goal (Robert):** make existing pages readable by Google + LLMs via structured
   data, ZERO text/layout change. Two commits:
