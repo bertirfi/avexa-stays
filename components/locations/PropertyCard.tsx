@@ -166,7 +166,7 @@ export function PropertyCard({
 
         <div className="sm:col-span-2">
           <Link
-            href={`/stays/${property.slug}`}
+            href={`/locations/${property.slug}`}
             className="block w-full rounded-xl bg-ink px-4 py-3.5 text-center text-sm font-semibold text-cream transition hover:bg-gold-dark"
           >
             View details

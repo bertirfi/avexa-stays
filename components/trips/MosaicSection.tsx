@@ -60,7 +60,7 @@ export function MosaicSection() {
               className={positions[i]}
             >
               <Link
-                href={`/stays/${property.slug}`}
+                href={`/locations/${property.slug}`}
                 className="group relative block h-full overflow-hidden rounded-[18px] transition-[transform,box-shadow] duration-[400ms] ease-[var(--ease-snap)] hover:-translate-y-1.5 hover:shadow-[0_24px_48px_-20px_rgba(25,25,25,0.2)]"
               >
                 <Image

@@ -8,6 +8,32 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-17 (later) — Route move: /stays/[id] → /locations/[slug] (committed)
+- **Decision (Robert):** property detail pages now live UNDER /locations as
+  /locations/[slug] (e.g. /locations/the-modern-green-gem) instead of
+  /stays/the-modern-green-gem. Reason: /locations is the hub; jumping to /stays/*
+  broke the URL hierarchy. Done PRE-LAUNCH (root still serves coming-soon, nothing
+  indexed) → zero migration cost, ideal timing. This resolves the long-open
+  "route naming" decision in PLAN.md.
+- **Scope was ROUTES ONLY — zero visible text changed** (Robert was explicit twice).
+  Did NOT build neighbourhood landing pages and did NOT write any new copy; the
+  earlier "/locations/[slug] neighbourhood pages + 800 words" idea is dropped.
+- **What changed:**
+  - Moved app/(marketing)/stays/[id]/page.tsx → app/(marketing)/locations/[slug]/page.tsx
+    (param renamed id→slug; still accepts BOTH numeric id and slug, canonical→slug).
+  - 5 internal links repointed /stays/→/locations/: PropertyCard, LocationsView
+    (mobile popup), MosaicSection, TripsList (/locations/101), + the page's own
+    "More AVEXA suites" links.
+  - SEO sync: canonical, sitemap.ts, JSON-LD (LodgingBusiness + BreadcrumbList) urls,
+    OG url → all /locations/[slug].
+  - next.config.ts: `async redirects()` 301 `/stays/:slug → /locations/:slug` (safety
+    net for any old/bookmarked link; nothing indexed yet so not SEO-critical).
+- **GOTCHA:** after moving/removing a route folder, `tsc --noEmit` failed on STALE
+  `.next/types/app/(marketing)/stays/...` validator files (TS2307). Fix: `rm -rf .next`
+  then rebuild — regenerates clean route types. Remember this for any future route move.
+- **Untouched:** /locations overview (still hub), /long-stays (separate route),
+  checkout/booking flow (uses propertyId from localStorage, not URL), all page text.
+
 ### 2026-06-17 — Wave 4A-trimmed: SEO + launch hardening (committed)
 - **Scope cut per Robert:** no Twitter account → removed twitter card from root
   layout entirely. No GA4/PostHog accounts yet → analytics + cookie consent

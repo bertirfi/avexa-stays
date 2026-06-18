@@ -22,6 +22,13 @@ const config: NextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
+  async redirects() {
+    // Property pages moved from /stays/* to /locations/* (hub → detail).
+    // 301 keeps any old/bookmarked link alive and consolidates SEO signals.
+    return [
+      { source: '/stays/:slug', destination: '/locations/:slug', permanent: true },
+    ];
+  },
 };
 
 export default config;

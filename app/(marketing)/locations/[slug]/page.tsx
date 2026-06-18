@@ -27,7 +27,7 @@ export const revalidate = 900;
 const SITE_URL = 'https://avexastays.com';
 
 interface Params {
-  id: string;
+  slug: string;
 }
 
 function absoluteUrl(path: string): string {
@@ -54,7 +54,7 @@ function buildLodgingSchema(property: Property) {
     name: property.name,
     description: property.description.split('\n\n')[0],
     image: absoluteUrl(property.cover),
-    url: `${SITE_URL}/stays/${property.slug}`,
+    url: `${SITE_URL}/locations/${property.slug}`,
     address: {
       '@type': 'PostalAddress',
       streetAddress: property.address,
@@ -67,7 +67,7 @@ function buildLodgingSchema(property: Property) {
       price: saverRate.perNight,
       priceCurrency: 'EUR',
       availability: 'https://schema.org/InStock',
-      url: `${SITE_URL}/stays/${property.slug}`,
+      url: `${SITE_URL}/locations/${property.slug}`,
     },
     numberOfRooms: property.maxGuests,
     petsAllowed: false,
@@ -113,32 +113,33 @@ function buildBreadcrumbSchema(property: Property) {
         '@type': 'ListItem',
         position: 4,
         name: property.name,
-        item: `${SITE_URL}/stays/${property.slug}`,
+        item: `${SITE_URL}/locations/${property.slug}`,
       },
     ],
   };
 }
 
 export function generateStaticParams(): Params[] {
-  return getAllPropertySlugIds().flatMap(({ id, slug }) => [{ id }, { id: slug }]);
+  // Emit both the numeric id and the slug form; canonical resolves to the slug.
+  return getAllPropertySlugIds().flatMap(({ id, slug }) => [{ slug: id }, { slug }]);
 }
 
 export async function generateMetadata(
   props: { params: Promise<Params> },
 ): Promise<Metadata> {
-  const { id } = await props.params;
-  const property = await getPropertyData(id);
+  const { slug } = await props.params;
+  const property = await getPropertyData(slug);
   if (!property) return { title: 'Stay not found' };
   const description = property.description.split('\n\n')[0];
   return {
     title: `${property.name} — ${property.subtitle}`,
     description,
     // Canonical always points to the slug URL (the id form is a duplicate).
-    alternates: { canonical: `/stays/${property.slug}` },
+    alternates: { canonical: `/locations/${property.slug}` },
     openGraph: {
       title: `${property.name} — ${property.subtitle}`,
       description,
-      url: `${SITE_URL}/stays/${property.slug}`,
+      url: `${SITE_URL}/locations/${property.slug}`,
       type: 'website',
       images: [{ url: absoluteUrl(property.cover), width: 1200, height: 800, alt: property.name }],
     },
@@ -146,8 +147,8 @@ export async function generateMetadata(
 }
 
 export default async function StayPage(props: { params: Promise<Params> }) {
-  const { id } = await props.params;
-  const property = await getPropertyData(id);
+  const { slug } = await props.params;
+  const property = await getPropertyData(slug);
   if (!property) notFound();
 
   const allOthers = await getAllPropertiesData();
@@ -204,7 +205,7 @@ export default async function StayPage(props: { params: Promise<Params> }) {
             {others.map((p) => (
                 <Link
                   key={p.id}
-                  href={`/stays/${p.slug}`}
+                  href={`/locations/${p.slug}`}
                   className="group block"
                 >
                   <div

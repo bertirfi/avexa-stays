@@ -192,7 +192,7 @@ export function LocationsView({ properties }: { properties: Property[] }) {
             >
               <Icon name="x" size={14} />
             </button>
-            <Link href={`/stays/${popupProperty.slug}`} className="flex gap-3">
+            <Link href={`/locations/${popupProperty.slug}`} className="flex gap-3">
               <div className="relative size-[84px] shrink-0 overflow-hidden rounded-[12px] bg-gray-light">
                 <Image
                   src={popupProperty.cover}

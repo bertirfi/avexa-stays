@@ -34,7 +34,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   const stayRoutes: MetadataRoute.Sitemap = properties.map((property) => ({
-    url: `${BASE_URL}/stays/${property.slug}`,
+    url: `${BASE_URL}/locations/${property.slug}`,
     lastModified: now,
     changeFrequency: 'weekly',
     priority: 0.8,

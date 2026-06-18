@@ -67,7 +67,7 @@ function UpcomingCard({ trip }: { trip: MockTrip }) {
 
       <div className="mt-6 flex flex-wrap gap-3">
         <Link
-          href="/stays/101"
+          href="/locations/101"
           className="rounded-full bg-ink px-5 py-2 text-sm font-semibold text-cream transition hover:bg-gold hover:text-ink"
         >
           View details
