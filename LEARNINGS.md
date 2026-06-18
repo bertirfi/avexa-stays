@@ -8,6 +8,25 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-17 (later) — Structured-data sweep (committed)
+- **Goal (Robert):** make existing pages readable by Google + LLMs via structured
+  data, ZERO text/layout change. Two commits:
+  - `/locations` overview: JSON-LD `ItemList` (8 suites: name, /locations/[slug]
+    url, image, address+neighborhood, EUR offer) + `BreadcrumbList`. Server-rendered.
+  - Homepage: `Organization` (name, url, logo→/opengraph-image, Bucharest address,
+    socials in sameAs: IG/TikTok/FB/LinkedIn) + `WebSite` (publisher→org @id).
+- **logo stand-in:** no logo file in /public (logos kit not added yet) → Organization
+  logo points to the OG PNG route `/opengraph-image`. Swap to a dedicated SQUARE
+  logo PNG when /public/logos is populated (1-line change). Google prefers raster;
+  do NOT point logo at an SVG.
+- **No SearchAction** in WebSite: there's no text-search endpoint (the search pill is
+  dates/guests, not /search?q=). Declaring a fake SearchAction is invalid — add the
+  sitelinks searchbox only once a real text-search results page exists.
+- **Now ALL page types have structured data:** homepage (Org+WebSite), /locations
+  (ItemList+Breadcrumb), /locations/[slug] (LodgingBusiness+Breadcrumb). Verify with
+  Rich Results Test / validator.schema.org (JSON-LD is in a <script>, so WebFetch's
+  markdown can't see it — build-green is the proof it emits).
+
 ### 2026-06-17 (later) — Route move: /stays/[id] → /locations/[slug] (committed)
 - **Decision (Robert):** property detail pages now live UNDER /locations as
   /locations/[slug] (e.g. /locations/the-modern-green-gem) instead of
