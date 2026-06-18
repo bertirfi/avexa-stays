@@ -1,10 +1,14 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { NewsletterForm } from '@/components/chrome/NewsletterForm';
 import { Logo } from '@/components/chrome/Logo';
+import { CONTACT_EMAIL, PHONE_DISPLAY, PHONE_TEL, WHATSAPP_URL } from '@/lib/contact';
 
 const contactLinks = [
   { label: 'FAQ', href: '/faq' },
-  { label: 'Contact us', href: 'mailto:hello@avexastays.com' },
+  { label: 'Chat on WhatsApp', href: WHATSAPP_URL },
+  { label: `Call ${PHONE_DISPLAY}`, href: PHONE_TEL },
+  { label: 'Contact us', href: `mailto:${CONTACT_EMAIL}` },
   { label: 'Cancellation policy', href: '/cancellation' },
 ];
 
@@ -137,6 +141,36 @@ export function Footer() {
   );
 }
 
+/** Renders internal routes via <Link>, and tel:/mailto:/http links via <a>. */
+function FooterLink({
+  href,
+  className,
+  children,
+}: {
+  href: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  const isProtocol = /^(https?:|mailto:|tel:)/.test(href);
+  if (isProtocol) {
+    const isHttp = href.startsWith('http');
+    return (
+      <a
+        href={href}
+        className={className}
+        {...(isHttp ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      >
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  );
+}
+
 function Column({
   title,
   links,
@@ -150,12 +184,12 @@ function Column({
       <ul className="space-y-3">
         {links.map((l) => (
           <li key={l.label}>
-            <Link
+            <FooterLink
               href={l.href}
               className="text-[15px] text-cream/80 transition hover:text-gold"
             >
               {l.label}
-            </Link>
+            </FooterLink>
           </li>
         ))}
       </ul>

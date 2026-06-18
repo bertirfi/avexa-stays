@@ -1,4 +1,5 @@
 import { Reveal } from '@/components/Reveal';
+import { PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact';
 
 export function ContactSection() {
   return (
@@ -51,7 +52,7 @@ export function ContactSection() {
 
           <Reveal direction="up" delay={0.12}>
             <a
-              href="https://wa.me/40712345678"
+              href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="group flex h-full flex-col gap-2 rounded-[20px] border border-white/10 bg-white/5 px-8 py-9 transition-[transform,background-color,border-color] duration-[400ms] ease-[var(--ease-snap)] hover:-translate-y-1.5 hover:border-gold/20 hover:bg-gold/[0.08]"
@@ -63,7 +64,7 @@ export function ContactSection() {
               </span>
               <span className="font-mono-label mt-1 text-white/40">WhatsApp</span>
               <span className="font-display text-2xl leading-tight tracking-[-0.01em] text-white">
-                +40 712 345 678
+                {PHONE_DISPLAY}
               </span>
               <span className="font-mono-label mt-3 tracking-[0.14em] text-gold transition-transform duration-200 group-hover:translate-x-1.5">
                 Open chat →
