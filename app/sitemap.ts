@@ -25,12 +25,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.7,
     },
-    {
-      url: `${BASE_URL}/login`,
+    // Legal pages — indexable trust signals, low priority.
+    ...['/privacy', '/terms', '/imprint', '/cancellation'].map((path) => ({
+      url: `${BASE_URL}${path}`,
       lastModified: now,
-      changeFrequency: 'yearly',
+      changeFrequency: 'yearly' as const,
       priority: 0.3,
-    },
+    })),
   ];
 
   const stayRoutes: MetadataRoute.Sitemap = properties.map((property) => ({

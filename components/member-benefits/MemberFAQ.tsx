@@ -1,11 +1,11 @@
 import { Reveal } from '@/components/Reveal';
 
-interface QA {
+export interface QA {
   q: string;
   a: string;
 }
 
-const faqs: QA[] = [
+export const faqs: QA[] = [
   {
     q: 'Is membership really free?',
     a: 'Yes — completely free, with no hidden fees, no trials, and no expiry date. You sign up once and keep your benefits forever.',

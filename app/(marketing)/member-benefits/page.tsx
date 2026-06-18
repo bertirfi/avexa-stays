@@ -5,8 +5,9 @@ import { MemberPerks } from '@/components/member-benefits/MemberPerks';
 import { MemberReward } from '@/components/member-benefits/MemberReward';
 import { MemberCompare } from '@/components/member-benefits/MemberCompare';
 import { MemberJoin } from '@/components/member-benefits/MemberJoin';
-import { MemberFAQ } from '@/components/member-benefits/MemberFAQ';
+import { MemberFAQ, faqs } from '@/components/member-benefits/MemberFAQ';
 import { MemberCTA } from '@/components/member-benefits/MemberCTA';
+import { JsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Member Benefits',
@@ -15,9 +16,21 @@ export const metadata: Metadata = {
   alternates: { canonical: '/member-benefits' },
 };
 
+// FAQPage built from the SAME data the page renders, so schema matches visible text.
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
 export default function MemberBenefitsPage() {
   return (
     <>
+      <JsonLd data={faqSchema} />
       <MemberHero />
       <MemberStatement />
       <MemberPerks />
