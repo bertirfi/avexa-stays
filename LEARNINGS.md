@@ -8,6 +8,20 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-17 (later) — /faq page + clickable phone & WhatsApp (committed)
+- Built `/faq` (FAQPage JSON-LD): two groups — "Booking & your stay" (factual
+  general Q&As) + "Membership & rates" (reuses exported `faqs` from MemberFAQ).
+  Native <details> accordions. Canonical, in sitemap, FAQ link added to footer.
+- **Real AVEXA phone (Robert): +40 755 411 059.** Stored as single source of truth
+  in `lib/contact.ts` (PHONE_DISPLAY / PHONE_TEL `tel:+40755411059` / WHATSAPP_URL
+  `https://wa.me/40755411059` / CONTACT_EMAIL hello@avexastays.com). Footer "Contact
+  & Help" now has FAQ, Chat on WhatsApp (wa.me), Call +40 755 411 059 (tel:),
+  Contact us, Cancellation policy. New `FooterLink` renders tel:/mailto:/http as <a>
+  (http → new tab), internal via <Link>.
+- Replaced the old PLACEHOLDER +40 712 345 678 in components/trips/ContactSection.tsx
+  with the real number via the shared constants. If the number ever changes, edit
+  lib/contact.ts only.
+
 ### 2026-06-17 (later) — /guide Bucharest city guide built (committed, verified live)
 - Built `/guide` (was deferred). Real original Bucharest content: neighbourhoods,
   what to see, eat & drink, getting around, day trips, when to visit, Good-to-know
