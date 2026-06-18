@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import { LocationsView } from '@/components/locations/LocationsView';
 import { getAllPropertiesData } from '@/lib/data/properties';
+import { JsonLd } from '@/components/seo/JsonLd';
+import type { Property } from '@/types';
+
+const SITE_URL = 'https://avexastays.com';
 
 export const metadata: Metadata = {
   title: 'Locations in Bucharest',
@@ -12,10 +16,61 @@ export const metadata: Metadata = {
 // ISR — refresh live prices from Supabase every 15 minutes.
 export const revalidate = 900;
 
+function absoluteUrl(path: string): string {
+  return path.startsWith('http') ? path : `${SITE_URL}${path}`;
+}
+
+/** ItemList of all suites — lets Google + LLMs read the listing as structured data. */
+function buildItemListSchema(properties: Property[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'AVEXA Stays — Bucharest City Center Apartments',
+    numberOfItems: properties.length,
+    itemListElement: properties.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': ['Apartment', 'LodgingBusiness'],
+        name: p.name,
+        url: `${SITE_URL}/locations/${p.slug}`,
+        image: absoluteUrl(p.cover),
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: p.address,
+          addressLocality: 'Bucharest',
+          addressRegion: p.neighborhoodLabel,
+          addressCountry: 'RO',
+        },
+        offers: {
+          '@type': 'Offer',
+          price: p.rates[0].perNight,
+          priceCurrency: 'EUR',
+          availability: 'https://schema.org/InStock',
+          url: `${SITE_URL}/locations/${p.slug}`,
+        },
+      },
+    })),
+  };
+}
+
+function buildBreadcrumbSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'Locations', item: `${SITE_URL}/locations` },
+    ],
+  };
+}
+
 export default async function LocationsPage() {
   const properties = await getAllPropertiesData();
   return (
     <div className="pt-0 sm:pt-20">
+      <JsonLd data={buildItemListSchema(properties)} />
+      <JsonLd data={buildBreadcrumbSchema()} />
       <LocationsView properties={properties} />
     </div>
   );
