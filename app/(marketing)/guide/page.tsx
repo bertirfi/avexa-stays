@@ -5,7 +5,7 @@ import { Reveal } from '@/components/Reveal';
 import { JsonLd } from '@/components/seo/JsonLd';
 
 const SITE_URL = 'https://avexastays.com';
-const HERO = '/listing-photos/20-palace-view.jpeg';
+const HERO = '/listings/302/02-living-room.jpeg';
 
 export const metadata: Metadata = {
   title: { absolute: 'Bucharest City Guide — What to See, Eat & Do | AVEXA' },
@@ -133,7 +133,7 @@ export default function GuidePage() {
       <section className="relative h-[82svh] min-h-[440px] w-full overflow-hidden bg-ink">
         <Image
           src={HERO}
-          alt="The view over central Bucharest from an AVEXA apartment"
+          alt="A bright living room in an AVEXA apartment in central Bucharest"
           fill
           priority
           sizes="100vw"
