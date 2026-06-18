@@ -3,23 +3,13 @@ import { NewsletterForm } from '@/components/chrome/NewsletterForm';
 import { Logo } from '@/components/chrome/Logo';
 
 const contactLinks = [
-  { label: 'Help centre', href: '/help' },
   { label: 'Contact us', href: 'mailto:hello@avexastays.com' },
   { label: 'Cancellation policy', href: '/cancellation' },
-  { label: 'Report accessibility', href: '/accessibility' },
 ];
 
 const discoverLinks = [
   { label: 'All locations', href: '/locations' },
-  { label: 'Bucharest guide', href: '/guide' },
-  { label: 'Long stays', href: '/long-stays' },
-];
-
-const avexaLinks = [
-  { label: 'About us', href: '/about' },
-  { label: 'Careers', href: '/careers' },
-  { label: 'Press', href: '/press' },
-  { label: 'Partners', href: '/partners' },
+  { label: 'Member benefits', href: '/member-benefits' },
 ];
 
 const socials = [
@@ -50,10 +40,9 @@ export function Footer() {
     <footer className="relative overflow-hidden bg-ink text-cream">
       <div className="mx-auto max-w-[1400px] px-6 py-20 md:px-10">
         {/* Top columns */}
-        <div className="grid grid-cols-2 gap-10 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-10 md:grid-cols-3">
           <Column title="Contact & Help" links={contactLinks} />
           <Column title="Discover" links={discoverLinks} />
-          <Column title="AVEXA" links={avexaLinks} />
 
           {/* Stay social + pay-with */}
           <div>
