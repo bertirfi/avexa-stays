@@ -9,6 +9,7 @@ const contactLinks = [
 
 const discoverLinks = [
   { label: 'All locations', href: '/locations' },
+  { label: 'Bucharest guide', href: '/guide' },
   { label: 'Member benefits', href: '/member-benefits' },
 ];
 
