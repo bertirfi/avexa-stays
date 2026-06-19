@@ -8,6 +8,36 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-19 — Checkout price fix + Chunk B (date pricing) (committed)
+- **Checkout consistency:** BookingSummary showed rack×nights + "Member discount
+  −X%" (the struck framing removed from the sidebar). Now book() persists the MEMBER
+  subtotal and BookingSummary shows "Stay · N nights" → subtotal + a gold "Member rate
+  applied" tag. No rack/struck anywhere.
+- **Chunk B — real per-night pricing from `availability`:**
+  - `lib/data/availability.ts`: getAvailabilityMap(propertyId, days=180) → reads
+    availability (property_id/date/available/price_ron), RON→EUR via
+    effectiveEurPerNight, returns `{ 'YYYY-MM-DD': {eur,available,minStay} }`.
+    try/catch → `{}` (graceful offline → flat pricing).
+  - `lib/date.ts`: shared pure `ymd()` — DO NOT import the server availability
+    module into client components (it pulls in getSupabaseAdmin / supabase-js).
+    Client components import ONLY `type AvailabilityMap` (erased) + `ymd`.
+  - Stay page (`locations/[slug]`) fetches availability, passes to sidebar.
+  - StayBookingSidebar: `stayNightPrices` = per-night (availability ?? flat),
+    `staySubtotal` = sum drives the total; `isVariablePricing` flips the breakdown
+    label ("Stay · N nights" vs "€X × N"). Pricing useMemo no longer computes
+    rack/discount.
+  - CalendarPopup: optional `priceByDate` → €price under each date, '—' for
+    unavailable (disabled), cells h-14 only when prices exist (hasPrices checks
+    Object.keys length so an empty map stays compact). Search-pill usage unaffected
+    (no priceByDate).
+- **MVP caveats:** added rooms keep flat rate (no per-room calendar); a range may
+  span an unavailable middle night (endpoints can't be unavailable) — true
+  validation is the Wave 4B live price check before payment. Chose real €prices over
+  $/$$/$$$ tiers (more useful, on-brand); can add color tiers later.
+- **Can't self-verify live** (no network to Supabase): calendar prices + the total
+  need Robert's browser with the synced data. Build green = compile-safe; graceful
+  fallback = no crash if Supabase unreachable.
+
 ### 2026-06-17 (later) — /faq page + clickable phone & WhatsApp (committed)
 - Built `/faq` (FAQPage JSON-LD): two groups — "Booking & your stay" (factual
   general Q&As) + "Membership & rates" (reuses exported `faqs` from MemberFAQ).
