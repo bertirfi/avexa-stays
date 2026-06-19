@@ -35,11 +35,9 @@ export function BookingSummary({ hydrated }: BookingSummaryProps) {
         <div className="border-t border-gray-line pt-3" />
 
         <Row label={`€ ${raw.pricePerNight} × ${raw.nights} night${raw.nights === 1 ? '' : 's'}`} value={`€ ${raw.subtotal}`} />
-        <Row
-          label={`Member discount –${rate.discount}%`}
-          value={`– € ${raw.discount}`}
-          muted
-        />
+        <span className="inline-flex w-fit items-center rounded-full bg-gold-pale px-2.5 py-1 text-[11px] font-semibold text-gold-dark">
+          Member rate applied
+        </span>
         {raw.breakfastTotal > 0 && (
           <Row label="Breakfast" value={`€ ${raw.breakfastTotal}`} />
         )}

@@ -151,9 +151,11 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
       guests,
       rateId,
       upgrades,
-      pricePerNight: pricing.rackPerNight,
-      subtotal: pricing.subtotal,
-      discount: pricing.discount,
+      // Persist the MEMBER price (no rack / no struck framing) — matches the
+      // sidebar and the no-struck-price decision; checkout shows this directly.
+      pricePerNight: rate.perNight,
+      subtotal: rate.perNight * nights,
+      discount: 0,
       breakfastTotal: pricing.breakfastTotal,
       cityTax: pricing.cityTax,
       total: roomCount > 1 ? pricing.combinedTotal : pricing.total,
