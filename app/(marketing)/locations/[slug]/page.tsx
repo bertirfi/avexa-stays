@@ -19,6 +19,7 @@ import { StayAmenities } from '@/components/stay/StayAmenities';
 import { StayBookingSidebar } from '@/components/stay/StayBookingSidebar';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getSiblingIds } from '@/lib/roomGroups';
+import { getAvailabilityMap } from '@/lib/data/availability';
 import type { Property } from '@/types';
 
 // ISR — refresh live price/availability from Supabase every 15 minutes.
@@ -157,6 +158,9 @@ export default async function StayPage(props: { params: Promise<Params> }) {
   const siblingIds = getSiblingIds(property.id);
   const siblings = allOthers.filter((p) => siblingIds.includes(p.id));
 
+  // Per-night prices + availability for the calendar (graceful: {} when offline).
+  const availability = await getAvailabilityMap(property.id);
+
   return (
     <div className="bg-cream pt-24 md:pt-32 pb-[150px] lg:pb-0">
       <JsonLd data={buildLodgingSchema(property)} />
@@ -194,7 +198,7 @@ export default async function StayPage(props: { params: Promise<Params> }) {
 
           {/* Sticky right sidebar */}
           <div className="lg:min-w-0">
-            <StayBookingSidebar property={property} siblings={siblings} />
+            <StayBookingSidebar property={property} siblings={siblings} availability={availability} />
           </div>
         </div>
 

@@ -9,11 +9,15 @@ import { CalendarPopup } from '@/components/search/CalendarPopup';
 import { GuestPopup } from '@/components/search/GuestPopup';
 import { MobileBookingBar } from '@/components/stay/MobileBookingBar';
 import type { Booking, GuestCounts, Property } from '@/types';
+import type { AvailabilityMap } from '@/lib/data/availability';
+import { ymd } from '@/lib/date';
 import { cn } from '@/lib/cn';
 
 interface Props {
   property: Property;
   siblings?: Property[];
+  /** Per-night prices + availability for the calendar (empty when offline). */
+  availability?: AvailabilityMap;
 }
 
 const CITY_TAX_PER_PERSON = 3;
@@ -33,7 +37,7 @@ function siblingPerNight(sib: Property): number | null {
   return sib.rates[0]?.perNight ?? null;
 }
 
-export function StayBookingSidebar({ property, siblings = [] }: Props) {
+export function StayBookingSidebar({ property, siblings = [], availability }: Props) {
   const router = useRouter();
   const [startDate, setStart] = useState<Date | null>(null);
   const [endDate, setEnd] = useState<Date | null>(null);
@@ -79,6 +83,22 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
   const rate = property.rates.find((r) => r.id === rateId)!;
   const nights = nightsBetween(startDate, endDate);
 
+  // Per-night member prices for the selected range: real prices from availability
+  // where present, else the flat listing rate. Sum drives the total.
+  const stayNightPrices = useMemo(() => {
+    if (!startDate || nights === 0) return [] as number[];
+    const out: number[] = [];
+    const cur = new Date(startDate);
+    for (let i = 0; i < nights; i += 1) {
+      out.push(availability?.[ymd(cur)]?.eur ?? rate.perNight);
+      cur.setDate(cur.getDate() + 1);
+    }
+    return out;
+  }, [availability, startDate, nights, rate.perNight]);
+
+  const staySubtotal = stayNightPrices.reduce((a, b) => a + b, 0);
+  const isVariablePricing = new Set(stayNightPrices).size > 1;
+
   // Siblings that have valid pricing (guard against missing rates[0])
   const validSiblings = useMemo(
     () => siblings.filter((s) => siblingPerNight(s) !== null),
@@ -108,16 +128,14 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
   const roomCount = 1 + addedRoomIds.length;
 
   const pricing = useMemo(() => {
-    const rackPerNight = Math.round(rate.perNight / (1 - rate.discount / 100));
-    const subtotal = rackPerNight * nights; // at rack rate
-    const afterDiscount = rate.perNight * nights; // member price
-    const discount = subtotal - afterDiscount;
     const occupants = guests.adults + guests.children;
     const breakfastTotal = upgrades.breakfast ? 20 * nights * occupants : 0;
     const mainCityTax = CITY_TAX_PER_PERSON * nights * occupants;
-    const mainRoomTotal = afterDiscount + breakfastTotal + mainCityTax;
+    // Member stay price = sum of per-night prices (variable from availability,
+    // else flat rate.perNight × nights).
+    const mainRoomTotal = staySubtotal + breakfastTotal + mainCityTax;
 
-    // Added rooms: saver rate × nights + city tax (breakfast is main-room only)
+    // Added rooms keep the flat saver rate × nights + city tax (no per-room calendar).
     const addedRoomsTotal = addedRooms.reduce((sum, sib) => {
       const pn = siblingPerNight(sib)!;
       return sum + pn * nights + CITY_TAX_PER_PERSON * nights * occupants;
@@ -126,17 +144,14 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
     const combinedTotal = mainRoomTotal + addedRoomsTotal;
 
     return {
-      rackPerNight,
-      subtotal,
-      discount,
-      afterDiscount,
+      staySubtotal,
       breakfastTotal,
       cityTax: mainCityTax,
       total: mainRoomTotal,
       combinedTotal,
       occupants,
     };
-  }, [rate, nights, guests, upgrades, addedRooms]);
+  }, [staySubtotal, nights, guests, upgrades, addedRooms]);
 
   function book() {
     if (!startDate || !endDate || nights === 0) {
@@ -153,8 +168,8 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
       upgrades,
       // Persist the MEMBER price (no rack / no struck framing) — matches the
       // sidebar and the no-struck-price decision; checkout shows this directly.
-      pricePerNight: rate.perNight,
-      subtotal: rate.perNight * nights,
+      pricePerNight: isVariablePricing ? Math.round(staySubtotal / nights) : rate.perNight,
+      subtotal: staySubtotal,
       discount: 0,
       breakfastTotal: pricing.breakfastTotal,
       cityTax: pricing.cityTax,
@@ -212,6 +227,7 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
               <CalendarPopup
                 startDate={startDate}
                 endDate={endDate}
+                priceByDate={availability}
                 onSelect={(s, e) => {
                   setStart(s);
                   setEnd(e);
@@ -286,6 +302,7 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
           <CalendarPopup
             startDate={startDate}
             endDate={endDate}
+            priceByDate={availability}
             onSelect={(s, e) => {
               setStart(s);
               setEnd(e);
@@ -508,7 +525,14 @@ export function StayBookingSidebar({ property, siblings = [] }: Props) {
           </button>
           {priceOpen && (
             <ul className="mt-3 space-y-1.5 text-sm">
-              <Row label={`€${rate.perNight} × ${nights} night${nights === 1 ? '' : 's'}`} value={`€${rate.perNight * nights}`} />
+              <Row
+                label={
+                  isVariablePricing
+                    ? `Stay · ${nights} night${nights === 1 ? '' : 's'}`
+                    : `€${rate.perNight} × ${nights} night${nights === 1 ? '' : 's'}`
+                }
+                value={`€${pricing.staySubtotal}`}
+              />
               {addedRooms.map((sib) => {
                 const pn = siblingPerNight(sib)!;
                 return (

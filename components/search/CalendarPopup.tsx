@@ -4,7 +4,12 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
+import { ymd } from '@/lib/date';
 import { cn } from '@/lib/cn';
+
+/** Per-night price + availability, keyed by 'YYYY-MM-DD'. Optional — when absent
+ *  the calendar renders plain dates (e.g. the homepage search pill). */
+type PriceByDate = Record<string, { eur: number; available: boolean }>;
 
 interface CalendarPopupProps {
   startDate: Date | null;
@@ -13,6 +18,7 @@ interface CalendarPopupProps {
   onClose: () => void;
   /** Mobile full-screen header back/close button. Defaults to onClose. */
   onBack?: () => void;
+  priceByDate?: PriceByDate;
 }
 
 const DOW = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
@@ -42,6 +48,7 @@ function MonthGrid({
   endDate,
   today,
   onPick,
+  priceByDate,
 }: {
   year: number;
   month: number;
@@ -49,6 +56,7 @@ function MonthGrid({
   endDate: Date | null;
   today: Date;
   onPick: (d: Date) => void;
+  priceByDate?: PriceByDate;
 }) {
   const first = startOfMonth(year, month);
   // JS getDay: 0=Sun..6=Sat. Convert so Mon=0, Sun=6:
@@ -58,6 +66,7 @@ function MonthGrid({
     ...Array.from<unknown, Date | null>({ length: offset }, () => null),
     ...Array.from({ length: total }, (_, i) => new Date(year, month, i + 1)),
   ];
+  const hasPrices = !!priceByDate && Object.keys(priceByDate).length > 0;
 
   return (
     <div>
@@ -73,6 +82,10 @@ function MonthGrid({
         {cells.map((d, i) => {
           if (!d) return <div key={i} />;
           const isPast = d < today && !sameDay(d, today);
+          const info = priceByDate?.[ymd(d)];
+          const unavailable = info ? !info.available : false;
+          const disabled = isPast || unavailable;
+          const price = info?.available ? info.eur : null;
           const isStart = startDate && sameDay(d, startDate);
           const isEnd = endDate && sameDay(d, endDate);
           const inRange =
@@ -83,7 +96,8 @@ function MonthGrid({
             <div
               key={i}
               className={cn(
-                'relative flex h-11 items-center justify-center',
+                'relative flex flex-col items-center justify-center gap-0.5',
+                hasPrices ? 'h-14' : 'h-11',
                 // Range fill that bridges between cells (no gap-x so the bar is continuous)
                 inRange && 'bg-gold-pale/60',
                 isStart && endDate && 'bg-gradient-to-r from-transparent from-50% to-gold-pale/60 to-50%',
@@ -92,18 +106,29 @@ function MonthGrid({
             >
               <button
                 type="button"
-                disabled={isPast}
+                disabled={disabled}
                 onClick={() => onPick(d)}
                 className={cn(
-                  'flex size-10 items-center justify-center rounded-full text-[15px] transition',
-                  isPast && 'text-ink-60/40 cursor-not-allowed line-through',
-                  !isPast && !isEndpoint && !inRange && 'hover:bg-ink/10 font-medium',
+                  'flex size-9 items-center justify-center rounded-full text-[14px] transition',
+                  disabled && 'cursor-not-allowed text-ink-60/40',
+                  isPast && 'line-through',
+                  !disabled && !isEndpoint && !inRange && 'hover:bg-ink/10 font-medium',
                   inRange && 'text-ink font-medium',
                   isEndpoint && 'bg-ink text-cream font-semibold',
                 )}
               >
                 {d.getDate()}
               </button>
+              {hasPrices && (
+                <span
+                  className={cn(
+                    'pointer-events-none text-[9px] font-medium leading-none',
+                    isEndpoint ? 'text-gold-dark' : disabled ? 'text-ink-60/30' : 'text-ink-60',
+                  )}
+                >
+                  {unavailable ? '—' : price != null ? `€${price}` : ''}
+                </span>
+              )}
             </div>
           );
         })}
@@ -124,6 +149,7 @@ export function CalendarPopup({
   onSelect,
   onClose,
   onBack,
+  priceByDate,
 }: CalendarPopupProps) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -226,6 +252,7 @@ export function CalendarPopup({
               endDate={endDate}
               today={today}
               onPick={pick}
+              priceByDate={priceByDate}
             />
           );
         })}
@@ -289,6 +316,7 @@ export function CalendarPopup({
             endDate={endDate}
             today={today}
             onPick={pick}
+            priceByDate={priceByDate}
           />
           <MonthGrid
             year={nextYear}
@@ -297,6 +325,7 @@ export function CalendarPopup({
             endDate={endDate}
             today={today}
             onPick={pick}
+            priceByDate={priceByDate}
           />
         </div>
 
