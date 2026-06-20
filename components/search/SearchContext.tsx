@@ -1,7 +1,9 @@
 'use client';
 
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { GuestCounts } from '@/types';
+import { readSearchPrefs, writeSearchPrefs, datesToPrefs } from '@/lib/searchPrefs';
+import { parseYmd } from '@/lib/date';
 
 export type SearchPanel = 'location' | 'dates' | 'guests';
 
@@ -33,6 +35,26 @@ export function SearchProvider({ children }: { children: ReactNode }) {
   const [guests, setGuests] = useState<GuestCounts>({ adults: 1, children: 0, infants: 0 });
   const [activePanel, setActivePanel] = useState<SearchPanel | null>(null);
   const [activePillId, setActivePillId] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
+
+  // Hydrate once from localStorage (client-only → no SSR mismatch). This is how
+  // the selection survives homepage → /locations and feeds the property sidebar.
+  useEffect(() => {
+    const p = readSearchPrefs();
+    if (p) {
+      setLocation(p.location ?? '');
+      setStartDate(parseYmd(p.checkIn));
+      setEndDate(parseYmd(p.checkOut));
+      if (p.guests) setGuests(p.guests);
+    }
+    setReady(true);
+  }, []);
+
+  // Persist after hydration so we never clobber saved prefs with the initial state.
+  useEffect(() => {
+    if (!ready) return;
+    writeSearchPrefs({ location, ...datesToPrefs(startDate, endDate), guests });
+  }, [ready, location, startDate, endDate, guests]);
 
   const value = useMemo<SearchContextValue>(
     () => ({

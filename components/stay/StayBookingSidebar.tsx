@@ -10,7 +10,9 @@ import { GuestPopup } from '@/components/search/GuestPopup';
 import { MobileBookingBar } from '@/components/stay/MobileBookingBar';
 import type { Booking, GuestCounts, Property } from '@/types';
 import type { AvailabilityMap } from '@/lib/data/availability';
-import { ymd } from '@/lib/date';
+import { ymd, parseYmd } from '@/lib/date';
+import { readSearchPrefs } from '@/lib/searchPrefs';
+import { readUser } from '@/lib/booking';
 import { cn } from '@/lib/cn';
 
 interface Props {
@@ -56,7 +58,21 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   const [addedRoomIds, setAddedRoomIds] = useState<string[]>([]);
 
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const [loggedIn, setLoggedIn] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    setLoggedIn(!!readUser()?.loggedIn);
+    // Carry the search selection (dates + guests) into the sidebar so the user
+    // doesn't have to re-pick dates after searching on the homepage / locations.
+    const p = readSearchPrefs();
+    if (p) {
+      const s = parseYmd(p.checkIn);
+      const e = parseYmd(p.checkOut);
+      if (s) setStart(s);
+      if (e) setEnd(e);
+      if (p.guests) setGuests(p.guests);
+    }
+  }, []);
 
   // Anchor the desktop calendar popup to the dates input via fixed positioning,
   // so the sidebar's `overflow-y-auto` cannot clip it.
@@ -189,12 +205,14 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
         ? `€${pricing.combinedTotal}`
         : `€${pricing.total}`;
 
-  const mobileBarLabel =
+  const ctaLabel =
     nights === 0
       ? 'Select dates'
-      : roomCount > 1
-        ? `Book ${roomCount} rooms →`
-        : 'Book best rate →';
+      : !loggedIn
+        ? 'Sign up & book →'
+        : roomCount > 1
+          ? `Book ${roomCount} rooms →`
+          : 'Book best rate →';
 
   const mobileBar = mounted
     ? createPortal(
@@ -202,7 +220,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
           priceLabel={nights === 0 ? 'From' : 'Total'}
           priceValue={mobileBarPrice}
           taxNote={nights === 0 ? '/night' : 'Taxes & charges incl.'}
-          ctaLabel={mobileBarLabel}
+          ctaLabel={ctaLabel}
           onBook={book}
         />,
         document.body,
@@ -565,11 +583,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
         onClick={book}
         className="mt-5 w-full rounded-full bg-ink py-3 text-center font-semibold text-cream transition hover:bg-gold hover:text-ink"
       >
-        {nights === 0
-          ? 'Select dates'
-          : roomCount > 1
-            ? `Book ${roomCount} rooms →`
-            : 'Book best rate →'}
+        {ctaLabel}
       </button>
 
       <p className="mt-3 text-center text-[11px] text-ink-60">

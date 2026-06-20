@@ -119,7 +119,7 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
 
   function go() {
     const params = new URLSearchParams();
-    if (location) params.set('where', location);
+    if (location && location !== 'all') params.set('where', location);
     if (startDate) params.set('checkIn', startDate.toISOString().slice(0, 10));
     if (endDate) params.set('checkOut', endDate.toISOString().slice(0, 10));
     params.set('adults', String(guests.adults));
@@ -130,9 +130,12 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
   }
 
   const open = (panel: SearchPanel) => isThisPillOpen && activePanel === panel;
-  const locationLabel = location
-    ? neighborhoods.find((n) => n.id === location)?.label ?? location
-    : 'Search';
+  const locationLabel =
+    location === 'all'
+      ? 'All locations'
+      : location
+        ? neighborhoods.find((n) => n.id === location)?.label ?? location
+        : 'Search';
   const datesLabel =
     startDate || endDate
       ? `${formatDate(startDate) ?? 'Add date'} – ${formatDate(endDate) ?? 'Add date'}`
@@ -182,6 +185,28 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
               </div>
               <h4 className="font-mono-label mb-1 text-ink-60">AVEXA Locations</h4>
               <ul>
+                {query.trim() === '' && (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLocation('all');
+                        setQuery('');
+                        openPanel('dates', pillId);
+                      }}
+                      className={cn(
+                        'flex w-full items-center gap-3 border-b border-gray-line py-4 text-left',
+                        location === 'all' && 'text-gold-dark',
+                      )}
+                    >
+                      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-cream">
+                        <Icon name="building" size={16} className="text-ink-60" />
+                      </span>
+                      <span className="font-semibold">All locations</span>
+                      <span className="ml-auto text-xs text-ink-60">Everything</span>
+                    </button>
+                  </li>
+                )}
                 {filteredNeighborhoods.map((n) => (
                   <li key={n.id}>
                     <button
@@ -383,6 +408,22 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
         <div className="hidden md:block absolute left-0 top-[calc(100%+8px)] z-[200] w-[320px] rounded-2xl bg-white p-2 text-ink shadow-[0_16px_48px_-12px_rgba(25,25,25,0.25)]">
           <h4 className="font-mono-label px-4 py-3 text-ink-60">Bucharest City Center</h4>
           <ul>
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  setLocation('all');
+                  openPanel('dates', pillId);
+                }}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition hover:bg-cream',
+                  location === 'all' && 'bg-gold-pale text-gold-dark',
+                )}
+              >
+                <span className="size-2 rounded-full bg-ink/40" />
+                All locations
+              </button>
+            </li>
             {neighborhoods.map((n) => (
               <li key={n.id}>
                 <button
