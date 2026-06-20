@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/chrome/Logo';
 import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
-import { clearUser, readUser, type StoredUser } from '@/lib/booking';
+import { readUser, type StoredUser } from '@/lib/booking';
+import { signOutClient } from '@/lib/auth/client';
 import { cn } from '@/lib/cn';
 
 const links = [
@@ -64,8 +65,7 @@ export function Nav() {
   const initial = displayName.trim().charAt(0).toUpperCase() || 'A';
 
   function logout() {
-    clearUser();
-    window.dispatchEvent(new Event('avexa:auth-changed'));
+    void signOutClient();
     setUser(null);
     setMenuOpen(false);
     router.push('/');

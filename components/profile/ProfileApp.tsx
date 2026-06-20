@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Icon } from '@/components/Icon';
-import { clearUser, readUser, writeUser, type StoredUser } from '@/lib/booking';
+import { readUser, writeUser, type StoredUser } from '@/lib/booking';
+import { signOutClient } from '@/lib/auth/client';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { PersonalDetailsCard } from '@/components/profile/PersonalDetailsCard';
 import { ToggleRow } from '@/components/profile/ToggleRow';
 
@@ -72,7 +74,7 @@ export function ProfileApp() {
   const displayName = full || 'Your Profile';
   const initial = (full || user.email || 'U').charAt(0).toUpperCase();
 
-  function handleSave(next: { first: string; last: string; phone: string }) {
+  async function handleSave(next: { first: string; last: string; phone: string }) {
     if (!user) return;
     const nextFull = `${next.first} ${next.last}`.trim();
     const updated: StoredUser = {
@@ -81,14 +83,27 @@ export function ProfileApp() {
       lastName: next.last,
       name: nextFull || user.name,
     };
+    // Optimistic local mirror (instant UI)
     writeUser(updated);
     writePhone(next.phone);
     setUser(updated);
     setPhone(next.phone);
+    // Persist to Supabase so edits survive a reload (the mirror re-reads from here).
+    try {
+      const supabase = getSupabaseBrowserClient();
+      await supabase.auth.updateUser({ data: { full_name: nextFull } });
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        await supabase
+          .from('profiles')
+          .update({ phone: next.phone || null })
+          .eq('id', data.user.id);
+      }
+    } catch {}
   }
 
   function handleLogout() {
-    clearUser();
+    void signOutClient();
     router.push('/');
   }
 

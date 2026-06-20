@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/chrome/Logo';
 import { MobileSearchOverlay } from '@/components/search/MobileSearchOverlay';
-import { clearUser, readUser, type StoredUser } from '@/lib/booking';
+import { readUser, type StoredUser } from '@/lib/booking';
+import { signOutClient } from '@/lib/auth/client';
 import { cn } from '@/lib/cn';
 
 const links = [
@@ -129,8 +130,7 @@ export function MobileSearchHeader() {
               <button
                 type="button"
                 onClick={() => {
-                  clearUser();
-                  window.dispatchEvent(new Event('avexa:auth-changed'));
+                  void signOutClient();
                   setMenuOpen(false);
                 }}
                 className="mt-4 inline-flex w-fit rounded-full bg-gold px-8 py-4 text-2xl text-ink"
