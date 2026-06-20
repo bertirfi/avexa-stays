@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { safeNext } from '@/lib/safeNext';
 
 const perks = [
   '15% off every booking, automatically',
@@ -32,14 +33,16 @@ type Mode = 'login' | 'signup';
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get('next') || '/my-trips';
+  const next = safeNext(params.get('next'));
 
   const [mode, setMode] = useState<Mode>('login');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    params.get('error') === 'auth' ? 'Sign-in failed. Please try again.' : null,
+  );
   const [info, setInfo] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {

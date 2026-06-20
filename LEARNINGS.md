@@ -8,6 +8,38 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-19 (later) — Real Supabase email/password auth (committed, multi-agent)
+- Orchestrated: 2 parallel Explore recon agents → I built the core → 1 adversarial
+  security-review agent → applied required fix.
+- **Mirror pattern:** real Supabase Auth is the source of truth (session in httpOnly
+  cookies via @supabase/ssr, middleware refresh, RLS). An `AuthProvider` (root layout)
+  subscribes to the session and mirrors the user (name/email ONLY, never a token) into
+  the existing `avexa_user` localStorage + `avexa:auth-changed` event — so Nav,
+  MobileSearchHeader, MyTrips, Profile, sidebar keep working WITHOUT a rewrite.
+- Files: `middleware.ts` (session refresh), `components/auth/AuthProvider.tsx`,
+  rewritten `LoginForm.tsx` (email/password signup+login toggle, Google via OAuth),
+  `app/auth/callback/route.ts` (code exchange), `lib/auth/client.ts` (signOutClient),
+  browser client made singleton. Logout in Nav/MobileSearchHeader/Profile → real
+  signOut. ProfileApp save persists name (user_metadata) + phone (profiles). Removed
+  DemoModeToggle (D-key demo).
+- **Security review verdict: safe for MVP.** Fixed the one live issue: **open redirect**
+  via unvalidated `?next=` (router.push(next) + callback redirect) → added
+  `lib/safeNext.ts` (same-origin path only) used in both. All else PASS (middleware uses
+  getUser() not getSession; mirror has no tokens; service-role provably server-only; RLS
+  profiles_update_own binds auth.uid()=id; handle_new_user trigger hardened).
+- **⚠️ CRITICAL for Wave 5 (booking/payments):** the checkout/profile gates are
+  CLIENT-SIDE only (localStorage mirror `loggedIn`) — fine now (no server mutation
+  exists), but the future booking/Stripe server action MUST derive identity from
+  `getSupabaseServerClient().auth.getUser()` (validated session), NEVER from the client
+  `loggedIn`/email/user_id. The localStorage mirror must never gate money.
+- **Edge warning (non-blocking):** @supabase/ssr in middleware logs "process.version not
+  supported in Edge Runtime" — expected with the canonical pattern; middleware works.
+- **GATES for Robert (auth to work live):** Supabase dashboard → Authentication →
+  Providers → Email enabled (default on); decide "Confirm email" ON (sends confirmation
+  link, user must confirm before login) vs OFF (instant login — easier for testing).
+  Google sign-in needs Google provider configured in the same dashboard (the code +
+  /auth/callback are ready). Cannot test auth in my sandbox (no network).
+
 ### 2026-06-19 — Checkout price fix + Chunk B (date pricing) (committed)
 - **Checkout consistency:** BookingSummary showed rack×nights + "Member discount
   −X%" (the struck framing removed from the sidebar). Now book() persists the MEMBER
