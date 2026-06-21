@@ -9,9 +9,9 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { safeNext } from '@/lib/safeNext';
 
 const perks = [
-  '15% off every booking, automatically',
-  'Early check-in & late check-out',
-  'Free cancellation until arrival day',
+  'Always the best price, 15% off',
+  'Free early check-in & late check-out',
+  'Extra perks on every stay',
 ];
 
 const BG_1 =
@@ -28,61 +28,55 @@ const BG_3 =
 const BG_OVERLAY =
   'radial-gradient(ellipse 70% 70% at 50% 50%, rgba(15,15,15,.3), rgba(15,15,15,.7))';
 
-type Mode = 'login' | 'signup';
+type Mode = 'choose' | 'login' | 'signup' | 'forgot' | 'verify';
+
+const inputClass =
+  'w-full rounded-xl border-[1.5px] border-gray-line bg-white px-[18px] py-[15px] text-[15px] font-medium text-ink outline-none transition placeholder:font-normal placeholder:text-ink-60 focus:border-gold-dark';
+const darkBtn =
+  'mt-0.5 w-full rounded-xl bg-ink px-[18px] py-[15px] text-[15px] font-bold text-white transition hover:bg-gold-dark disabled:opacity-60';
 
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const next = safeNext(params.get('next'));
 
-  const [mode, setMode] = useState<Mode>('login');
+  const [mode, setMode] = useState<Mode>('choose');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(
     params.get('error') === 'auth' ? 'Sign-in failed. Please try again.' : null,
   );
   const [info, setInfo] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const pwChecks = [
+    { label: 'At least 8 characters', ok: password.length >= 8 },
+    { label: 'Upper & lowercase letters', ok: /[a-z]/.test(password) && /[A-Z]/.test(password) },
+    { label: 'At least one number', ok: /\d/.test(password) },
+  ];
+  const pwValid = pwChecks.every((c) => c.ok);
+
+  function go(to: Mode) {
     setError(null);
     setInfo(null);
-    setPending(true);
-    const supabase = getSupabaseBrowserClient();
+    setMode(to);
+  }
 
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setPending(true);
     try {
-      if (mode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            data: { full_name: fullName.trim() },
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-          },
-        });
-        if (error) {
-          setError(error.message);
-          return;
-        }
-        if (!data.session) {
-          // Email confirmation is ON in the Supabase project.
-          setInfo('Check your email to confirm your account, then log in.');
-          setMode('login');
-          return;
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-        if (error) {
-          setError(error.message);
-          return;
-        }
+      const { error } = await getSupabaseBrowserClient().auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) {
+        setError(error.message);
+        return;
       }
-      // Session is set → AuthProvider mirrors it; refresh server components.
       router.push(next);
       router.refresh();
     } finally {
@@ -90,10 +84,59 @@ export function LoginForm() {
     }
   }
 
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setPending(true);
+    try {
+      const { data, error } = await getSupabaseBrowserClient().auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: { full_name: fullName.trim() },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        },
+      });
+      if (error) {
+        setError(error.message);
+        return;
+      }
+      if (!data.session) {
+        // Email confirmation is ON → show the "check your email" screen.
+        setMode('verify');
+        return;
+      }
+      router.push(next);
+      router.refresh();
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setPending(true);
+    try {
+      const { error } = await getSupabaseBrowserClient().auth.resetPasswordForEmail(
+        email.trim(),
+        {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/auth/reset-password')}`,
+        },
+      );
+      if (error) {
+        setError(error.message);
+        return;
+      }
+      setInfo('If that email has an account, a password-reset link is on its way.');
+    } finally {
+      setPending(false);
+    }
+  }
+
   async function signInWithGoogle() {
     setError(null);
-    const supabase = getSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await getSupabaseBrowserClient().auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
@@ -102,11 +145,10 @@ export function LoginForm() {
     if (error) setError(error.message);
   }
 
-  const isSignup = mode === 'signup';
+  const showBack = mode !== 'choose';
 
   return (
     <div className="relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-[#0f0f0f] py-12">
-      {/* Animated gradient background */}
       <div aria-hidden className="absolute inset-0 z-0">
         <div className="absolute -inset-[10%]" style={{ background: BG_1 }} />
         <div
@@ -117,7 +159,6 @@ export function LoginForm() {
         <div className="absolute inset-0" style={{ background: BG_OVERLAY }} />
       </div>
 
-      {/* Back to home */}
       <Link
         href="/"
         className="absolute left-7 top-7 z-10 flex items-center gap-1.5 text-sm font-medium text-white/60 transition hover:text-gold"
@@ -126,15 +167,26 @@ export function LoginForm() {
         Back
       </Link>
 
-      {/* Auth card */}
       <motion.div
         initial={{ opacity: 0, y: 32, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-[5] w-[min(420px,calc(100%-32px))] rounded-[24px] bg-gold-pale px-10 pb-9 pt-11 text-center"
+        className="relative z-[5] w-[min(420px,calc(100%-32px))] rounded-[24px] bg-gold-pale px-9 pb-9 pt-10 text-center"
       >
+        {/* In-card back (between sub-steps) */}
+        {showBack && (
+          <button
+            type="button"
+            aria-label="Back"
+            onClick={() => go(mode === 'signup' || mode === 'forgot' || mode === 'verify' ? 'login' : 'choose')}
+            className="absolute left-5 top-5 grid size-8 place-items-center rounded-full text-ink transition hover:bg-ink/5"
+          >
+            <Icon name="chevLeft" size={18} />
+          </button>
+        )}
+
         {/* Logo */}
-        <div className="mb-7 flex items-center justify-center gap-2.5">
+        <div className="mb-6 flex items-center justify-center gap-2.5">
           <span className="grid size-9 place-items-center rounded-[10px] bg-ink">
             <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden>
               <line x1="3" y1="3" x2="17" y2="17" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
@@ -144,131 +196,196 @@ export function LoginForm() {
           <span className="font-display text-xl text-gold-dark">AVEXA</span>
         </div>
 
-        {/* Title */}
-        <h1 className="font-display text-[28px] leading-[1.15] tracking-[-0.02em] text-ink">
-          {isSignup ? 'Join AVEXA' : 'Welcome back'}
-          <span
-            aria-hidden
-            className="ml-1.5 inline-block size-1.5 translate-y-px rounded-full bg-gold-dark pulse-dot align-middle"
-          />
+        <h1 className="font-display text-[26px] leading-[1.15] tracking-[-0.02em] text-ink">
+          {mode === 'choose' && 'Your best rate starts here'}
+          {mode === 'login' && 'Welcome back'}
+          {mode === 'signup' && 'Join AVEXA'}
+          {mode === 'forgot' && 'Reset your password'}
+          {mode === 'verify' && 'Check your inbox'}
         </h1>
 
-        {/* Perks (signup only) */}
-        {isSignup && (
-          <ul className="mx-auto mb-7 mt-5 flex max-w-[300px] flex-col gap-2 text-left">
-            {perks.map((p) => (
-              <li key={p} className="flex items-center gap-2.5 text-sm font-medium text-ink-80">
-                <span className="grid size-5 flex-shrink-0 place-items-center rounded-full bg-ink text-gold">
-                  <Icon name="check" size={11} strokeWidth={3} />
-                </span>
-                {p}
-              </li>
-            ))}
-          </ul>
+        {/* ── CHOOSE ── */}
+        {mode === 'choose' && (
+          <>
+            <ul className="mx-auto mb-7 mt-5 flex max-w-[300px] flex-col gap-2 text-left">
+              {perks.map((p) => (
+                <li key={p} className="flex items-center gap-2.5 text-sm font-medium text-ink-80">
+                  <span className="grid size-5 flex-shrink-0 place-items-center rounded-full bg-ink text-gold">
+                    <Icon name="check" size={11} strokeWidth={3} />
+                  </span>
+                  {p}
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-col gap-2.5">
+              <button type="button" onClick={() => go('login')} className={darkBtn}>
+                Continue with Email
+              </button>
+              <GoogleButton onClick={signInWithGoogle} />
+            </div>
+          </>
         )}
 
-        {/* Form */}
-        <form onSubmit={onSubmit} className={`flex flex-col gap-2.5 ${isSignup ? '' : 'mt-6'}`}>
-          {isSignup && (
-            <input
-              type="text"
-              required
-              autoComplete="name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Full name"
-              className="w-full rounded-xl border-[1.5px] border-gray-line bg-white px-[18px] py-[15px] text-[15px] font-medium text-ink outline-none transition placeholder:font-normal placeholder:text-ink-60 focus:border-gold-dark"
-            />
-          )}
-          <input
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            className="w-full rounded-xl border-[1.5px] border-gray-line bg-white px-[18px] py-[15px] text-[15px] font-medium text-ink outline-none transition placeholder:font-normal placeholder:text-ink-60 focus:border-gold-dark"
-          />
-          <input
-            type="password"
-            required
-            minLength={6}
-            autoComplete={isSignup ? 'new-password' : 'current-password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder={isSignup ? 'Password (min 6 characters)' : 'Password'}
-            className="w-full rounded-xl border-[1.5px] border-gray-line bg-white px-[18px] py-[15px] text-[15px] font-medium text-ink outline-none transition placeholder:font-normal placeholder:text-ink-60 focus:border-gold-dark"
-          />
-
-          {error && (
-            <p className="rounded-lg bg-red-500/10 px-3 py-2 text-left text-[13px] font-medium text-red-700">
-              {error}
+        {/* ── LOGIN ── */}
+        {mode === 'login' && (
+          <form onSubmit={handleLogin} className="mt-6 flex flex-col gap-2.5">
+            <input type="email" required autoComplete="email" value={email}
+              onChange={(e) => setEmail(e.target.value)} placeholder="Email" className={inputClass} />
+            <PasswordInput value={password} onChange={setPassword} show={showPw} setShow={setShowPw}
+              autoComplete="current-password" placeholder="Password" />
+            <button type="button" onClick={() => go('forgot')}
+              className="self-end text-[13px] font-semibold text-ink underline underline-offset-2">
+              Forgot your password?
+            </button>
+            <Feedback error={error} info={info} />
+            <button type="submit" disabled={pending} className={darkBtn}>
+              {pending ? 'Please wait…' : 'Continue'}
+            </button>
+            <p className="mt-2 text-[13px] text-ink-60">
+              Don&apos;t have an account?{' '}
+              <button type="button" onClick={() => go('signup')} className="font-bold text-ink underline underline-offset-2">
+                Sign up
+              </button>
             </p>
-          )}
-          {info && (
-            <p className="rounded-lg bg-gold/15 px-3 py-2 text-left text-[13px] font-medium text-gold-dark">
-              {info}
+          </form>
+        )}
+
+        {/* ── SIGNUP ── */}
+        {mode === 'signup' && (
+          <form onSubmit={handleSignup} className="mt-6 flex flex-col gap-2.5">
+            <input type="email" required autoComplete="email" value={email}
+              onChange={(e) => setEmail(e.target.value)} placeholder="Email" className={inputClass} />
+            <input type="text" required autoComplete="name" value={fullName}
+              onChange={(e) => setFullName(e.target.value)} placeholder="Full name" className={inputClass} />
+            <PasswordInput value={password} onChange={setPassword} show={showPw} setShow={setShowPw}
+              autoComplete="new-password" placeholder="Password" />
+            <ul className="mb-1 mt-1 flex flex-col gap-1.5 text-left">
+              {pwChecks.map((c) => (
+                <li key={c.label} className="flex items-center gap-2 text-[12.5px] text-ink-60">
+                  <span className={`grid size-4 place-items-center rounded-full ${c.ok ? 'bg-gold-dark text-white' : 'bg-ink/10 text-ink-60'}`}>
+                    <Icon name="check" size={9} strokeWidth={3} />
+                  </span>
+                  {c.label}
+                </li>
+              ))}
+            </ul>
+            <Feedback error={error} info={info} />
+            <button type="submit" disabled={pending || !pwValid} className={darkBtn}>
+              {pending ? 'Please wait…' : 'Sign up'}
+            </button>
+            <p className="mt-2 text-[13px] text-ink-60">
+              Already have an account?{' '}
+              <button type="button" onClick={() => go('login')} className="font-bold text-ink underline underline-offset-2">
+                Log in
+              </button>
             </p>
-          )}
+          </form>
+        )}
 
-          <button
-            type="submit"
-            disabled={pending}
-            className="mt-0.5 w-full rounded-xl bg-ink px-[18px] py-[15px] text-[15px] font-bold text-white transition hover:bg-gold-dark disabled:opacity-60"
-          >
-            {pending ? 'Please wait…' : isSignup ? 'Create account' : 'Log in'}
-          </button>
-        </form>
+        {/* ── FORGOT ── */}
+        {mode === 'forgot' && (
+          <form onSubmit={handleForgot} className="mt-6 flex flex-col gap-2.5">
+            <p className="mb-1 text-[13.5px] text-ink-80">
+              Enter your email and we&apos;ll send a link to reset your password.
+            </p>
+            <input type="email" required autoComplete="email" value={email}
+              onChange={(e) => setEmail(e.target.value)} placeholder="Email" className={inputClass} />
+            <Feedback error={error} info={info} />
+            <button type="submit" disabled={pending} className={darkBtn}>
+              {pending ? 'Sending…' : 'Send reset link'}
+            </button>
+            <button type="button" onClick={() => go('login')}
+              className="mt-2 text-[13px] font-bold text-ink underline underline-offset-2">
+              Back to log in
+            </button>
+          </form>
+        )}
 
-        {/* Divider */}
-        <div className="my-[18px] flex items-center gap-3.5">
-          <span className="h-px flex-1 bg-ink/12" />
-          <span className="font-mono-label text-ink-60">or</span>
-          <span className="h-px flex-1 bg-ink/12" />
-        </div>
-
-        {/* Google */}
-        <button
-          type="button"
-          onClick={signInWithGoogle}
-          className="flex w-full items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-gray-line bg-white px-[18px] py-[15px] text-[15px] font-bold text-ink transition hover:border-ink hover:bg-cream"
-        >
-          <GoogleIcon />
-          Continue with Google
-        </button>
+        {/* ── VERIFY ── */}
+        {mode === 'verify' && (
+          <div className="mt-5 flex flex-col gap-4 text-center">
+            <p className="text-[14.5px] leading-[1.6] text-ink-80">
+              We sent a confirmation link to{' '}
+              <span className="font-semibold text-ink">{email || 'your email'}</span>. Click it to
+              activate your account, then log in.
+            </p>
+            <button type="button" onClick={() => go('login')} className={darkBtn}>
+              Back to log in
+            </button>
+          </div>
+        )}
 
         {/* Legal */}
-        <p className="mt-6 text-[11.5px] leading-[1.55] text-ink-60">
-          By continuing, you agree to AVEXA&apos;s{' '}
-          <Link href="/terms" className="text-ink-80 underline underline-offset-2">Terms &amp; Conditions</Link>{' '}
-          and{' '}
-          <Link href="/privacy" className="text-ink-80 underline underline-offset-2">Privacy Policy</Link>.
-        </p>
-
-        {/* Switch mode */}
-        <p className="mt-3.5 text-[13px] text-ink-60">
-          {isSignup ? 'Already have an account?' : 'New to AVEXA?'}{' '}
-          <button
-            type="button"
-            onClick={() => {
-              setMode(isSignup ? 'login' : 'signup');
-              setError(null);
-              setInfo(null);
-            }}
-            className="font-bold text-ink underline underline-offset-2"
-          >
-            {isSignup ? 'Log in' : 'Sign up'}
-          </button>
-        </p>
+        {(mode === 'choose' || mode === 'signup') && (
+          <p className="mt-6 text-[11.5px] leading-[1.55] text-ink-60">
+            By continuing, you agree to AVEXA&apos;s{' '}
+            <Link href="/terms" className="text-ink-80 underline underline-offset-2">Terms</Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="text-ink-80 underline underline-offset-2">Privacy Policy</Link>.
+          </p>
+        )}
       </motion.div>
     </div>
   );
 }
 
-function GoogleIcon() {
+function Feedback({ error, info }: { error: string | null; info: string | null }) {
+  if (!error && !info) return null;
+  return error ? (
+    <p className="rounded-lg bg-red-500/10 px-3 py-2 text-left text-[13px] font-medium text-red-700">{error}</p>
+  ) : (
+    <p className="rounded-lg bg-gold/15 px-3 py-2 text-left text-[13px] font-medium text-gold-dark">{info}</p>
+  );
+}
+
+function PasswordInput({
+  value, onChange, show, setShow, autoComplete, placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  show: boolean;
+  setShow: (b: boolean) => void;
+  autoComplete: string;
+  placeholder: string;
+}) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-      <path d="M21.35 11.1H12v3.84h5.36c-.23 1.5-1.66 4.4-5.36 4.4-3.23 0-5.86-2.66-5.86-5.95s2.63-5.95 5.86-5.95c1.84 0 3.07.78 3.78 1.45l2.58-2.49C16.6 4.66 14.5 3.7 12 3.7 6.96 3.7 2.9 7.8 2.9 12.9s4.06 9.2 9.1 9.2c5.26 0 8.74-3.69 8.74-8.88 0-.6-.06-1.05-.13-1.42z" fill="#4285F4" />
-    </svg>
+    <div className="relative">
+      <input
+        type={show ? 'text' : 'password'}
+        required
+        minLength={6}
+        autoComplete={autoComplete}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`${inputClass} pr-12`}
+      />
+      <button
+        type="button"
+        aria-label={show ? 'Hide password' : 'Show password'}
+        onClick={() => setShow(!show)}
+        className="absolute right-3 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-ink-60 transition hover:bg-ink/5"
+      >
+        <Icon name={show ? 'eyeOff' : 'eye'} size={17} />
+      </button>
+    </div>
+  );
+}
+
+function GoogleButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-gray-line bg-white px-[18px] py-[15px] text-[15px] font-bold text-ink transition hover:border-ink hover:bg-cream"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+        <path fill="#4285F4" d="M23.06 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h6.2a5.3 5.3 0 0 1-2.3 3.48v2.89h3.72c2.18-2 3.44-4.96 3.44-8.38z" />
+        <path fill="#34A853" d="M12 24c3.1 0 5.7-1.03 7.6-2.79l-3.72-2.89c-1.03.69-2.35 1.1-3.88 1.1-2.98 0-5.5-2.01-6.4-4.72H1.76v2.98A11.5 11.5 0 0 0 12 24z" />
+        <path fill="#FBBC05" d="M5.6 14.7a6.9 6.9 0 0 1 0-4.4V7.32H1.76a11.5 11.5 0 0 0 0 10.36L5.6 14.7z" />
+        <path fill="#EA4335" d="M12 4.77c1.68 0 3.2.58 4.4 1.72l3.3-3.3C17.7 1.2 15.1 0 12 0 7.4 0 3.4 2.64 1.76 6.5L5.6 9.48C6.5 6.77 9.02 4.77 12 4.77z" />
+      </svg>
+      Continue with Google
+    </button>
   );
 }
