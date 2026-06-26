@@ -31,9 +31,12 @@
 1. https://supabase.com/dashboard/project/iebxcxaxfpbqyumoprbt/auth/providers → **Email**
 2. **Confirm email → OFF** (din secțiunea User Signups) → **Save**
 3. **Minimum password length → 8** → Save
-4. Authentication → **URL Configuration → Redirect URLs** → adaugă:
-   - `https://avexa-stays-git-feat-nextjs-platform-berti8.vercel.app/**`
-   - `https://avexastays.com/**` (pentru lansare)
+4. Authentication → **URL Configuration**:
+   - **Site URL** → `https://avexa-stays-git-feat-nextjs-platform-berti8.vercel.app` (preview-ul, cât timp `avexastays.com` arată coming-soon). **La lansare** → schimbi în `https://avexastays.com`.
+   - **Redirect URLs** → adaugă:
+     - `https://avexa-stays-git-feat-nextjs-platform-berti8.vercel.app/**`
+     - `https://avexastays.com/**` (pentru lansare)
+   > De ce contează: app-ul real trăiește pe URL-ul de preview, iar `avexastays.com` e încă coming-soon (domeniul rădăcină → `main` → `coming-soon.html`). Codul trimite explicit `redirectTo` pe originea curentă (deci login Google + reset parolă se întorc corect pe preview), dar Site URL pe preview asigură că nu cazi pe coming-soon nici pe vreun fallback / link din email.
 5. **Verificare:** `/login` → Sign up cu email+parolă → te loghează direct.
 
 ---
