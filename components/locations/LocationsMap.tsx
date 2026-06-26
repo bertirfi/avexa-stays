@@ -68,6 +68,32 @@ function styleMarker(el: HTMLElement, isActive: boolean) {
   el.style.zIndex = isActive ? '10' : '1';
 }
 
+/**
+ * Greedy proximity clustering — groups suites within `thresholdM` metres of a
+ * running centroid (same building/complex). Distance-based, so suites ~15m
+ * apart never split across a coordinate grid boundary.
+ */
+function clusterByProximity(items: Property[], thresholdM: number): Property[][] {
+  const clusters: { lat: number; lng: number; items: Property[] }[] = [];
+  for (const p of items) {
+    const c = p.coordinates!;
+    let placed = false;
+    for (const cl of clusters) {
+      const dLat = (c.lat - cl.lat) * 111320;
+      const dLng = (c.lng - cl.lng) * 111320 * Math.cos((cl.lat * Math.PI) / 180);
+      if (Math.hypot(dLat, dLng) < thresholdM) {
+        cl.items.push(p);
+        cl.lat = cl.items.reduce((s, q) => s + q.coordinates!.lat, 0) / cl.items.length;
+        cl.lng = cl.items.reduce((s, q) => s + q.coordinates!.lng, 0) / cl.items.length;
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) clusters.push({ lat: c.lat, lng: c.lng, items: [p] });
+  }
+  return clusters.map((cl) => cl.items);
+}
+
 /** Build a positioned price-pin overlay with the given HTML + handlers. */
 function makeMarker(
   maps: typeof google.maps,
@@ -167,16 +193,9 @@ export function LocationsMap(props: LocationsMapProps) {
           });
           mapRef.current = map;
 
-          // Group suites by building (co-located = same rounded coordinate).
+          // Group suites by proximity (same building/complex within ~70m).
           const pinnable = propsRef.current.properties.filter((p) => p.coordinates);
-          const groups = new Map<string, Property[]>();
-          for (const p of pinnable) {
-            const c = p.coordinates!;
-            const key = `${c.lat.toFixed(4)},${c.lng.toFixed(4)}`;
-            const arr = groups.get(key);
-            if (arr) arr.push(p);
-            else groups.set(key, [p]);
-          }
+          const groups = clusterByProximity(pinnable, 70);
 
           const bounds = new maps.LatLngBounds();
 
@@ -200,7 +219,7 @@ export function LocationsMap(props: LocationsMapProps) {
             markers.set(`i:${p.id}`, { overlay, el, kind: 'individual', propertyId: p.id, grouped });
           };
 
-          for (const group of groups.values()) {
+          for (const group of groups) {
             if (group.length === 1) {
               const c = group[0].coordinates!;
               const position = { lat: c.lat, lng: c.lng };
