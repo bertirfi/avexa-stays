@@ -68,3 +68,4 @@ db/types.ts
 stripe.log
 
 .claude/worktrees/
+.gstack/

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { StylizedMap } from '@/components/locations/StylizedMap';
-import { loadGoogleMaps } from '@/lib/maps/loadGoogleMaps';
+import { loadGoogleMaps, subscribeMapsAuthFailure, isMapsAuthFailed } from '@/lib/maps/loadGoogleMaps';
 import { cn } from '@/lib/cn';
 import type { Property } from '@/types';
 
@@ -115,9 +115,19 @@ export function LocationsMap(props: LocationsMapProps) {
       return;
     }
 
+    // Referrer/auth failures don't reject the loader — Google paints its own
+    // error box. Catch them and fall back to the decorative map instead.
+    const unsubscribe = subscribeMapsAuthFailure(() => {
+      if (!cancelled) setFailed(true);
+    });
+
     pending
       .then((maps) => {
         if (cancelled) return;
+        if (isMapsAuthFailed()) {
+          setFailed(true);
+          return;
+        }
         const container = containerRef.current;
         if (!container) return;
 
@@ -220,6 +230,7 @@ export function LocationsMap(props: LocationsMapProps) {
 
     return () => {
       cancelled = true;
+      unsubscribe();
       observer?.disconnect();
       markers.forEach(({ overlay }) => overlay.setMap(null));
       markers.clear();

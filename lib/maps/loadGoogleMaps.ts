@@ -6,9 +6,27 @@
  * configured or when called on the server, so callers can fall back to the
  * decorative map without throwing. The key is the same one used by the stay
  * page's Embed map: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`.
+ *
+ * Auth/referrer failures (e.g. RefererNotAllowedMapError) don't fire the
+ * script's `onerror` — the script loads fine and Google paints its own error
+ * box into the map div. Google calls `window.gm_authFailure` instead, so we
+ * hook it and let subscribers fall back to the decorative map gracefully.
  */
 
 let mapsPromise: Promise<typeof google.maps> | null = null;
+let authFailed = false;
+const authSubscribers = new Set<() => void>();
+
+/** True once Google has reported an auth/referrer failure for the key. */
+export function isMapsAuthFailed(): boolean {
+  return authFailed;
+}
+
+/** Subscribe to Google Maps auth/referrer failure. Returns an unsubscribe fn. */
+export function subscribeMapsAuthFailure(callback: () => void): () => void {
+  authSubscribers.add(callback);
+  return () => authSubscribers.delete(callback);
+}
 
 export function loadGoogleMaps(): Promise<typeof google.maps> | null {
   if (typeof window === 'undefined') return null;
@@ -22,9 +40,17 @@ export function loadGoogleMaps(): Promise<typeof google.maps> | null {
   if (mapsPromise) return mapsPromise;
 
   mapsPromise = new Promise<typeof google.maps>((resolve, reject) => {
+    const win = window as unknown as Record<string, () => void>;
+
     const callbackName = '__avexaGoogleMapsReady';
-    (window as unknown as Record<string, () => void>)[callbackName] = () => {
+    win[callbackName] = () => {
       resolve(google.maps);
+    };
+
+    // Must be defined before the API script evaluates so Google can call it.
+    win.gm_authFailure = () => {
+      authFailed = true;
+      authSubscribers.forEach((cb) => cb());
     };
 
     const params = new URLSearchParams({
