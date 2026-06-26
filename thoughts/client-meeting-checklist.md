@@ -8,6 +8,23 @@
 
 ---
 
+## Unde pun fiecare cheie? (Vercel env ≠ Supabase ≠ Google Cloud)
+
+> Întrebarea recurentă: „o bag în Vercel env vars?" Răspuns rapid mai jos. Regula: cheile pe care le folosește **browserul** (`NEXT_PUBLIC_*`) stau în Vercel; cheile pe care le folosește **un serviciu** (Supabase trimite email, face OAuth) stau în acel serviciu.
+
+| Setare | Unde se pune | În Vercel env? |
+|---|---|---|
+| Supabase URL + Anon key | Vercel (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) | ✅ DA (deja) |
+| Supabase Service Role key | Vercel (`SUPABASE_SERVICE_ROLE_KEY`, server-only) | ✅ DA (deja) |
+| Google Maps key | Vercel (`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`) | ✅ DA (deja) |
+| Google Maps referrers | Google Cloud Console (pe cheie) | ❌ NU |
+| **Google OAuth Client ID + Secret** | **Supabase → Auth → Providers → Google** | ❌ **NU** |
+| **Resend API key (`re_...`)** | **Supabase → SMTP Settings** | ❌ **NU** |
+| Stripe `pk_` / `sk_` / `whsec_` | Vercel env | ✅ DA (când facem plăți) |
+| GA4 / PostHog ID-uri | Vercel (`NEXT_PUBLIC_*`) | ✅ DA (când adăugăm analytics) |
+
+---
+
 ## 0) Setări imediate Supabase (Robert, ACUM — fără client)
 
 **Scop:** să poți testa auth-ul azi.
@@ -21,24 +38,32 @@
 
 ---
 
-## 1) Resend (trimitere emailuri) — confirmare + reset parolă
+## 1) Resend (trimitere emailuri) — confirmare cont + reset parolă
 
-**Scop:** ca Supabase să trimită real emailurile (confirmare cont, reset parolă, mai târziu booking).
-**Cine:** client creează contul + acces DNS la `avexastays.com`.
+**Scop:** ca Supabase să trimită REAL emailurile (confirmare cont, reset parolă, mai târziu confirmare booking). Fără SMTP custom, Supabase trimite doar câteva emailuri/oră de pe domeniul lui — bun doar de test, nu de producție.
+**Cine:** client (cont Resend + acces la DNS-ul domeniului `avexastays.com`).
+**Ce domeniu pui:** **`avexastays.com`** (domeniul site-ului). Expeditor: **`bookings@avexastays.com`** (sau `noreply@` / `account@avexastays.com` — orice adresă @avexastays.com merge după ce domeniul e „Verified").
+**Unde stă cheia:** **doar în Supabase (SMTP), NU în Vercel.**
 
 **Pași:**
-1. Creează cont pe **resend.com** (free: 3.000 emailuri/lună).
-2. **Domains → Add Domain → `avexastays.com`** → Resend îți dă niște înregistrări **DNS** (SPF/TXT + DKIM + MX opțional).
-3. Adaugă acele înregistrări DNS la domeniu (unde e găzduit DNS-ul) → așteaptă "Verified".
-4. **API Keys → Create API Key** → copiază cheia (`re_...`).
-5. În **Supabase → Project Settings → Authentication → SMTP Settings → Enable Custom SMTP**:
+1. Cont pe **resend.com** (free: 3.000 emailuri/lună, 100/zi).
+2. **Domains → Add Domain** → scrie **`avexastays.com`** → Add.
+3. Resend afișează înregistrările **DNS** de adăugat la furnizorul unde e găzduit DNS-ul domeniului (Cloudflare / GoDaddy / Namecheap etc.):
+   - **MX** pe `send` → `feedback-smtp.eu-west-1.amazonses.com` (priority 10) — pt. bounce/feedback
+   - **TXT (SPF)** pe `send` → `v=spf1 include:amazonses.com ~all`
+   - **TXT (DKIM)** pe `resend._domainkey` → valoarea lungă dată de Resend
+   - (opțional, recomandat) **TXT (DMARC)** pe `_dmarc` → `v=DMARC1; p=none;`
+   > Valorile exacte le copiezi din Resend (pot diferi ușor în funcție de regiune). Alege regiunea **EU** la creare ca să fie aproape de RO.
+4. După ce ai salvat înregistrările → în Resend apasă **Verify DNS Records** → aștepți **„Verified"** (de la câteva minute la câteva ore, în funcție de DNS).
+5. **API Keys → Create API Key** (Sending access) → copiază cheia **`re_...`** (se vede o singură dată).
+6. **Supabase → Project Settings → Authentication → SMTP Settings → Enable Custom SMTP:**
    - Sender email: `bookings@avexastays.com` · Sender name: `AVEXA STAYS`
-   - Host: `smtp.resend.com` · Port: `465`
+   - Host: `smtp.resend.com` · Port: **465** (SSL) — sau 587 (TLS)
    - Username: `resend` · Password: **cheia `re_...`**
    - Save.
-6. (Producție) Supabase → Auth → **Confirm email → ON**.
+7. (Producție) Supabase → Authentication → Providers → Email → **Confirm email → ON** (acum poți, fiindcă emailurile pleacă real).
 
-**Verificare:** Sign up cu un email real → primești emailul de confirmare. "Forgot password" → primești link de reset.
+**Verificare:** Sign up cu un email real → primești emailul de confirmare. „Forgot password" → primești link de reset.
 
 ---
 
@@ -61,36 +86,39 @@
 
 ---
 
-## 3) Google Maps — hărți reale
+## 3) Google Maps — hărți reale ✅ GATA (verificat în browser)
 
-**Status:** ambele hărți sunt **gata în cod**: pagina proprietății (Maps **Embed API**) și acum și `/locations` (hartă **interactivă Maps JavaScript API**, pini de preț stil Airbnb, sync card↔pin, popup pe mobil). Cheia **e setată pe Vercel** și **Maps JavaScript API e activ** (verificat în browser). **Singurul blocaj rămas:** cheia nu autorizează domeniul de preview → eroare `RefererNotAllowedMapError`. Până se rezolvă, `/locations` afișează automat harta decorativă (fallback grațios, fără cutia de eroare Google).
-**Cine:** client (un singur pas: adaugă referrers pe cheie în Google Cloud Console).
+**Status:** **FĂCUT și testat live (desktop + mobil).** Funcționează tot:
+- **Pagina proprietății** — hartă Google (Embed API) în secțiunea „Where you'll be".
+- **`/locations`** — hartă **interactivă** (Maps JavaScript API) cu pini de preț stil Airbnb, **clustering** pentru suite-le din aceeași clădire (ex. „4 suites from €…" → click pe cluster → se desfac în pini individuali), sync card↔pin la hover + scroll, iar pe mobil tap pe pin → card mic cu proprietatea → link la pagina ei.
+- Cheia e pe Vercel, **Maps JavaScript API + Embed API active**, iar referrer-ul cheii autorizează `*.vercel.app` + `avexastays.com`.
 
-**Pași:**
-1. **(ACȚIUNEA IMEDIATĂ)** **Google Cloud Console → APIs & Services → Credentials** → cheia Maps → **Application restrictions → HTTP referrers** → adaugă **ambele**:
-   - `https://*.vercel.app/*` (pentru preview — deblochează harta acum)
-   - `https://avexastays.com/*` (pentru producție la lansare)
-   - Save → așteaptă 1-5 min să se propage.
-2. (Deja făcut / de confirmat) **APIs & Services → Library** → activate: **Maps JavaScript API** ✅ (confirmat), **Maps Embed API**, plus opțional **Places API (New)** + **Geocoding API**.
-3. (Deja făcut) Cheia pe Vercel: env `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (scope **Production + Preview**).
-
-**Verificare:** după ce adaugi referrer-ul, deschide `/locations` pe preview → harta Google se încarcă cu pinii de preț (fără „Oops! Something went wrong"). Pe pagina unei proprietăți, secțiunea „Where you'll be" arată harta Embed.
+**Dacă vreodată apare „Oops! Something went wrong" pe hartă:** lipsește referrer-ul pe cheie. Google Cloud Console → APIs & Services → Credentials → cheia Maps → **Application restrictions → HTTP referrers** → adaugă `https://*.vercel.app/*` și `https://avexastays.com/*` → Save (propagare 1-5 min). Codul cade automat pe harta decorativă până se rezolvă, deci pagina nu se strică.
 
 ---
 
 ## 4) Google OAuth — butonul "Continue with Google"
 
-**Scop:** login cu Google (codul e deja gata, trebuie doar configurat).
-**Cine:** client (Google Cloud) + Robert (Supabase).
+**Scop:** login cu Google (codul e gata, trebuie doar configurat).
+**Cine:** client/Robert (Google Cloud) + Robert (Supabase).
+**Unde se pun cheile:** **în Supabase, NU în Vercel.** Pentru OAuth nu adaugi nimic în Vercel env vars — fluxul trece prin Supabase, care ține Client ID + Secret. (Din partea app-ului sunt deja suficiente `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`.)
 
 **Pași:**
-1. **Google Cloud Console → APIs & Services → OAuth consent screen** → External → nume app "AVEXA Stays", email suport, domeniu `avexastays.com` → Save.
-2. **Credentials → Create credentials → OAuth client ID → Web application**:
-   - **Authorized redirect URIs:** `https://iebxcxaxfpbqyumoprbt.supabase.co/auth/v1/callback`
-   - Create → copiază **Client ID** + **Client secret**.
-3. **Supabase → Authentication → Providers → Google** → Enable → lipește Client ID + Secret → Save.
+1. **Google Cloud Console → APIs & Services → OAuth consent screen** → User type **External** → nume app „AVEXA Stays", user support email, developer email, **Authorized domain** `avexastays.com` → Save. (Dacă rămâne în „Testing", adaugă-ți emailul la **Test users** — altfel doar tu poți testa; sau apasă **Publish app**.)
+2. **APIs & Services → Credentials → Create credentials → OAuth client ID → Application type: Web application** (nume ex. „Avexa auth supabase"):
+   - **Authorized JavaScript origins** = DOAR origini, FĂRĂ cale. **Lasă-l GOL** (nu e necesar pentru Supabase). ⚠️ NU pune aici URL-ul cu `/auth/v1/callback` — de-aia dă eroarea „Invalid Origin: URIs must not contain a path".
+   - **Authorized redirect URIs** → **+ Add URI** → `https://iebxcxaxfpbqyumoprbt.supabase.co/auth/v1/callback` ← **AICI** merge callback-ul (singurul URL obligatoriu).
+   - **Create** → copiază **Client ID** + **Client secret**.
+3. **Supabase → Authentication → Providers → Google** → **Enable** → lipește **Client ID** + **Client Secret** → **Save**.
+4. (Deja făcut) Supabase → Authentication → **URL Configuration → Redirect URLs** conține `https://*.vercel.app/**` + `https://avexastays.com/**` (ca să se întoarcă în app după login).
 
-**Verificare:** `/login` → "Continue with Google" → contul se creează/loghează.
+**Tabel rapid pentru ecranul „Create OAuth client ID":**
+| Câmp | Ce pui |
+|---|---|
+| Authorized JavaScript origins | *gol* (sau `https://iebxcxaxfpbqyumoprbt.supabase.co`, fără cale) |
+| Authorized redirect URIs | `https://iebxcxaxfpbqyumoprbt.supabase.co/auth/v1/callback` |
+
+**Verificare:** `/login` → „Continue with Google" → alegi contul Google → te întoarce logat.
 
 ---
 
@@ -145,10 +173,10 @@
 ## Rezumat priorități pentru meeting
 1. **Resend** (email) — deblochează confirmare + reset
 2. **Stripe test** — deblochează plăți (eu construiesc apoi)
-3. **Google Maps** (activare API) — hărți reale
-4. **Google OAuth** — login Google
+3. ~~Google Maps~~ ✅ **GATA** — hărți reale, verificate în browser
+4. **Google OAuth** — login Google (Client ID/Secret → Supabase, nu Vercel)
 5. **GA4 + PostHog** — analytics
 6. **Search Console** — la lansare
 7. **Vercel Pro + env scopes** — la lansare
 
-**Ce rămâne în sarcina mea (dev), după ce primesc cheile:** Stripe checkout+webhook+rezervare Hostaway+email, componenta Google Maps, snippet GA4/PostHog + consent, multi-room checkout, flip lansare.
+**Ce rămâne în sarcina mea (dev), după ce primesc cheile:** Stripe checkout+webhook+rezervare Hostaway+email, snippet GA4/PostHog + consent, multi-room checkout, flip lansare.

@@ -8,6 +8,43 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-06-26 — Real Google Maps on /locations (Airbnb-style clustering), browser-verified
+- **Replaced the decorative StylizedMap on /locations with a real interactive Google
+  Maps JS map** — key-gated, drop-in (same props), graceful fallback to StylizedMap.
+  `components/locations/LocationsMap.tsx` + `lib/maps/loadGoogleMaps.ts` (dependency-free
+  singleton loader) + `@types/google.maps` (dev). Stay page keeps its Embed map.
+- **Coordinates:** real Hostaway lat/lng per suite in `lib/propertyCoordinates.ts`,
+  overlaid in `lib/data/properties.ts` (`withCoordinates`) so BOTH the live Supabase
+  `content` path and the static fallback get them (Supabase `content` JSON has no coords).
+  Sourced from `/api/hostaway/diagnostic` (returns lat/lng+bed/bath/capacity); mapped to
+  our ids by address+capacity.
+- **Custom price-pin overlays** via `OverlayView` (no Map ID needed → works with just the
+  key). **Airbnb clustering:** co-located suites (CV2 ×2, CV142-148 ×4) grouped by
+  PROXIMITY (greedy, ~70m) — NOT coordinate-grid rounding, which split 15m-apart suites
+  across cell boundaries → one "€X · N" cluster pin; click cluster or zoom ≥16 → fans into
+  individual pins.
+- **Interactions preserved + verified:** hover card → pin gold (exactly one); click pin →
+  scroll list to card (desktop) / popup → property page (mobile); **scroll-sync added**
+  (IntersectionObserver, desktop) so the active pin follows the centered card.
+- **gm_authFailure fallback:** RefererNotAllowedMapError does NOT trigger `script.onerror`
+  (Google paints its own "Oops" box). Hook `window.gm_authFailure` in the loader →
+  LocationsMap subscribes → `setFailed` → StylizedMap. Missing referrer now degrades
+  gracefully instead of showing Google's error box.
+- **Browser verification works in this env** via gstack **/browse** (network + headless
+  Chromium BOTH work — the "no network/can't browse" belief from a prior compaction was
+  WRONG). Confirmed on the live preview: 64 tiles, clusters, expand, sync, mobile popup.
+- **Root blocker was client-side:** the Maps key referrer didn't allow the preview domain.
+  Client added `https://*.vercel.app/*` + `https://avexastays.com/*` → works. (Maps JS API
+  was already enabled.)
+- **Pitfall:** to detect an "active" pin by class, check `scale-[1.2]`, NOT `bg-gold` —
+  `PIN_INACTIVE` contains `hover:bg-gold`, so `includes('bg-gold')` matches every pin.
+- **Commits:** 3fb3b6e (real map) · 254f74b (gm_authFailure fallback) · bd1a441 (clustering)
+  · f593926 (proximity-clustering fix) · plus checklist doc detail (Resend/OAuth + a
+  "where each key goes" table; Maps marked done).
+- **Pending (client):** rotate `SYNC_SECRET` (exposed in chat). Google OAuth Client
+  ID/Secret → Supabase (NOT Vercel env). Resend domain = `avexastays.com`, API key →
+  Supabase SMTP.
+
 ### 2026-06-19 (later) — Real Supabase email/password auth (committed, multi-agent)
 - Orchestrated: 2 parallel Explore recon agents → I built the core → 1 adversarial
   security-review agent → applied required fix.
