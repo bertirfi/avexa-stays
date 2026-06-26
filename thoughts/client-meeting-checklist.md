@@ -63,18 +63,17 @@
 
 ## 3) Google Maps — hărți reale
 
-**Scop:** hartă reală pe pagina proprietății + locații (acum e doar CSS decorativ).
-**Cine:** client (are deja cheia; trebuie activate API-urile + restricția).
+**Status:** pagina proprietății **are deja hartă Google reală** (Maps **Embed API oficial**, cu fallback la varianta keyless dacă lipsește cheia). Codul e gata — trebuie doar cheia + API-urile activate. (Pagina `/locations` overview folosește încă harta **CSS desenată** — opțional de upgradat ulterior.)
+**Cine:** client (are deja cheia; trebuie activate API-urile + restricția + cheia pe Vercel).
 
 **Pași:**
-1. **Google Cloud Console** → proiectul cu cheia Maps → **APIs & Services → Library** → activează:
-   - **Maps JavaScript API**, **Maps Embed API**, **Places API (New)**, **Geocoding API**
+1. **Google Cloud Console** → proiectul cu cheia Maps → **APIs & Services → Library** → activează (important **Maps Embed API**):
+   - **Maps Embed API** (obligatoriu pt. harta de pe pagina proprietății), **Maps JavaScript API**, **Places API (New)**, **Geocoding API**
 2. **APIs & Services → Credentials** → cheia Maps → **Application restrictions: HTTP referrers** → adaugă:
    - `https://avexastays.com/*` · `https://*.vercel.app/*` (pentru preview)
-3. Pune cheia pe Vercel: env `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (scope Production + Preview).
-4. Spune-mi că e gata → **eu construiesc** componenta de hartă.
+3. Pune cheia pe Vercel: env `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (scope **Production + Preview**) → redeploy.
 
-**Verificare:** după ce construiesc, harta apare pe pagina proprietății (nu cea desenată).
+**Verificare:** deschide o proprietate pe preview → secțiunea "Where you'll be" → harta Google se încarcă (fără mesaj de eroare "This page can't load Google Maps correctly").
 
 ---
 
