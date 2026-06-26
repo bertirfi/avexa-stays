@@ -1,6 +1,7 @@
 import { properties as staticProperties } from '@/lib/properties';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { effectiveEurPerNight } from '@/lib/pricing';
+import { PROPERTY_COORDINATES } from '@/lib/propertyCoordinates';
 import type { Property } from '@/types';
 
 /**
@@ -28,6 +29,18 @@ function applyLivePricing(property: Property, priceFromRon: number | null): Prop
   };
 }
 
+/**
+ * Overlay real building coordinates (static, by id) onto a property. Coordinates
+ * are editorial constants, so this guarantees markers work on both the live
+ * Supabase path and the static fallback — regardless of what the cached
+ * `content` JSON holds.
+ */
+function withCoordinates(property: Property): Property {
+  if (property.coordinates) return property;
+  const coordinates = PROPERTY_COORDINATES[property.id];
+  return coordinates ? { ...property, coordinates } : property;
+}
+
 export async function getAllPropertiesData(): Promise<Property[]> {
   try {
     const { data, error } = await getSupabaseAdmin()
@@ -39,10 +52,10 @@ export async function getAllPropertiesData(): Promise<Property[]> {
       throw new Error(error?.message ?? 'no property rows');
     }
     return data.map((row) =>
-      applyLivePricing(row.content as unknown as Property, row.price_from_ron),
+      withCoordinates(applyLivePricing(row.content as unknown as Property, row.price_from_ron)),
     );
   } catch {
-    return staticProperties;
+    return staticProperties.map(withCoordinates);
   }
 }
 
@@ -55,9 +68,10 @@ export async function getPropertyData(idOrSlug: string): Promise<Property | null
       .or(`id.eq.${safe},slug.eq.${safe}`)
       .maybeSingle();
     if (error || !data) throw new Error(error?.message ?? 'not found');
-    return applyLivePricing(data.content as unknown as Property, data.price_from_ron);
+    return withCoordinates(applyLivePricing(data.content as unknown as Property, data.price_from_ron));
   } catch {
-    return staticProperties.find((p) => p.id === safe || p.slug === safe) ?? null;
+    const fallback = staticProperties.find((p) => p.id === safe || p.slug === safe);
+    return fallback ? withCoordinates(fallback) : null;
   }
 }
 

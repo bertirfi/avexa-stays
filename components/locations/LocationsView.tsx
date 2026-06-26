@@ -9,6 +9,7 @@ import { SearchPill } from '@/components/search/SearchPill';
 import { SearchProvider } from '@/components/search/SearchContext';
 import { PropertyCard } from '@/components/locations/PropertyCard';
 import { StylizedMap } from '@/components/locations/StylizedMap';
+import { LocationsMap } from '@/components/locations/LocationsMap';
 import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
 import { neighborhoods } from '@/lib/neighborhoods';
 import { cn } from '@/lib/cn';
@@ -32,6 +33,30 @@ export function LocationsView({ properties }: { properties: Property[] }) {
     };
   }, [mobileView]);
 
+  // Desktop: the active pin follows the card nearest the viewport center as you
+  // scroll the list (Airbnb-style), in addition to hover.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!window.matchMedia('(min-width: 1024px)').matches) return;
+
+    const cards = properties
+      .map((p) => document.getElementById(`loc-card-${p.id}`))
+      .filter((el): el is HTMLElement => el !== null);
+    if (cards.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const focused = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (focused) setActiveId(focused.target.id.replace('loc-card-', ''));
+      },
+      { rootMargin: '-32% 0px -48% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] },
+    );
+    cards.forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, [properties]);
+
   const popupProperty = popupId
     ? (properties.find((p) => p.id === popupId) ?? null)
     : null;
@@ -42,6 +67,13 @@ export function LocationsView({ properties }: { properties: Property[] }) {
       items: properties.filter((p) => p.neighborhood === n.id),
     }))
     .filter((g) => g.items.length > 0);
+
+  // Real Google map when a key is configured + coordinates exist; otherwise the
+  // decorative map. Both share the same props, so it's a drop-in swap.
+  const hasMaps =
+    Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) &&
+    properties.some((p) => p.coordinates);
+  const MapComponent = hasMaps ? LocationsMap : StylizedMap;
 
   return (
     <div className="bg-cream">
@@ -156,7 +188,7 @@ export function LocationsView({ properties }: { properties: Property[] }) {
 
         {/* RIGHT — map (desktop split view) */}
         {mapOpen && (
-          <StylizedMap
+          <MapComponent
             properties={properties}
             activeId={activeId}
             onActivate={setActiveId}
@@ -172,7 +204,7 @@ export function LocationsView({ properties }: { properties: Property[] }) {
           mobileView === 'map' ? 'block' : 'hidden',
         )}
       >
-        <StylizedMap
+        <MapComponent
           variant="mobile"
           properties={properties}
           activeId={activeId}
