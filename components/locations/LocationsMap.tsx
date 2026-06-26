@@ -19,8 +19,14 @@ interface LocationsMapProps {
 
 const BUCHAREST_CENTER: google.maps.LatLngLiteral = { lat: 44.4385, lng: 26.0965 };
 
-// Airbnb-style price pill — same look as the decorative map, applied imperatively
-// to the overlay nodes so React state still drives the active highlight.
+// At/above this zoom, a building cluster expands into its individual suite pins.
+const SPREAD_ZOOM = 16;
+// Fan radius (deg lat, ~50m) used to separate suites in the same building once
+// the cluster is expanded — readable at SPREAD_ZOOM, honest about the complex.
+const FAN_RADIUS = 0.00045;
+
+// Airbnb-style price pill — applied imperatively to overlay nodes so React state
+// still drives the active highlight.
 const PIN_BASE =
   'relative flex items-center gap-1.5 whitespace-nowrap rounded-full border-[1.5px] px-2.5 py-1.5 font-display text-[12.5px] font-bold transition-all duration-200';
 const PIN_INACTIVE =
@@ -28,8 +34,13 @@ const PIN_INACTIVE =
 const PIN_ACTIVE =
   'scale-[1.2] border-ink bg-gold text-ink shadow-[0_10px_28px_rgba(0,0,0,.5)]';
 
-// Dark editorial map theme (brand ink + forest greens) to match the brand and
-// keep the white/gold pins legible.
+const DOT = (color: string) =>
+  `<span style="display:inline-block;width:6px;height:6px;border-radius:9999px;background:${color}"></span>`;
+const CARET = '<span class="absolute -bottom-1 left-1/2 size-2 -translate-x-1/2 rotate-45 bg-inherit"></span>';
+const COUNT_BADGE = (n: number) =>
+  `<span style="display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;margin-left:1px;border-radius:9999px;background:#191919;color:#fff;font-size:10px;line-height:1">${n}</span>`;
+
+// Dark editorial map theme (brand ink + forest greens) to keep white/gold pins legible.
 const MAP_STYLE: google.maps.MapTypeStyle[] = [
   { elementType: 'geometry', stylers: [{ color: '#242824' }] },
   { elementType: 'labels.text.fill', stylers: [{ color: '#9aa39a' }] },
@@ -46,40 +57,10 @@ const MAP_STYLE: google.maps.MapTypeStyle[] = [
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#1b2630' }] },
 ];
 
-/**
- * Fan co-located pins out around their shared centroid so each stays clickable
- * (several suites share a building). Stand-alone pins keep their exact spot.
- */
-function spreadPositions(items: Property[]): Map<string, google.maps.LatLngLiteral> {
-  const groups = new Map<string, Property[]>();
-  for (const p of items) {
-    const c = p.coordinates;
-    if (!c) continue;
-    const key = `${c.lat.toFixed(4)},${c.lng.toFixed(4)}`;
-    const arr = groups.get(key);
-    if (arr) arr.push(p);
-    else groups.set(key, [p]);
-  }
-
-  const out = new Map<string, google.maps.LatLngLiteral>();
-  for (const group of groups.values()) {
-    if (group.length === 1) {
-      const c = group[0].coordinates!;
-      out.set(group[0].id, { lat: c.lat, lng: c.lng });
-      continue;
-    }
-    const lat0 = group.reduce((s, p) => s + p.coordinates!.lat, 0) / group.length;
-    const lng0 = group.reduce((s, p) => s + p.coordinates!.lng, 0) / group.length;
-    const radius = 0.00032; // ~35m so the cluster reads as one building, still separable
-    group.forEach((p, i) => {
-      const angle = (2 * Math.PI * i) / group.length - Math.PI / 2;
-      const lat = lat0 + radius * Math.sin(angle);
-      const lng = lng0 + (radius * Math.cos(angle)) / Math.cos((lat0 * Math.PI) / 180);
-      out.set(p.id, { lat, lng });
-    });
-  }
-  return out;
-}
+type MarkerEntry = { overlay: google.maps.OverlayView; el: HTMLButtonElement } & (
+  | { kind: 'individual'; propertyId: string; grouped: boolean }
+  | { kind: 'cluster'; groupIds: string[] }
+);
 
 function styleMarker(el: HTMLElement, isActive: boolean) {
   const inner = el.firstElementChild as HTMLElement | null;
@@ -87,23 +68,55 @@ function styleMarker(el: HTMLElement, isActive: boolean) {
   el.style.zIndex = isActive ? '10' : '1';
 }
 
+/** Build a positioned price-pin overlay with the given HTML + handlers. */
+function makeMarker(
+  maps: typeof google.maps,
+  map: google.maps.Map,
+  position: google.maps.LatLngLiteral,
+  innerHTML: string,
+  ariaLabel: string,
+  handlers: { onEnter?: () => void; onLeave?: () => void; onClick: (e: MouseEvent) => void },
+): { overlay: google.maps.OverlayView; el: HTMLButtonElement } {
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.setAttribute('aria-label', ariaLabel);
+  el.style.cssText = 'position:absolute;transform:translate(-50%,-100%);background:none;border:none;padding:0;cursor:pointer;';
+  el.innerHTML = innerHTML;
+  if (handlers.onEnter) el.addEventListener('mouseenter', handlers.onEnter);
+  if (handlers.onLeave) el.addEventListener('mouseleave', handlers.onLeave);
+  el.addEventListener('click', handlers.onClick);
+
+  const overlay = new maps.OverlayView();
+  overlay.onAdd = function onAdd() {
+    this.getPanes()?.overlayMouseTarget.appendChild(el);
+  };
+  overlay.draw = function draw() {
+    const point = this.getProjection()?.fromLatLngToDivPixel(new maps.LatLng(position.lat, position.lng));
+    if (!point) return;
+    el.style.left = `${point.x}px`;
+    el.style.top = `${point.y}px`;
+  };
+  overlay.onRemove = function onRemove() {
+    el.remove();
+  };
+  overlay.setMap(map);
+  return { overlay, el };
+}
+
 export function LocationsMap(props: LocationsMapProps) {
   const { variant = 'desktop' } = props;
   const isMobile = variant === 'mobile';
   const [failed, setFailed] = useState(false);
 
-  // Keep latest props in a ref so the imperative overlay closures stay fresh
-  // without rebuilding the markers on every render.
+  // Latest props in a ref so imperative overlay closures stay fresh without
+  // rebuilding markers on every render.
   const propsRef = useRef(props);
   propsRef.current = props;
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef(new Map<string, { overlay: google.maps.OverlayView; el: HTMLButtonElement }>());
+  const markersRef = useRef(new Map<string, MarkerEntry>());
 
-  // ── Init (once): load the API, then build map + markers when the container
-  //    actually has a size (handles hidden→visible for the desktop column and
-  //    the mobile overlay). ─────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     let observer: ResizeObserver | null = null;
@@ -154,69 +167,109 @@ export function LocationsMap(props: LocationsMapProps) {
           });
           mapRef.current = map;
 
+          // Group suites by building (co-located = same rounded coordinate).
           const pinnable = propsRef.current.properties.filter((p) => p.coordinates);
-          const positions = spreadPositions(pinnable);
+          const groups = new Map<string, Property[]>();
+          for (const p of pinnable) {
+            const c = p.coordinates!;
+            const key = `${c.lat.toFixed(4)},${c.lng.toFixed(4)}`;
+            const arr = groups.get(key);
+            if (arr) arr.push(p);
+            else groups.set(key, [p]);
+          }
+
           const bounds = new maps.LatLngBounds();
 
-          for (const property of pinnable) {
-            const position = positions.get(property.id);
-            if (!position) continue;
-
-            const el = document.createElement('button');
-            el.type = 'button';
-            el.setAttribute('aria-label', `${property.name} — €${property.rates[0].perNight} per night`);
-            el.style.cssText =
-              'position:absolute;transform:translate(-50%,-100%);background:none;border:none;padding:0;cursor:pointer;';
-            el.innerHTML =
-              `<span class="${PIN_BASE} ${PIN_INACTIVE}">` +
-              `<span style="display:inline-block;width:6px;height:6px;border-radius:9999px;background:${property.neighborhoodColor}"></span>` +
-              `€${property.rates[0].perNight}` +
-              `<span class="absolute -bottom-1 left-1/2 size-2 -translate-x-1/2 rotate-45 bg-inherit"></span>` +
-              `</span>`;
-
-            el.addEventListener('mouseenter', () => propsRef.current.onActivate(property.id));
-            el.addEventListener('mouseleave', () => propsRef.current.onClear());
-            el.addEventListener('click', (event) => {
-              event.stopPropagation();
-              const current = propsRef.current;
-              current.onActivate(property.id);
-              if (current.variant === 'mobile') {
-                current.onPinTap?.(property.id);
-                return;
-              }
-              document
-                .getElementById(`loc-card-${property.id}`)
-                ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          const individualMarker = (p: Property, position: google.maps.LatLngLiteral, grouped: boolean) => {
+            const html =
+              `<span class="${PIN_BASE} ${PIN_INACTIVE}">${DOT(p.neighborhoodColor)}€${p.rates[0].perNight}${CARET}</span>`;
+            const { overlay, el } = makeMarker(maps, map, position, html, `${p.name} — €${p.rates[0].perNight} per night`, {
+              onEnter: () => propsRef.current.onActivate(p.id),
+              onLeave: () => propsRef.current.onClear(),
+              onClick: (event) => {
+                event.stopPropagation();
+                const current = propsRef.current;
+                current.onActivate(p.id);
+                if (current.variant === 'mobile') {
+                  current.onPinTap?.(p.id);
+                  return;
+                }
+                document.getElementById(`loc-card-${p.id}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+              },
             });
+            markers.set(`i:${p.id}`, { overlay, el, kind: 'individual', propertyId: p.id, grouped });
+          };
 
-            const overlay = new maps.OverlayView();
-            overlay.onAdd = function onAdd() {
-              this.getPanes()?.overlayMouseTarget.appendChild(el);
-            };
-            overlay.draw = function draw() {
-              const point = this.getProjection()?.fromLatLngToDivPixel(
-                new maps.LatLng(position.lat, position.lng),
-              );
-              if (!point) return;
-              el.style.left = `${point.x}px`;
-              el.style.top = `${point.y}px`;
-            };
-            overlay.onRemove = function onRemove() {
-              el.remove();
-            };
-            overlay.setMap(map);
+          for (const group of groups.values()) {
+            if (group.length === 1) {
+              const c = group[0].coordinates!;
+              const position = { lat: c.lat, lng: c.lng };
+              individualMarker(group[0], position, false);
+              bounds.extend(position);
+              continue;
+            }
 
-            styleMarker(el, propsRef.current.activeId === property.id);
-            markers.set(property.id, { overlay, el });
-            bounds.extend(position);
+            // Cluster centroid + a single collapsed pin shown at low zoom.
+            const lat0 = group.reduce((s, p) => s + p.coordinates!.lat, 0) / group.length;
+            const lng0 = group.reduce((s, p) => s + p.coordinates!.lng, 0) / group.length;
+            const centroid = { lat: lat0, lng: lng0 };
+            const minPrice = Math.min(...group.map((p) => p.rates[0].perNight));
+            const groupIds = group.map((p) => p.id);
+
+            const clusterHtml =
+              `<span class="${PIN_BASE} ${PIN_INACTIVE}">${DOT(group[0].neighborhoodColor)}€${minPrice}${COUNT_BADGE(group.length)}${CARET}</span>`;
+            const cluster = makeMarker(maps, map, centroid, clusterHtml, `${group.length} suites from €${minPrice} per night`, {
+              onClick: (event) => {
+                event.stopPropagation();
+                map.panTo(centroid);
+                map.setZoom(SPREAD_ZOOM);
+              },
+            });
+            markers.set(`c:${lat0.toFixed(5)},${lng0.toFixed(5)}`, { overlay: cluster.overlay, el: cluster.el, kind: 'cluster', groupIds });
+            bounds.extend(centroid);
+
+            // Individual suites fanned around the centroid, hidden until expanded.
+            group.forEach((p, i) => {
+              const angle = (2 * Math.PI * i) / group.length - Math.PI / 2;
+              const position = {
+                lat: lat0 + FAN_RADIUS * Math.sin(angle),
+                lng: lng0 + (FAN_RADIUS * Math.cos(angle)) / Math.cos((lat0 * Math.PI) / 180),
+              };
+              individualMarker(p, position, true);
+            });
           }
+
+          const applyZoomVisibility = () => {
+            const zoom = map.getZoom() ?? 14;
+            const expanded = zoom >= SPREAD_ZOOM;
+            markers.forEach((entry) => {
+              if (entry.kind === 'cluster') entry.el.style.display = expanded ? 'none' : '';
+              else if (entry.grouped) entry.el.style.display = expanded ? '' : 'none';
+            });
+          };
+
+          const applyActive = () => {
+            const activeId = propsRef.current.activeId;
+            markers.forEach((entry) => {
+              const active =
+                entry.kind === 'cluster' ? entry.groupIds.includes(activeId ?? '') : entry.propertyId === activeId;
+              styleMarker(entry.el, active);
+            });
+          };
+
+          maps.event.addListener(map, 'zoom_changed', applyZoomVisibility);
 
           if (!bounds.isEmpty()) {
             map.fitBounds(bounds, mobile ? 56 : 76);
             maps.event.addListenerOnce(map, 'idle', () => {
               const zoom = map.getZoom();
               if (typeof zoom === 'number' && zoom > 16) map.setZoom(16);
+              applyZoomVisibility();
+              applyActive();
             });
+          } else {
+            applyZoomVisibility();
+            applyActive();
           }
         };
 
@@ -239,9 +292,15 @@ export function LocationsMap(props: LocationsMapProps) {
     // Mount-once: properties are stable server data; latest handlers come from propsRef.
   }, []);
 
-  // ── Active highlight follows hover / scroll-sync from the list. ───────────
+  // Active highlight follows hover / scroll-sync from the list (cluster lights
+  // up when any of its suites is active).
   useEffect(() => {
-    markersRef.current.forEach(({ el }, id) => styleMarker(el, id === props.activeId));
+    const activeId = props.activeId;
+    markersRef.current.forEach((entry) => {
+      const active =
+        entry.kind === 'cluster' ? entry.groupIds.includes(activeId ?? '') : entry.propertyId === activeId;
+      styleMarker(entry.el, active);
+    });
   }, [props.activeId]);
 
   if (failed) return <StylizedMap {...props} />;

@@ -63,17 +63,18 @@
 
 ## 3) Google Maps — hărți reale
 
-**Status:** pagina proprietății **are deja hartă Google reală** (Maps **Embed API oficial**, cu fallback la varianta keyless dacă lipsește cheia). Codul e gata — trebuie doar cheia + API-urile activate. (Pagina `/locations` overview folosește încă harta **CSS desenată** — opțional de upgradat ulterior.)
-**Cine:** client (are deja cheia; trebuie activate API-urile + restricția + cheia pe Vercel).
+**Status:** ambele hărți sunt **gata în cod**: pagina proprietății (Maps **Embed API**) și acum și `/locations` (hartă **interactivă Maps JavaScript API**, pini de preț stil Airbnb, sync card↔pin, popup pe mobil). Cheia **e setată pe Vercel** și **Maps JavaScript API e activ** (verificat în browser). **Singurul blocaj rămas:** cheia nu autorizează domeniul de preview → eroare `RefererNotAllowedMapError`. Până se rezolvă, `/locations` afișează automat harta decorativă (fallback grațios, fără cutia de eroare Google).
+**Cine:** client (un singur pas: adaugă referrers pe cheie în Google Cloud Console).
 
 **Pași:**
-1. **Google Cloud Console** → proiectul cu cheia Maps → **APIs & Services → Library** → activează (important **Maps Embed API**):
-   - **Maps Embed API** (obligatoriu pt. harta de pe pagina proprietății), **Maps JavaScript API**, **Places API (New)**, **Geocoding API**
-2. **APIs & Services → Credentials** → cheia Maps → **Application restrictions: HTTP referrers** → adaugă:
-   - `https://avexastays.com/*` · `https://*.vercel.app/*` (pentru preview)
-3. Pune cheia pe Vercel: env `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (scope **Production + Preview**) → redeploy.
+1. **(ACȚIUNEA IMEDIATĂ)** **Google Cloud Console → APIs & Services → Credentials** → cheia Maps → **Application restrictions → HTTP referrers** → adaugă **ambele**:
+   - `https://*.vercel.app/*` (pentru preview — deblochează harta acum)
+   - `https://avexastays.com/*` (pentru producție la lansare)
+   - Save → așteaptă 1-5 min să se propage.
+2. (Deja făcut / de confirmat) **APIs & Services → Library** → activate: **Maps JavaScript API** ✅ (confirmat), **Maps Embed API**, plus opțional **Places API (New)** + **Geocoding API**.
+3. (Deja făcut) Cheia pe Vercel: env `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (scope **Production + Preview**).
 
-**Verificare:** deschide o proprietate pe preview → secțiunea "Where you'll be" → harta Google se încarcă (fără mesaj de eroare "This page can't load Google Maps correctly").
+**Verificare:** după ce adaugi referrer-ul, deschide `/locations` pe preview → harta Google se încarcă cu pinii de preț (fără „Oops! Something went wrong"). Pe pagina unei proprietăți, secțiunea „Where you'll be" arată harta Embed.
 
 ---
 
