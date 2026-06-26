@@ -101,6 +101,12 @@ export function StayFAQ({ property }: { property: Property }) {
 
 export function StayLocation({ property }: { property: Property }) {
   const mapsQuery = encodeURIComponent(`${property.address}`);
+  const mapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  // Official Maps Embed API when the key is set; graceful fallback to the
+  // keyless embed otherwise, so the map always renders.
+  const mapSrc = mapsKey
+    ? `https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=${mapsQuery}&zoom=15`
+    : `https://www.google.com/maps?q=${mapsQuery}&output=embed`;
   return (
     <section className="border-b border-gray-line py-10">
       <h2 className="font-display mb-6 text-2xl">Where you&apos;ll be</h2>
@@ -120,11 +126,13 @@ export function StayLocation({ property }: { property: Property }) {
       </div>
       <div className="mt-6 overflow-hidden rounded-card border border-gray-line">
         <iframe
-          src={`https://www.google.com/maps?q=${mapsQuery}&output=embed`}
+          title={`Map showing ${property.name}, ${property.address}`}
+          src={mapSrc}
           width="100%"
           height="380"
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
+          allowFullScreen
           className="block"
         />
       </div>
