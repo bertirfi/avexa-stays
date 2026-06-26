@@ -3,7 +3,7 @@
 > Pentru meeting cu clientul. Fiecare secțiune: **scop · cine · pași · unde pun valoarea în proiect · verificare**.
 > Repere proiect: domeniu `avexastays.com` · Supabase project ref `iebxcxaxfpbqyumoprbt`
 > · preview `https://avexa-stays-git-feat-nextjs-platform-berti8.vercel.app`
-> · firmă `PRIME GOLD LIVING SRL` · expeditor email `bookings@avexastays.com`
+> · firmă `PRIME GOLD LIVING SRL` · expeditor email `office@avexastays.com` (Google Workspace)
 > Env-urile se pun în **Vercel → Settings → Environment Variables** (bifează scope-urile **Production + Preview**) și local în `.env.local`.
 
 ---
@@ -42,8 +42,9 @@
 
 **Scop:** ca Supabase să trimită REAL emailurile (confirmare cont, reset parolă, mai târziu confirmare booking). Fără SMTP custom, Supabase trimite doar câteva emailuri/oră de pe domeniul lui — bun doar de test, nu de producție.
 **Cine:** client (cont Resend + acces la DNS-ul domeniului `avexastays.com`).
-**Ce domeniu pui:** **`avexastays.com`** (domeniul site-ului). Expeditor: **`bookings@avexastays.com`** (sau `noreply@` / `account@avexastays.com` — orice adresă @avexastays.com merge după ce domeniul e „Verified").
+**Ce domeniu pui:** **`avexastays.com`** (domeniul site-ului). Expeditor: **`office@avexastays.com`** (sau `noreply@` / `account@avexastays.com` — orice adresă @avexastays.com merge după ce domeniul e „Verified").
 **Unde stă cheia:** **doar în Supabase (SMTP), NU în Vercel.**
+**Cu Google Workspace (office@avexastays.com):** merge fără conflict — Resend folosește subdomeniul `send.avexastays.com` pentru bounce/SPF, deci nu atinge MX-ul root al Workspace (răspunsurile ajung normal în Workspace). DKIM Resend (`resend._domainkey`) coexistă cu DKIM Google. Doar asigură-te că SPF-ul de pe domeniul **root** păstrează include-ul Google (`v=spf1 include:_spf.google.com ~all`) pentru trimisul din Gmail.
 
 **Pași:**
 1. Cont pe **resend.com** (free: 3.000 emailuri/lună, 100/zi).
@@ -57,7 +58,7 @@
 4. După ce ai salvat înregistrările → în Resend apasă **Verify DNS Records** → aștepți **„Verified"** (de la câteva minute la câteva ore, în funcție de DNS).
 5. **API Keys → Create API Key** (Sending access) → copiază cheia **`re_...`** (se vede o singură dată).
 6. **Supabase → Project Settings → Authentication → SMTP Settings → Enable Custom SMTP:**
-   - Sender email: `bookings@avexastays.com` · Sender name: `AVEXA STAYS`
+   - Sender email: `office@avexastays.com` · Sender name: `AVEXA STAYS`
    - Host: `smtp.resend.com` · Port: **465** (SSL) — sau 587 (TLS)
    - Username: `resend` · Password: **cheia `re_...`**
    - Save.
