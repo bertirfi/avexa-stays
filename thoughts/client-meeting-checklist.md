@@ -74,7 +74,9 @@
 ## 2) Stripe (plăți) — TEST întâi, apoi LIVE
 
 **Scop:** plăți reale la checkout → webhook creează rezervarea în Hostaway.
-**Cine:** client creează contul Stripe pe firma `PRIME GOLD LIVING SRL` (CUI 52265361).
+**Cine:** clientul — **contul Stripe există deja** (folosit cu rezervări reale din alte surse). Folosim ACELAȘI cont, nu unul nou.
+
+> **Contul e deja folosit cu plăți reale? Nu-i problemă.** Test mode e complet izolat de Live: chei separate (`pk_test_`/`sk_test_` vs `pk_live_`), date separate, 0 bani reali, nu atinge rezervările curente. Testăm pe test, apoi flip pe live la lansare. Pe live, webhookul nostru = endpoint **separat** + sesiunile marcate cu `metadata`, deci NU interferează cu rezervările care vin din alte părți (Hostaway/OTA).
 
 **Pași (test):**
 1. Creează cont pe **dashboard.stripe.com**, completează datele firmei.
@@ -109,6 +111,7 @@
 
 **Pași:**
 1. **Google Cloud Console → APIs & Services → OAuth consent screen** → User type **External** → nume app „AVEXA Stays", user support email, developer email, **Authorized domain** `avexastays.com` → Save. (Dacă rămâne în „Testing", adaugă-ți emailul la **Test users** — altfel doar tu poți testa; sau apasă **Publish app**.)
+   > Numele afișat pe ecranul Google („Sign in to …") = **App name** de aici. Dacă vezi domeniul `…supabase.co`, App name nu e setat/propagat — pune `AVEXA Stays` → Save (propagare câteva minute; la conturile deja autorizate se updatează la următorul login). Ca să dispară complet `supabase.co` (și din linia „to continue to…") ai nevoie de **custom auth domain pe Supabase** (`auth.avexastays.com`, add-on ~$10/lună + un CNAME) — opțional, nu acum.
 2. **APIs & Services → Credentials → Create credentials → OAuth client ID → Application type: Web application** (nume ex. „Avexa auth supabase"):
    - **Authorized JavaScript origins** = DOAR origini, FĂRĂ cale. **Lasă-l GOL** (nu e necesar pentru Supabase). ⚠️ NU pune aici URL-ul cu `/auth/v1/callback` — de-aia dă eroarea „Invalid Origin: URIs must not contain a path".
    - **Authorized redirect URIs** → **+ Add URI** → `https://iebxcxaxfpbqyumoprbt.supabase.co/auth/v1/callback` ← **AICI** merge callback-ul (singurul URL obligatoriu).
