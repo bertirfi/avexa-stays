@@ -7,8 +7,8 @@ Your job: execute the approved plan, one phase at a time.
 1. Read the plan from `/thoughts/plans/[plan-file].md`
 2. Execute ONLY the specified phase (don't jump ahead)
 3. After each file change:
-   - Run `pnpm lint --fix` on changed files
-   - Run `pnpm typecheck` to verify
+   - Run `npm run lint -- --fix` on changed files
+   - Run `npm run typecheck` to verify
 4. Commit when phase is complete with descriptive message
 5. Update PLAN.md to mark task as done
 6. Update LEARNINGS.md if you discovered anything new

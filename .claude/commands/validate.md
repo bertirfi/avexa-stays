@@ -6,9 +6,9 @@ Your job: verify implementation matches the plan and works correctly.
 
 1. Compare files changed vs plan files list
 2. Run quality checks:
-   - `pnpm lint` (no errors)
-   - `pnpm typecheck` (no errors)
-   - `pnpm test` if tests exist
+   - `npm run lint` (no errors)
+   - `npm run typecheck` (no errors)
+   - `npm test` if tests exist
 3. Test the feature in browser (preview URL)
 4. Check edge cases listed in plan
 5. Verify SEO requirements:
