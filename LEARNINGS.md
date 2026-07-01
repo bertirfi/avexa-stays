@@ -8,6 +8,31 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-07-01 — Steering framework restructure + OAuth/Resend live
+- **Restructured project steering per Anthropic's "steering" article** (commit 72fe47c).
+  Instructions now placed by load timing + authority instead of one big CLAUDE.md:
+  - **Hooks** (`.claude/settings.json` + `.claude/hooks/*.js`, deterministic, `PreToolUse` exit 2):
+    `guard-protected-files.js` blocks Edit/Write to `coming-soon.html` and to `vercel.json` on `main`;
+    `pre-commit-checks.js` runs lint+typecheck before a `git commit` that stages app code
+    (`.ts/.tsx/.js…` outside `.claude/`) and blocks on failure — docs/config-only commits skip (fast).
+  - **Rules** (`.claude/rules/`, path-scoped via `paths:`): `pricing`, `hostaway`, `api-validation`.
+  - **Skills** (`.claude/skills/`): `seo-audit` (converted from command), `verify-frontend` (loops
+    self-check), `deploy`. **Subagents** (`.claude/agents/`): `code-reviewer` (sonnet),
+    `build-log-analyzer` (haiku), `dependency-auditor` (sonnet).
+  - **CLAUDE.md 310 → 68 lines** (index only). Full map: `thoughts/steering-framework.md`.
+  - Confirmed `.claude/rules/` IS native (frontmatter `paths:` globs; no-`paths` = always-on like CLAUDE.md).
+    eslint already ignores `.claude/**` + `thoughts/**`, so tooling scripts never break `npm run lint`.
+  - Gotcha: new hooks take effect at next session start, not mid-session — validate scripts directly:
+    `echo '{"tool_input":{"file_path":"coming-soon.html"}}' | node .claude/hooks/guard-protected-files.js; echo $?` → `2`.
+- **Auth + email live & verified:** Google OAuth configured in Supabase (authorize endpoint 302s to
+  Google with the right `client_id` + callback); Resend custom SMTP set, sender `office@avexastays.com`
+  (recover endpoint returns 200). Supabase Site URL + Redirect URLs point to the preview while
+  `avexastays.com` is coming-soon. Auth code uses `window.location.origin` so it returns to the preview.
+- **Stripe:** `pk_test`/`sk_test` added to Vercel (Preview scope) from the client's EXISTING account —
+  test mode is fully isolated from their live reservations. `whsec_` deferred until the webhook exists.
+  **NEXT: build checkout → Stripe webhook → Hostaway reservation → confirmation email** (Wave 5).
+- **Still pending:** rotate `SYNC_SECRET` (was exposed in chat; guards sync/diagnostic endpoints).
+
 ### 2026-06-26 — Real Google Maps on /locations (Airbnb-style clustering), browser-verified
 - **Replaced the decorative StylizedMap on /locations with a real interactive Google
   Maps JS map** — key-gated, drop-in (same props), graceful fallback to StylizedMap.
