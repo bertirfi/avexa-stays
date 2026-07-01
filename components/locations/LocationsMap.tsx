@@ -194,7 +194,9 @@ export function LocationsMap(props: LocationsMapProps) {
           mapRef.current = map;
 
           // Group suites by proximity (same building/complex within ~70m).
-          const pinnable = propsRef.current.properties.filter((p) => p.coordinates);
+          // Require rates[0] too: a bad Supabase content row with empty rates[]
+          // would otherwise throw in this loop and drop the whole map to fallback.
+          const pinnable = propsRef.current.properties.filter((p) => p.coordinates && p.rates[0]);
           const groups = clusterByProximity(pinnable, 70);
 
           const bounds = new maps.LatLngBounds();
@@ -304,6 +306,9 @@ export function LocationsMap(props: LocationsMapProps) {
       cancelled = true;
       unsubscribe();
       observer?.disconnect();
+      if (mapRef.current && typeof google !== 'undefined') {
+        google.maps.event.clearInstanceListeners(mapRef.current);
+      }
       markers.forEach(({ overlay }) => overlay.setMap(null));
       markers.clear();
       mapRef.current = null;

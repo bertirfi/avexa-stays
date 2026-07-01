@@ -176,8 +176,8 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     }
     const booking: Booking = {
       propertyId: property.id,
-      checkIn: startDate.toISOString().slice(0, 10),
-      checkOut: endDate.toISOString().slice(0, 10),
+      checkIn: ymd(startDate),
+      checkOut: ymd(endDate),
       nights,
       guests,
       rateId,

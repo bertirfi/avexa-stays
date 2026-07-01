@@ -121,7 +121,7 @@ export function LoginForm() {
       const { error } = await getSupabaseBrowserClient().auth.resetPasswordForEmail(
         email.trim(),
         {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/auth/reset-password')}`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/reset-password')}`,
         },
       );
       if (error) {
