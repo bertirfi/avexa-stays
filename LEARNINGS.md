@@ -128,8 +128,13 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
   clientul vede sold neîncasat / automatizări de payment-request. De rezolvat (probabil
   PUT follow-up după create sau payment record atașat) — PUT-ul de verificare a fost
   blocat de permission classifier; decizia e la Robert.
-- **Cleanup:** Robert anulează rezervarea 62347427 din dashboard → apoi resync cache
-  (`/api/sync` cu `SYNC_SECRET`) + marchează booking-urile de test `cancelled` în DB.
+- **Cleanup DONE (2026-07-02):** rezervarea 62347427 anulată din dashboard (11:25) →
+  calendar Hostaway eliberat instant → sync rulat (8 proprietăți × 181 zile) → cache
+  eliberat (Nov 17–18 + blocajul vechi Sep 14–16 de la mock) → ambele booking-uri de
+  test marcate `cancelled` în DB. **Ciclul complet demonstrat, inclusiv self-healing.**
+- **⚠ Post-test:** preview-ul a rămas FĂRĂ mock — orice plată test pe preview creează
+  rezervări REALE în PMS. Recomandat: repune `HOSTAWAY_MOCK_RESERVATIONS=1` în Vercel
+  Preview până la lansare.
 
 ### Rămase pe plăți
 - **isPaid fix** (vezi finding-ul P6b de mai sus) + verifică emailul de confirmare
