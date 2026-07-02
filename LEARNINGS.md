@@ -199,6 +199,22 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-07-02 — P7 review total + F2 SEO sprint (ambele livrate)
+- **P7 (8 agenți paraleli):** raport complet în `thoughts/research/2026-07-02-p7-review-findings.md` —
+  fundația (trust boundary, RLS, idempotență, sume) confirmată solidă de 3 agenți independenți;
+  2 critice (ambele închise: C1 guard mock ✅, C2 SEO ✅), 9 workstream-uri HIGH rămase (F3–F7):
+  my-trips mock, divergență preț afișat/taxat, reset-password fără recovery gate, orfan PMS la
+  eșec ambiguu, 429/token race, fereastră sync 180d, newsletter fals, timezone off-by-one, CVE postcss.
+- **F2 SEO livrat + verificat pe HTML-ul randat:** `metaDescription` unic per suite (obligatoriu
+  în tip, 140–150 car.) + `metaTitle` 301 (83→52); H1 „Bucharest City Center apartments, unlocked"
+  + subhead cu fraza exactă; /locations title 58 car. cu keyword; /member-benefits desc 144.
+- **⚠ GOTCHA arhitectural (a mușcat o dată):** paginile de proprietate se randează din
+  `properties.content` (JSON-ul seed-uit în Supabase), NU din `lib/properties.ts` — câmpuri noi
+  adăugate în catalogul static NU ajung în producție (cast-ul `as unknown as Property` ascunde
+  lipsa; meta description a lipsit complet pe randat). Pattern-ul corect pentru câmpuri editoriale
+  code-owned: overlay la citire în `lib/data/properties.ts` (`withCoordinates`/`withSeoFields`) —
+  sau re-seed. Verifică mereu pe HTML-ul RANDAT de pe preview, nu doar în cod.
+
 ### 2026-07-02 — CONFIRMAT (client): contractul de afișare a prețului la checkout
 - **Breakdown-ul pe linii e obligatoriu și fix:** (1) **Accommodation** = prețul real al
   cazării pe O singură linie (fără să se vadă vreodată split-ul 18%/3%); (2) **Extra

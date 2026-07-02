@@ -62,7 +62,7 @@ zod, stripe, @supabase/ssr, react 19, clsx: la zi. Fără pachete git-pinned, f�
 
 ## Ordinea de fix propusă
 1. **F1 (făcut):** C1 guard mock. ✅
-2. **F2 — SEO sprint (C2):** 8 metaDescription unice + H1/keyword homepage + title/desc locations + title 301. O sesiune, un commit, re-audit.
+2. **F2 — SEO sprint (C2): ✅ FĂCUT + VERIFICAT PE RANDAT (2026-07-02).** `metaDescription` obligatoriu pe Property (8 unice, 140–150 car., toate cu keyword-ul) + `metaTitle` opțional (301: 83→52 car.); [slug] metadata + JSON-LD pe copy-ul curat; H1 „Bucharest City Center apartments, unlocked" + subhead nou cu fraza exactă; /locations title cu keyword (58 car.) + desc 147; /member-benefits desc 209→144. **Gotcha descoperit și fixat:** paginile se randează din `properties.content` (JSON seed-uit în Supabase) — câmpurile noi nu ajungeau în producție; fix = overlay code-owned `withSeoFields` (pattern-ul withCoordinates). Verificat pe HTML-ul randat de pe preview: title/desc/og/JSON-LD toate corecte.
 3. **F3 — Member area real (H1):** sesiune server-side în UI + my-trips din DB + ștergere mock. Cel mai valoros refactor pentru „sellable”.
 4. **F4 — Checkout trust (H2, H8 + medium-urile de checkout):** quote server pe checkout, parseYmd, poller fallback, dedupe pending, autocomplete, Link.
 5. **F5 — Hostaway hardening (H4, H5, H6 + medium-urile de integrare):** 429/backoff, single-flight token, fereastră 380d, derivare preț comună, eliberare cache pe date, flag charge-fail, regex CA, deadline after().
