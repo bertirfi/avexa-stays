@@ -12,8 +12,23 @@ Premium direct-booking platform for Bucharest city-center apartments. Every deci
 Dark editorial aesthetic + gold accents. Positioning: "No front desk. No friction. No compromise." · 15% member advantage. Client: Smighi · Dev: Robert. Live at avexastays.com (root serves `coming-soon.html` until launch; real app ships to the `feat/nextjs-platform` preview).
 
 ## Orchestration (every session)
-The orchestrator is **the selected advanced model** (Fable 5, Opus 4.8, or whatever Robert picks — it changes over time; never assume a specific one). It keeps only high-value work — planning, codebase/systems review, architecture, code structure, integration design, final review — and **delegates implementation aggressively** to cheaper models: moderate work → Sonnet 5, simple/repetitive → Haiku, split into MANY small self-contained tasks so no agent overflows its context. Full convention: the `efficient-fable` skill (model-agnostic efficient orchestration). Vet subagent output before trusting it.
-Subagent models are set by the `CLAUDE_CODE_SUBAGENT_MODEL` env var or `model:` frontmatter in `.claude/agents/*` — a `.md` instruction alone does NOT change subagent models.
+The orchestrator is **the selected advanced model** (Fable 5, Opus 4.8, or whatever Robert picks — it changes over time; never assume a specific one). It keeps only high-value work — planning, codebase/systems review, architecture, code structure, integration design, final review — and **delegates the token-hungry grunt work** to cheaper models, split into MANY small self-contained tasks so no agent overflows its context. Full convention: the `efficient-fable` skill (model-agnostic efficient orchestration). Vet subagent output before trusting it.
+
+**Model routing** — rankings, higher = better; cost ≈ what we pay in practice, intelligence = how hard a problem the model handles unsupervised, taste = UI/UX, code quality, API design, copy. Tune the numbers to the current subscription; the rules below read from this table:
+
+| model | cost | intelligence | taste |
+|----------|------|--------------|-------|
+| sonnet-5 | 6 | 5 | 7 |
+| opus-4.8 | 4 | 8 | 8 |
+| fable-5 | 2 | 9 | 9 |
+
+- These are defaults, not limits. Standing permission to override: if a cheaper model's output does not meet the bar, rerun or redo the work with a smarter model without asking. Judge the output, not the price tag. Escalating costs less than shipping mediocre work.
+- Cost is a tie-breaker only. When axes conflict for anything that ships: intelligence > taste > cost.
+- Bulk/mechanical work (clear-spec implementation, data analysis, migrations, codebase reading): send to the cheapest capable model — this is where most of the quota would otherwise go.
+- Anything user-facing (UI, copy, API design) needs taste ≥ 7 — keep it on opus-4.8/fable-5.
+- Reviews of plans/implementations: fable-5 or opus-4.8, optionally a second independent model for an extra perspective.
+- **Never use Haiku.**
+- Models are swapped via the Agent/Workflow `model` parameter (e.g. `model: 'sonnet'` for cheap mechanical work, `'opus'` when it needs more taste); the main session model via `/model`. Subagent defaults: the `CLAUDE_CODE_SUBAGENT_MODEL` env var or `model:` frontmatter in `.claude/agents/*` — a `.md` instruction alone does NOT change subagent models.
 
 ## Tech stack
 - **Next.js 15** App Router · **TypeScript** strict · **Tailwind v4** · **motion** (import from `'motion/react'`, not framer-motion)
@@ -52,7 +67,7 @@ Steering is split by load-timing and authority. Full rationale: `thoughts/steeri
 - **Hard guardrails — deterministic, `.claude/settings.json` + `.claude/hooks/`:** block edits to `coming-soon.html`; block `vercel.json` on `main`; run lint+typecheck before any code commit and block on failure.
 - **Path-scoped rules — `.claude/rules/` (load when you touch matching files):** `pricing.md`, `hostaway.md`, `api-validation.md`.
 - **Skills — `.claude/skills/` (load when invoked):** `seo-audit`, `verify-frontend`, `deploy`, plus the registered `efficient-fable`. Workflow commands in `.claude/commands/`: `research`, `plan`, `implement`, `validate`.
-- **Subagents — `.claude/agents/` (isolated, return a summary):** `code-reviewer` (sonnet), `build-log-analyzer` (haiku), `dependency-auditor` (sonnet).
+- **Subagents — `.claude/agents/` (isolated, return a summary):** `code-reviewer` (sonnet), `build-log-analyzer` (sonnet), `dependency-auditor` (sonnet).
 - **Docs:** `BRAND.md` (brand/voice/colors/fonts) · `INTEGRATIONS.md` (setup + all env vars) · `ARCHITECTURE.md` (the WHY) · `PLAN.md` (phase/roadmap) · `thoughts/client-meeting-checklist.md` (client setup steps) · `LEARNINGS.md` (read at session start, update at end).
 
 ## Non-negotiables (must always stay in context)

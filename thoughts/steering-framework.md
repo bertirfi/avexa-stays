@@ -33,7 +33,7 @@ Test a hook without committing: pipe a sample tool-call JSON to it, e.g.
 - Pre-commit checklist → `skills/deploy` + the lint/typecheck hook.
 
 ## Models (efficient orchestration — model-agnostic)
-The orchestrator is the selected advanced model (Fable 5, Opus 4.8, or whatever Robert picks — changes over time). It keeps judgment (planning, reviews, architecture, integration, final review); Sonnet 5 implements moderate work; Haiku handles simple/repetitive passes. Subagent models come from `CLAUDE_CODE_SUBAGENT_MODEL` env var or per-agent `model:` frontmatter — a .md instruction alone doesn't change them. Convention: `efficient-fable` skill.
+The orchestrator is the selected advanced model (Fable 5, Opus 4.8, or whatever Robert picks — changes over time). It keeps judgment (planning, reviews, architecture, integration, final review); Sonnet 5 takes all delegated implementation and bulk/mechanical passes — never Haiku. The cost/intelligence/taste routing table lives in CLAUDE.md ("Model routing") and Robert tunes it per subscription. Subagent models come from `CLAUDE_CODE_SUBAGENT_MODEL` env var or per-agent `model:` frontmatter — a .md instruction alone doesn't change them. Convention: `efficient-fable` skill.
 
 ## Self-verification (loops)
 The `verify-frontend` skill encodes the loop from Anthropic's "Getting started with loops": open the real route, exercise the change, assert the user-visible result, check the console, test mobile + desktop, iterate until clean. "The edit applied" is never proof.

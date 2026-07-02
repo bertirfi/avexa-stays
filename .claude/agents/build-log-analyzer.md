@@ -2,7 +2,7 @@
 name: build-log-analyzer
 description: Use to distill long, noisy build / lint / typecheck / test / dev-server output down to the actual failures, root cause, and file:line. Give it a command to run or a log path. Keeps token-heavy logs out of the main context.
 tools: Read, Grep, Bash
-model: haiku
+model: sonnet
 color: orange
 ---
 
