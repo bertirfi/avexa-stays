@@ -131,16 +131,19 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
   conectat al contului → „Internal error" 403); „other" + titlu descriptiv e corect.
   Implementat în `createReservation` (best-effort, nu pică booking-ul). `status:
   "modified"` în loc de `new` = comportament normal Hostaway post-creare, benign.
-- **Emailul de confirmare (decizia 13 REVIZUITĂ 2026-07-02):** clientul folosește
-  **ChargeAutomation.com** (terț) — generează linkul de check-in și îl scrie în notele
-  rezervării (`CA_PRE_ARRIVAL_LINK`, latență 9–60s), dar NU trimite email guestului
-  pentru rezervări direct/API. **Soluția noastră (implementată):**
-  `lib/hostaway/confirmation.ts` — după confirmarea booking-ului (în `after()` din
-  next/server, nu ține webhook-ul Stripe), așteptăm linkul CA (~95s max), compunem
-  confirmarea (date, oaspeți, total plătit RON, link check-in) și o trimitem pe
-  **conversația Hostaway** cu `communicationType: email` → guestul primește email +
-  mesajul rămâne vizibil în inbox-ul Hostaway (și răspunsurile guestului la fel).
-  Fallback: Resend (`RESEND_API_KEY` în Vercel). Best-effort — nu pică booking-ul.
+- **Emailul guestului (decizia 13 FINALĂ 2026-07-02): UN singur email, doar cel cu
+  linkul CA.** Clientul folosește **ChargeAutomation.com** (terț) — generează linkul
+  de check-in și îl scrie în notele rezervării (`CA_PRE_ARRIVAL_LINK`, latență
+  9–60s), dar NU trimite email guestului pentru rezervări direct/API (pentru OTA îl
+  postează chiar CA pe conversația Hostaway). **Soluția (implementată + testată):**
+  `lib/hostaway/confirmation.ts` — în `after()`, așteptăm linkul CA (~3,5 min max),
+  apoi postăm **exact template-ul CA** (fără footer-ul „Powered by") pe **conversația
+  Hostaway** cu `communicationType: email` → guestul primește emailul cu expeditorul
+  „Avexa Stays", mesajul + răspunsurile rămân în inbox-ul Hostaway. **Fără fallback,
+  fără email separat de confirmare** — dacă linkul CA nu apare, nu se trimite nimic
+  și se loghează eroare. (Resend rămâne DOAR pt. auth + refund-conflict.)
+  **Anti-dublare:** CA trimite pt. OTA, noi pt. site; nu activați mesajele CA pe
+  canalul direct.
 - **✅ Test #3 (Dec 15–17, rez. 62359556, 2026-07-02) — TOTUL VERDE, mistere rezolvate:**
   - **Status „modified" NU e de la noi** — timeline prins live: 19:39:35 status `new`
     + `paymentStatus: Paid` (charge-ul automat din cod!), 19:39:44 status devine
