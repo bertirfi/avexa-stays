@@ -131,13 +131,21 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
   conectat al contului → „Internal error" 403); „other" + titlu descriptiv e corect.
   Implementat în `createReservation` (best-effort, nu pică booking-ul). `status:
   "modified"` în loc de `new` = comportament normal Hostaway post-creare, benign.
-- **Emailul de confirmare (decizia 13) — concluzie:** automatizarea clientului e
-  **charge automation** (legată de încasare). La rezervările de pe site nu are ce
-  încasa (banii vin prin Stripe-ul nostru, decizia 10), deci nu se declanșează —
-  verificat: 0 mesaje în conversație, niciun autopayment atașat. **Fix pe partea
-  clientului:** message automation pe „new reservation" care să includă canalul
-  direct/API (2000), cu template-ul de check-in. Se testează la următoarea rezervare
-  (automatizările nu se aplică retroactiv).
+- **Emailul de confirmare (decizia 13):** clientul folosește **ChargeAutomation.com**
+  (serviciu terț) — procesează și rezervările noastre (scrie `CA_PRE_ARRIVAL_LINK`
+  în guest note). Emailul CA se trimite prin mailerul CA, NU apare în conversațiile
+  Hostaway. De verificat în inbox/spam; dacă lipsește → scope/config în CA.
+- **✅ Test #3 (Dec 15–17, rez. 62359556, 2026-07-02) — TOTUL VERDE, mistere rezolvate:**
+  - **Status „modified" NU e de la noi** — timeline prins live: 19:39:35 status `new`
+    + `paymentStatus: Paid` (charge-ul automat din cod!), 19:39:44 status devine
+    `modified` EXACT când ChargeAutomation își scrie linkul în note. Fix posibil doar
+    în setările CA / întrebare la suportul CA (la Airbnb nu flipează pt. că CA nu
+    scrie nota acolo).
+  - **financeField funcționează:** dashboard-ul arată „Base rate 560 / City / Tourism
+    tax 40 / Total 600 / Total paid 600" — exact structura cerută (ca la Airbnb).
+  - Charge automat unic (600 RON, „Paid via Stripe on avexastays.com", la ~3s după
+    creare); calendar Hostaway 15–16 dec `reserved` (17 = checkout liber); cache-ul
+    nostru blocat instant.
 - **Cleanup DONE (2026-07-02):** rezervarea 62347427 anulată din dashboard (11:25) →
   calendar Hostaway eliberat instant → sync rulat (8 proprietăți × 181 zile) → cache
   eliberat (Nov 17–18 + blocajul vechi Sep 14–16 de la mock) → ambele booking-uri de
@@ -147,10 +155,14 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
   Preview până la lansare.
 
 ### Rămase pe plăți
-- **Test #2 activ:** rezervarea 62358420 (Dec 8–10, 600 RON, „Paid") e lăsată în PMS
-  ca Robert să vadă starea financiară în dashboard și să configureze message
-  automation; la final: anulare din dashboard → resync → mark cancelled în DB.
-- **Client:** configurează message automation pt. canal direct (vezi concluzia email).
+- **Rezervări de test active în PMS (de anulat din dashboard după verificări):**
+  62358420 (Dec 8–10) și 62359556 (Dec 15–17) → apoi resync + mark cancelled în DB.
+- **Sync gap:** cerință client = sub 15 min. Recomandare: **Hostaway Unified Webhooks**
+  (`POST /v1/webhooks/unifiedWebhooks` — cele pe `/webhooks/reservations` sunt marcate
+  deprecated) → endpoint `app/api/webhooks/hostaway` care upsertează availability la
+  orice eveniment de rezervare (secunde în loc de ≤15 min); cron-ul rămâne backstop.
+- **Client:** verifică emailul CA în inbox/spam; config CA (scope canale) dacă lipsește;
+  întrebare la CA de ce scrie nota (flip „modified") doar la rezervările API.
 - **La lansare:** chei live + webhook de producție + fără mock; confirmă automatizarea
   de email Hostaway + că listing-urile n-au procesare de plată proprie; confirmă TVA
   inclus în baza Hostaway; multi-room (flip `MULTI_ROOM_ENABLED` + order_id există deja).
