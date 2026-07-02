@@ -20,6 +20,7 @@ import { StayBookingSidebar } from '@/components/stay/StayBookingSidebar';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getSiblingIds } from '@/lib/roomGroups';
 import { getAvailabilityMap } from '@/lib/data/availability';
+import { getFxRateEur } from '@/lib/pricing';
 import type { Property } from '@/types';
 
 // ISR — refresh live price/availability from Supabase every 15 minutes.
@@ -35,9 +36,14 @@ function absoluteUrl(path: string): string {
   return path.startsWith('http') ? path : `${SITE_URL}${path}`;
 }
 
-function buildLodgingSchema(property: Property) {
+/**
+ * rates[].perNight is RON (money of record); JSON-LD keeps the site's default
+ * display currency (EUR), so the offer/priceRange prices are converted here.
+ */
+function buildLodgingSchema(property: Property, fxRateEur: number) {
   const saverRate =
     property.rates.find((r) => r.id === 'saver') ?? property.rates[0];
+  const saverPriceEur = Math.round(saverRate.perNight / fxRateEur);
 
   const ratings = property.reviews
     .map((r) => r.rating)
@@ -62,10 +68,10 @@ function buildLodgingSchema(property: Property) {
       addressLocality: 'Bucharest',
       addressCountry: 'RO',
     },
-    priceRange: `From €${saverRate.perNight} / night`,
+    priceRange: `From €${saverPriceEur} / night`,
     offers: {
       '@type': 'Offer',
-      price: saverRate.perNight,
+      price: saverPriceEur,
       priceCurrency: 'EUR',
       availability: 'https://schema.org/InStock',
       url: `${SITE_URL}/locations/${property.slug}`,
@@ -161,9 +167,13 @@ export default async function StayPage(props: { params: Promise<Params> }) {
   // Per-night prices + availability for the calendar (graceful: {} when offline).
   const availability = await getAvailabilityMap(property.id);
 
+  // rates[].perNight is RON; this server boundary renders EUR (site default
+  // display currency) directly — both in JSON-LD and the "More suites" footer.
+  const fxRateEur = getFxRateEur();
+
   return (
     <div className="bg-cream pt-24 md:pt-32 pb-[150px] lg:pb-0">
-      <JsonLd data={buildLodgingSchema(property)} />
+      <JsonLd data={buildLodgingSchema(property, fxRateEur)} />
       <JsonLd data={buildBreadcrumbSchema(property)} />
       <div className="mx-auto max-w-[1200px] px-6 md:px-10">
         {/* Breadcrumb */}
@@ -217,7 +227,7 @@ export default async function StayPage(props: { params: Promise<Params> }) {
                     style={{ backgroundImage: `url(${p.cover})` }}
                   >
                     <span className="font-display absolute right-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold tracking-normal text-ink">
-                      €{p.rates[0].perNight}
+                      €{Math.round(p.rates[0].perNight / fxRateEur)}
                     </span>
                   </div>
                   <h3 className="font-display mt-2 text-base group-hover:text-gold-dark">

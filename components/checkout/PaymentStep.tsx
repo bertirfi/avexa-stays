@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Icon } from '@/components/Icon';
 import type { HydratedBooking } from '@/lib/booking';
 import type { ContactForm } from '@/components/checkout/ContactInfoStep';
+import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { cn } from '@/lib/cn';
 
 interface Props {
@@ -20,8 +21,10 @@ export function PaymentStep({ hydrated, form, onBack, onNext }: Props) {
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
   const [method, setMethod] = useState<'card' | 'apple' | 'google'>('card');
+  const { currency, format } = useCurrency();
 
-  const total = hydrated.raw.total.toFixed(2);
+  const totalRon = hydrated.raw.total;
+  const totalDisplay = format(totalRon);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +38,11 @@ export function PaymentStep({ hydrated, form, onBack, onNext }: Props) {
       <div className="flex items-end justify-between">
         <div>
           <p className="text-sm text-ink-60">Amount to be paid</p>
-          <p className="font-display text-4xl">€ {total}</p>
+          <p className="font-display text-4xl">{totalDisplay}</p>
+          {currency !== 'RON' && (
+            <p className="mt-1 text-xs text-ink-60">charged as {totalRon} RON</p>
+          )}
+          <p className="mt-0.5 text-xs text-ink-60">VAT included</p>
         </div>
         <span className="font-mono-label flex items-center gap-1.5 text-gold-dark">
           <Icon name="shield" size={14} /> Secure Payment
@@ -143,7 +150,7 @@ export function PaymentStep({ hydrated, form, onBack, onNext }: Props) {
           type="submit"
           className="flex flex-1 items-center justify-center gap-2 rounded-full bg-ink py-3 font-semibold text-cream transition hover:bg-gold hover:text-ink"
         >
-          <Icon name="shield" size={16} /> Pay € {total}
+          <Icon name="shield" size={16} /> Pay {totalDisplay}
         </button>
       </div>
     </form>

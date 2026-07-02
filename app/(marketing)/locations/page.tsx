@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { LocationsView } from '@/components/locations/LocationsView';
 import { getAllPropertiesData } from '@/lib/data/properties';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { getFxRateEur } from '@/lib/pricing';
 import type { Property } from '@/types';
 
 const SITE_URL = 'https://avexastays.com';
@@ -20,8 +21,12 @@ function absoluteUrl(path: string): string {
   return path.startsWith('http') ? path : `${SITE_URL}${path}`;
 }
 
-/** ItemList of all suites — lets Google + LLMs read the listing as structured data. */
-function buildItemListSchema(properties: Property[]) {
+/**
+ * ItemList of all suites — lets Google + LLMs read the listing as structured
+ * data. rates[].perNight is RON (money of record); JSON-LD keeps the site's
+ * default display currency (EUR), so prices are converted here server-side.
+ */
+function buildItemListSchema(properties: Property[], fxRateEur: number) {
   return {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
@@ -44,7 +49,7 @@ function buildItemListSchema(properties: Property[]) {
         },
         offers: {
           '@type': 'Offer',
-          price: p.rates[0].perNight,
+          price: Math.round(p.rates[0].perNight / fxRateEur),
           priceCurrency: 'EUR',
           availability: 'https://schema.org/InStock',
           url: `${SITE_URL}/locations/${p.slug}`,
@@ -67,9 +72,10 @@ function buildBreadcrumbSchema() {
 
 export default async function LocationsPage() {
   const properties = await getAllPropertiesData();
+  const fxRateEur = getFxRateEur();
   return (
     <div className="pt-0 sm:pt-20">
-      <JsonLd data={buildItemListSchema(properties)} />
+      <JsonLd data={buildItemListSchema(properties, fxRateEur)} />
       <JsonLd data={buildBreadcrumbSchema()} />
       <LocationsView properties={properties} />
     </div>

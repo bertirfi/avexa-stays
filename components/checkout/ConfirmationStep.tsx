@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { generateConfirmationId, longDate, markHasTrips, type HydratedBooking } from '@/lib/booking';
+import { useCurrency } from '@/components/currency/CurrencyProvider';
 
 interface Props {
   hydrated: HydratedBooking;
@@ -12,6 +13,7 @@ interface Props {
 export function ConfirmationStep({ hydrated }: Props) {
   const { property, rate, raw, checkInDate, checkOutDate } = hydrated;
   const [confId, setConfId] = useState<string | null>(null);
+  const { format } = useCurrency();
 
   useEffect(() => {
     // Only generate the ID + flip the trips flag on the client
@@ -43,7 +45,7 @@ export function ConfirmationStep({ hydrated }: Props) {
         <Row label="Check-out" value={`${longDate(checkOutDate)}, 11:00 AM`} />
         <Row label="Guests" value={`${guestsTotal} guest${guestsTotal === 1 ? '' : 's'}`} />
         <Row label="Rate" value={rate.name} />
-        <Row label="Total paid" value={`€ ${raw.total}`} accent />
+        <Row label="Total paid" value={format(raw.total)} accent />
         <Row label="Door code" value="Sent 24h before" italic />
       </dl>
 

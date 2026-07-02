@@ -8,6 +8,7 @@ import { Icon } from '@/components/Icon';
 import { CalendarPopup } from '@/components/search/CalendarPopup';
 import { GuestPopup } from '@/components/search/GuestPopup';
 import { MobileBookingBar } from '@/components/stay/MobileBookingBar';
+import { useCurrency } from '@/components/currency/CurrencyProvider';
 import type { Booking, GuestCounts, Property } from '@/types';
 import type { AvailabilityMap } from '@/lib/data/availability';
 import { ymd, parseYmd } from '@/lib/date';
@@ -26,6 +27,11 @@ interface Props {
 // City tax: state tax, RON pass-through (no markup/fee) — see lib/currency.
 const CITY_TAX_PER_PERSON = CITY_TAX_RON_PER_PERSON_NIGHT;
 
+// v1: single-room — re-enable with the multi-room phase. Gates ONLY the
+// "Add another room" UI rendering; the addedRoomIds state/logic stays wired
+// so re-enabling later is a one-line flip.
+const MULTI_ROOM_ENABLED = false;
+
 function formatDate(d: Date | null) {
   if (!d) return null;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -43,6 +49,7 @@ function siblingPerNight(sib: Property): number | null {
 
 export function StayBookingSidebar({ property, siblings = [], availability }: Props) {
   const router = useRouter();
+  const { currency, format, approx } = useCurrency();
   const [startDate, setStart] = useState<Date | null>(null);
   const [endDate, setEnd] = useState<Date | null>(null);
   const [showCal, setShowCal] = useState(false);
@@ -172,6 +179,10 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     };
   }, [staySubtotal, nights, guests, upgrades, addedRooms]);
 
+  // RON total actually charged — combinedTotal only applies once multi-room
+  // re-enables (roomCount stays 1 in practice while MULTI_ROOM_ENABLED is false).
+  const effectiveTotal = roomCount > 1 && MULTI_ROOM_ENABLED ? pricing.combinedTotal : pricing.total;
+
   function book() {
     if (!startDate || !endDate || nights === 0) {
       setShowCal(true);
@@ -203,17 +214,17 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
 
   const mobileBarPrice =
     nights === 0
-      ? `€${rate.perNight}`
-      : roomCount > 1
-        ? `€${pricing.combinedTotal}`
-        : `€${pricing.total}`;
+      ? format(rate.perNight)
+      : roomCount > 1 && MULTI_ROOM_ENABLED
+        ? format(pricing.combinedTotal)
+        : format(pricing.total);
 
   const ctaLabel =
     nights === 0
       ? 'Select dates'
       : !loggedIn
         ? 'Sign up & book →'
-        : roomCount > 1
+        : roomCount > 1 && MULTI_ROOM_ENABLED
           ? `Book ${roomCount} rooms →`
           : 'Book best rate →';
 
@@ -265,7 +276,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     <>
     <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto rounded-card border border-gray-line bg-white p-6 shadow-[var(--shadow-pill)]">
       <div className="mb-4 flex items-baseline gap-1.5">
-        <span className="font-display text-[26px] text-gold-dark">€{rate.perNight}</span>
+        <span className="font-display text-[26px] text-gold-dark">{format(rate.perNight)}</span>
         <span className="text-sm text-ink-60">/night</span>
       </div>
 
@@ -372,7 +383,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
           >
             <div className="flex items-center justify-between">
               <span className="font-semibold">{r.name}</span>
-              <span className="font-display text-lg">€{r.perNight}<span className="text-xs text-ink-60">/night</span></span>
+              <span className="font-display text-lg">{format(r.perNight)}<span className="text-xs text-ink-60">/night</span></span>
             </div>
             <ul className="mt-2 space-y-1 text-xs text-ink-80">
               {r.perks.map((p) => (
@@ -398,7 +409,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
             </span>
             <span className="flex items-center gap-3">
               {!u.free && (
-                <span className="text-xs text-ink-60">+€{u.price}{u.unit}</span>
+                <span className="text-xs text-ink-60">+{format(u.price)}{u.unit}</span>
               )}
               <input
                 type="checkbox"
@@ -411,8 +422,8 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
         ))}
       </div>
 
-      {/* ── Add another room ─────────────────────────────────── */}
-      {validSiblings.length > 0 && (
+      {/* ── Add another room (v1: hidden — MULTI_ROOM_ENABLED) ── */}
+      {MULTI_ROOM_ENABLED && validSiblings.length > 0 && (
         <div className="mt-6 rounded-2xl border border-gray-line p-4">
           <p className="font-mono-label mb-3 text-ink-60">Add another room</p>
 
@@ -435,7 +446,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                   <p className="text-[10px] text-ink-60">Room 1 · this suite</p>
                 </div>
                 <span className="shrink-0 text-xs font-semibold text-gold-dark">
-                  {nights > 0 ? `€${rate.perNight * nights}` : `€${rate.perNight}/n`}
+                  {nights > 0 ? format(rate.perNight * nights) : `${format(rate.perNight)}/n`}
                 </span>
               </div>
 
@@ -463,7 +474,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                       <span className="ml-1 text-[10px] text-ink-60">{sib.neighborhoodLabel}</span>
                     </div>
                     <span className="shrink-0 text-xs font-semibold text-gold-dark">
-                      {nights > 0 ? `€${pn * nights}` : `€${pn}/n`}
+                      {nights > 0 ? format(pn * nights) : `${format(pn)}/n`}
                     </span>
                     <button
                       type="button"
@@ -509,7 +520,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                       </div>
                     </div>
                     <span className="shrink-0 text-xs font-semibold text-gold-dark">
-                      {nights > 0 ? `€${pn * nights}` : `from €${pn}/n`}
+                      {nights > 0 ? format(pn * nights) : `from ${format(pn)}/n`}
                     </span>
                     <button
                       type="button"
@@ -546,37 +557,51 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
           </button>
           {priceOpen && (
             <ul className="mt-3 space-y-1.5 text-sm">
+              {/* Accommodation — ONE total-price line, never the 18%/3% split */}
               <Row
-                label={
-                  isVariablePricing
-                    ? `Stay · ${nights} night${nights === 1 ? '' : 's'}`
-                    : `€${rate.perNight} × ${nights} night${nights === 1 ? '' : 's'}`
-                }
-                value={`€${pricing.staySubtotal}`}
+                label={`Accommodation · ${nights} night${nights === 1 ? '' : 's'}`}
+                value={format(pricing.staySubtotal)}
               />
-              {addedRooms.map((sib) => {
-                const pn = siblingPerNight(sib)!;
-                return (
-                  <Row
-                    key={sib.id}
-                    label={`${sib.name} × ${nights}n`}
-                    value={`€${pn * nights}`}
-                  />
-                );
-              })}
+              {MULTI_ROOM_ENABLED &&
+                addedRooms.map((sib) => {
+                  const pn = siblingPerNight(sib)!;
+                  return (
+                    <Row
+                      key={sib.id}
+                      label={`${sib.name} × ${nights}n`}
+                      value={format(pn * nights)}
+                    />
+                  );
+                })}
               {pricing.breakfastTotal > 0 && (
-                <Row label={`Breakfast (${pricing.occupants}p × ${nights}n)`} value={`€${pricing.breakfastTotal}`} />
+                <Row
+                  label={`Extra services · Breakfast (${pricing.occupants}p × ${nights}n)`}
+                  value={format(pricing.breakfastTotal)}
+                />
               )}
-              <Row label={`City tax (€${CITY_TAX_PER_PERSON}/p/night)`} value={`€${pricing.cityTax * roomCount}`} muted />
+              <Row
+                label="City tax"
+                value={format(pricing.cityTax * roomCount)}
+                approxValue={approx(pricing.cityTax * roomCount)}
+                muted
+              />
             </ul>
           )}
-          <div className="mt-3 flex items-center justify-between border-t border-gray-line pt-3">
-            <span className="font-semibold">
-              {roomCount > 1 ? `Order total (${roomCount} rooms)` : 'Total'}
-            </span>
-            <span className="font-display text-xl text-gold-dark">
-              €{roomCount > 1 ? pricing.combinedTotal : pricing.total}
-            </span>
+          <div className="mt-3 border-t border-gray-line pt-3">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold">
+                {roomCount > 1 && MULTI_ROOM_ENABLED ? `Order total (${roomCount} rooms)` : 'Total'}
+              </span>
+              <span className="font-display text-xl text-gold-dark">
+                {format(effectiveTotal)}
+              </span>
+            </div>
+            {currency !== 'RON' && (
+              <p className="mt-0.5 text-right text-[11px] text-ink-60">
+                charged as {effectiveTotal} RON
+              </p>
+            )}
+            <p className="mt-1 text-right text-[11px] text-ink-60">VAT included</p>
           </div>
         </div>
       )}
@@ -599,11 +624,25 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   );
 }
 
-function Row({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
+function Row({
+  label,
+  value,
+  approxValue,
+  muted,
+}: {
+  label: string;
+  value: string;
+  /** "≈ €11.43" equivalent shown muted/smaller next to a RON-real value (city tax). */
+  approxValue?: string | null;
+  muted?: boolean;
+}) {
   return (
     <li className={cn('flex items-center justify-between', muted && 'text-ink-60')}>
       <span>{label}</span>
-      <span>{value}</span>
+      <span>
+        {value}
+        {approxValue && <span className="ml-1 text-xs text-ink-60/80">({approxValue})</span>}
+      </span>
     </li>
   );
 }

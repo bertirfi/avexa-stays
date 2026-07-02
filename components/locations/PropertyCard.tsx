@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { getLocationCard } from '@/lib/locationCards';
+import { useCurrency } from '@/components/currency/CurrencyProvider';
 import type { Property } from '@/types';
 import { cn } from '@/lib/cn';
 
@@ -28,6 +29,7 @@ export function PropertyCard({
   const photos = property.photos.slice(0, 5);
   const [slide, setSlide] = useState(0);
   const [fav, setFav] = useState(false);
+  const { format } = useCurrency();
 
   const bedType = property.stats.find((s) => s.icon === 'bed')?.label ?? '';
   const saver = property.rates[0];
@@ -158,7 +160,7 @@ export function PropertyCard({
 
         <div className="text-left sm:text-right">
           <span className="inline-flex items-baseline gap-1 rounded-full bg-gold px-3.5 py-2.5 font-bold text-ink">
-            <span className="font-display text-[22px]">€{saver.perNight}</span>
+            <span className="font-display text-[22px]">{format(saver.perNight)}</span>
             <span className="text-[11.5px] font-medium opacity-70">/night</span>
           </span>
           <span className="mt-1.5 block text-[11px] text-ink-60">Member rate · incl. taxes</span>

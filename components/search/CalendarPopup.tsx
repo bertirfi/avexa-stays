@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
+import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { ymd } from '@/lib/date';
 import { cn } from '@/lib/cn';
 
@@ -50,6 +51,7 @@ function MonthGrid({
   today,
   onPick,
   priceByDate,
+  formatPrice,
 }: {
   year: number;
   month: number;
@@ -58,6 +60,7 @@ function MonthGrid({
   today: Date;
   onPick: (d: Date) => void;
   priceByDate?: PriceByDate;
+  formatPrice: (ron: number) => string;
 }) {
   const first = startOfMonth(year, month);
   // JS getDay: 0=Sun..6=Sat. Convert so Mon=0, Sun=6:
@@ -127,7 +130,7 @@ function MonthGrid({
                     isEndpoint ? 'text-gold-dark' : disabled ? 'text-ink-60/30' : 'text-ink-60',
                   )}
                 >
-                  {unavailable ? '—' : price != null ? `€${price}` : ''}
+                  {unavailable ? '—' : price != null ? formatPrice(price) : ''}
                 </span>
               )}
             </div>
@@ -152,6 +155,7 @@ export function CalendarPopup({
   onBack,
   priceByDate,
 }: CalendarPopupProps) {
+  const { format } = useCurrency();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -254,6 +258,7 @@ export function CalendarPopup({
               today={today}
               onPick={pick}
               priceByDate={priceByDate}
+              formatPrice={format}
             />
           );
         })}
@@ -318,6 +323,7 @@ export function CalendarPopup({
             today={today}
             onPick={pick}
             priceByDate={priceByDate}
+            formatPrice={format}
           />
           <MonthGrid
             year={nextYear}
@@ -327,6 +333,7 @@ export function CalendarPopup({
             today={today}
             onPick={pick}
             priceByDate={priceByDate}
+            formatPrice={format}
           />
         </div>
 

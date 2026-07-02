@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { StylizedMap } from '@/components/locations/StylizedMap';
 import { loadGoogleMaps, subscribeMapsAuthFailure, isMapsAuthFailed } from '@/lib/maps/loadGoogleMaps';
+import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { cn } from '@/lib/cn';
 import type { Property } from '@/types';
 
@@ -58,14 +59,31 @@ const MAP_STYLE: google.maps.MapTypeStyle[] = [
 ];
 
 type MarkerEntry = { overlay: google.maps.OverlayView; el: HTMLButtonElement } & (
-  | { kind: 'individual'; propertyId: string; grouped: boolean }
-  | { kind: 'cluster'; groupIds: string[] }
+  | { kind: 'individual'; propertyId: string; name: string; grouped: boolean; priceRon: number; color: string }
+  | { kind: 'cluster'; groupIds: string[]; minPriceRon: number; count: number; color: string }
 );
 
 function styleMarker(el: HTMLElement, isActive: boolean) {
   const inner = el.firstElementChild as HTMLElement | null;
   if (inner) inner.className = `${PIN_BASE} ${isActive ? PIN_ACTIVE : PIN_INACTIVE}`;
   el.style.zIndex = isActive ? '10' : '1';
+}
+
+/**
+ * Single source of truth for pin inner-HTML — used both at build time and when
+ * the display currency changes, so the markup never drifts between the two.
+ * Always renders the inactive style; callers re-apply active state via
+ * styleMarker() immediately after (matching the build-time build → applyActive flow).
+ */
+function pinInnerHTML(color: string, priceLabel: string, count?: number): string {
+  const badge = typeof count === 'number' ? COUNT_BADGE(count) : '';
+  return `<span class="${PIN_BASE} ${PIN_INACTIVE}">${DOT(color)}${priceLabel}${badge}${CARET}</span>`;
+}
+
+/** Shared aria-label text — kept alongside pinInnerHTML so build + rewrite never drift. */
+function pinAriaLabel(priceLabel: string, name?: string, count?: number): string {
+  if (typeof count === 'number') return `${count} suites from ${priceLabel} per night`;
+  return `${name} — ${priceLabel} per night`;
 }
 
 /**
@@ -133,11 +151,17 @@ export function LocationsMap(props: LocationsMapProps) {
   const { variant = 'desktop' } = props;
   const isMobile = variant === 'mobile';
   const [failed, setFailed] = useState(false);
+  const { currency, format } = useCurrency();
 
   // Latest props in a ref so imperative overlay closures stay fresh without
   // rebuilding markers on every render.
   const propsRef = useRef(props);
   propsRef.current = props;
+
+  // Latest formatter in a ref — read at marker-build time (initial mount) and
+  // by the currency-change effect below. Never triggers a rebuild itself.
+  const formatRef = useRef(format);
+  formatRef.current = format;
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -202,9 +226,10 @@ export function LocationsMap(props: LocationsMapProps) {
           const bounds = new maps.LatLngBounds();
 
           const individualMarker = (p: Property, position: google.maps.LatLngLiteral, grouped: boolean) => {
-            const html =
-              `<span class="${PIN_BASE} ${PIN_INACTIVE}">${DOT(p.neighborhoodColor)}€${p.rates[0].perNight}${CARET}</span>`;
-            const { overlay, el } = makeMarker(maps, map, position, html, `${p.name} — €${p.rates[0].perNight} per night`, {
+            const priceRon = p.rates[0].perNight;
+            const label = formatRef.current(priceRon);
+            const html = pinInnerHTML(p.neighborhoodColor, label);
+            const { overlay, el } = makeMarker(maps, map, position, html, pinAriaLabel(label, p.name), {
               onEnter: () => propsRef.current.onActivate(p.id),
               onLeave: () => propsRef.current.onClear(),
               onClick: (event) => {
@@ -218,7 +243,16 @@ export function LocationsMap(props: LocationsMapProps) {
                 document.getElementById(`loc-card-${p.id}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
               },
             });
-            markers.set(`i:${p.id}`, { overlay, el, kind: 'individual', propertyId: p.id, grouped });
+            markers.set(`i:${p.id}`, {
+              overlay,
+              el,
+              kind: 'individual',
+              propertyId: p.id,
+              name: p.name,
+              grouped,
+              priceRon,
+              color: p.neighborhoodColor,
+            });
           };
 
           for (const group of groups) {
@@ -234,19 +268,35 @@ export function LocationsMap(props: LocationsMapProps) {
             const lat0 = group.reduce((s, p) => s + p.coordinates!.lat, 0) / group.length;
             const lng0 = group.reduce((s, p) => s + p.coordinates!.lng, 0) / group.length;
             const centroid = { lat: lat0, lng: lng0 };
-            const minPrice = Math.min(...group.map((p) => p.rates[0].perNight));
+            const minPriceRon = Math.min(...group.map((p) => p.rates[0].perNight));
             const groupIds = group.map((p) => p.id);
+            const clusterColor = group[0].neighborhoodColor;
 
-            const clusterHtml =
-              `<span class="${PIN_BASE} ${PIN_INACTIVE}">${DOT(group[0].neighborhoodColor)}€${minPrice}${COUNT_BADGE(group.length)}${CARET}</span>`;
-            const cluster = makeMarker(maps, map, centroid, clusterHtml, `${group.length} suites from €${minPrice} per night`, {
-              onClick: (event) => {
-                event.stopPropagation();
-                map.panTo(centroid);
-                map.setZoom(SPREAD_ZOOM);
+            const clusterLabel = formatRef.current(minPriceRon);
+            const clusterHtml = pinInnerHTML(clusterColor, clusterLabel, group.length);
+            const cluster = makeMarker(
+              maps,
+              map,
+              centroid,
+              clusterHtml,
+              pinAriaLabel(clusterLabel, undefined, group.length),
+              {
+                onClick: (event) => {
+                  event.stopPropagation();
+                  map.panTo(centroid);
+                  map.setZoom(SPREAD_ZOOM);
+                },
               },
+            );
+            markers.set(`c:${lat0.toFixed(5)},${lng0.toFixed(5)}`, {
+              overlay: cluster.overlay,
+              el: cluster.el,
+              kind: 'cluster',
+              groupIds,
+              minPriceRon,
+              count: group.length,
+              color: clusterColor,
             });
-            markers.set(`c:${lat0.toFixed(5)},${lng0.toFixed(5)}`, { overlay: cluster.overlay, el: cluster.el, kind: 'cluster', groupIds });
             bounds.extend(centroid);
 
             // Individual suites fanned around the centroid, hidden until expanded.
@@ -326,6 +376,30 @@ export function LocationsMap(props: LocationsMapProps) {
       styleMarker(entry.el, active);
     });
   }, [props.activeId]);
+
+  // Currency switch: markers are built once on mount, so when the display
+  // currency changes we rewrite each marker's price text/aria-label in place
+  // (pure display — priceRon/minPriceRon never change) using the same
+  // pinInnerHTML template used at build time, then re-apply the active style
+  // so the highlighted pin doesn't flash back to inactive markup.
+  useEffect(() => {
+    const activeId = propsRef.current.activeId;
+    markersRef.current.forEach((entry) => {
+      if (entry.kind === 'individual') {
+        const label = format(entry.priceRon);
+        entry.el.innerHTML = pinInnerHTML(entry.color, label);
+        entry.el.setAttribute('aria-label', pinAriaLabel(label, entry.name));
+      } else {
+        const label = format(entry.minPriceRon);
+        entry.el.innerHTML = pinInnerHTML(entry.color, label, entry.count);
+        entry.el.setAttribute('aria-label', pinAriaLabel(label, undefined, entry.count));
+      }
+      const active =
+        entry.kind === 'cluster' ? entry.groupIds.includes(activeId ?? '') : entry.propertyId === activeId;
+      styleMarker(entry.el, active);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currency]);
 
   if (failed) return <StylizedMap {...props} />;
 

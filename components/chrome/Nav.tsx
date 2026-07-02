@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/chrome/Logo';
 import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
+import { CurrencySwitcher } from '@/components/currency/CurrencySwitcher';
 import { readUser, type StoredUser } from '@/lib/booking';
 import { signOutClient } from '@/lib/auth/client';
 import { cn } from '@/lib/cn';
@@ -117,6 +118,8 @@ export function Nav() {
               );
             })}
 
+            <CurrencySwitcher tone={transparent ? 'dark' : 'light'} />
+
             {loggedIn ? (
               <div className="relative" ref={menuRef}>
                 <button
@@ -186,9 +189,12 @@ export function Nav() {
       >
         <div className="flex items-center justify-between px-6 py-4">
           <Logo size={44} wordmarkSize={22} />
-          <button aria-label="Close menu" onClick={() => setMobileOpen(false)} className="rounded-full p-2">
-            <Icon name="x" size={24} />
-          </button>
+          <div className="flex items-center gap-3">
+            <CurrencySwitcher tone="dark" />
+            <button aria-label="Close menu" onClick={() => setMobileOpen(false)} className="rounded-full p-2">
+              <Icon name="x" size={24} />
+            </button>
+          </div>
         </div>
         <nav className="flex flex-col gap-7 px-8 pt-10 font-display text-4xl">
           {links.map((l) => (

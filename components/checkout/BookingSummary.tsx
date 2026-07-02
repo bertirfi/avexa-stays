@@ -1,6 +1,9 @@
+'use client';
+
 import Image from 'next/image';
 import type { HydratedBooking } from '@/lib/booking';
 import { shortDate } from '@/lib/booking';
+import { useCurrency } from '@/components/currency/CurrencyProvider';
 
 interface BookingSummaryProps {
   hydrated: HydratedBooking;
@@ -9,6 +12,7 @@ interface BookingSummaryProps {
 export function BookingSummary({ hydrated }: BookingSummaryProps) {
   const { property, rate, raw, checkInDate, checkOutDate } = hydrated;
   const totalGuests = raw.guests.adults + raw.guests.children;
+  const { currency, format, approx } = useCurrency();
 
   return (
     <aside className="rounded-card border border-gray-line bg-white shadow-[var(--shadow-pill)]">
@@ -34,24 +38,36 @@ export function BookingSummary({ hydrated }: BookingSummaryProps) {
 
         <div className="border-t border-gray-line pt-3" />
 
-        <Row label={`Stay · ${raw.nights} night${raw.nights === 1 ? '' : 's'}`} value={`€ ${raw.subtotal}`} />
+        {/* Accommodation — ONE total-price line, never the 18%/3% split */}
+        <Row label={`Accommodation · ${raw.nights} night${raw.nights === 1 ? '' : 's'}`} value={format(raw.subtotal)} />
         <span className="inline-flex w-fit items-center rounded-full bg-gold-pale px-2.5 py-1 text-[11px] font-semibold text-gold-dark">
           Member rate applied
         </span>
         {raw.breakfastTotal > 0 && (
-          <Row label="Breakfast" value={`€ ${raw.breakfastTotal}`} />
+          <Row label="Extra services · Breakfast" value={format(raw.breakfastTotal)} />
         )}
 
         <div className="border-t border-gray-line pt-3" />
 
-        <Row label="City tax" value={`€ ${raw.cityTax}`} muted />
+        <Row
+          label="City tax"
+          value={format(raw.cityTax)}
+          approxValue={approx(raw.cityTax)}
+          muted
+        />
       </div>
 
-      <div className="flex items-center justify-between border-t border-gray-line bg-cream px-5 py-4">
-        <span className="text-xs text-ink-60">Taxes &amp; charges incl.</span>
-        <span className="rounded-full bg-ink px-4 py-1.5 font-display text-cream">
-          Total € {raw.total}
-        </span>
+      <div className="border-t border-gray-line bg-cream px-5 py-4">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-ink-60">Taxes &amp; charges incl.</span>
+          <span className="rounded-full bg-ink px-4 py-1.5 font-display text-cream">
+            Total {format(raw.total)}
+          </span>
+        </div>
+        {currency !== 'RON' && (
+          <p className="mt-1.5 text-right text-[11px] text-ink-60">charged as {raw.total} RON</p>
+        )}
+        <p className="mt-1 text-right text-[11px] text-ink-60">VAT included</p>
       </div>
 
       {!rate.refundable && (
@@ -71,11 +87,25 @@ export function BookingSummary({ hydrated }: BookingSummaryProps) {
   );
 }
 
-function Row({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
+function Row({
+  label,
+  value,
+  approxValue,
+  muted,
+}: {
+  label: string;
+  value: string;
+  /** "≈ €11.43" equivalent shown muted/smaller next to a RON-real value (city tax). */
+  approxValue?: string | null;
+  muted?: boolean;
+}) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span className={muted ? 'text-ink-60' : 'text-ink-80'}>{label}</span>
-      <span className={muted ? 'text-ink-60' : 'font-semibold text-ink'}>{value}</span>
+      <span className={muted ? 'text-ink-60' : 'font-semibold text-ink'}>
+        {value}
+        {approxValue && <span className="ml-1 text-xs text-ink-60/80">({approxValue})</span>}
+      </span>
     </div>
   );
 }

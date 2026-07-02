@@ -17,8 +17,10 @@ export interface MockTrip {
   dateRange: string;
   propertyName: string;
   details: string;
-  totalPrice: string;
-  perNightRate: string;
+  /** RON — money of record; convert only at display (lib/currency / useCurrency). */
+  totalPriceRon: number;
+  /** RON — money of record; convert only at display (lib/currency / useCurrency). */
+  perNightRon: number;
   status: 'Confirmed' | 'Completed';
   checkInTime?: string;
   checkOutTime?: string;
@@ -34,8 +36,9 @@ export const mockTrips: MockTrip[] = [
     dateRange: 'Jun 12 — Jun 16, 2026',
     propertyName: 'The Floreasca Loft',
     details: '1 bedroom · 2 guests · 4 nights',
-    totalPrice: '€ 506',
-    perNightRate: '€ 126.50 / night · Member rate',
+    // perNight 664 RON (≈ €126.50 at 5.25) × 4 nights
+    totalPriceRon: 2656,
+    perNightRon: 664,
     status: 'Confirmed',
     checkInTime: 'Jun 12, 3:00 PM',
     checkOutTime: 'Jun 16, 1:00 PM',
@@ -49,8 +52,9 @@ export const mockTrips: MockTrip[] = [
     dateRange: 'Apr 28 — May 01, 2026',
     propertyName: 'Centre Studio — Lipscani',
     details: 'Studio · 2 guests · 3 nights',
-    totalPrice: '€ 327',
-    perNightRate: '€ 109 / night · Member rate',
+    // perNight 572 RON (≈ €109 at 5.25) × 3 nights
+    totalPriceRon: 1716,
+    perNightRon: 572,
     status: 'Completed',
   },
   {
@@ -61,8 +65,9 @@ export const mockTrips: MockTrip[] = [
     dateRange: 'Mar 10 — Mar 14, 2026',
     propertyName: 'Dorobanti 74',
     details: '1 bedroom · 1 guest · 4 nights',
-    totalPrice: '€ 512',
-    perNightRate: '€ 128 / night · Member rate',
+    // perNight 672 RON (≈ €128 at 5.25) × 4 nights
+    totalPriceRon: 2688,
+    perNightRon: 672,
     status: 'Completed',
   },
 ];

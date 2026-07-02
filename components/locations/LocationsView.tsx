@@ -11,12 +11,14 @@ import { PropertyCard } from '@/components/locations/PropertyCard';
 import { StylizedMap } from '@/components/locations/StylizedMap';
 import { LocationsMap } from '@/components/locations/LocationsMap';
 import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
+import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { neighborhoods } from '@/lib/neighborhoods';
 import { cn } from '@/lib/cn';
 import type { Property } from '@/types';
 
 export function LocationsView({ properties }: { properties: Property[] }) {
   const [mapOpen, setMapOpen] = useState(true);
+  const { format } = useCurrency();
   const [activeId, setActiveId] = useState<string | null>(null);
   // Mobile-only List/Map toggle state
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
@@ -249,7 +251,7 @@ export function LocationsView({ properties }: { properties: Property[] }) {
                 <h4 className="font-display mt-0.5 truncate text-base">{popupProperty.name}</h4>
                 <p className="truncate text-xs text-ink-60">{popupProperty.tagline}</p>
                 <span className="mt-1 inline-flex items-baseline gap-1 font-display text-[15px]">
-                  €{popupProperty.rates[0].perNight}
+                  {format(popupProperty.rates[0].perNight)}
                   <span className="text-[11px] font-medium text-ink-60">/night</span>
                 </span>
               </div>

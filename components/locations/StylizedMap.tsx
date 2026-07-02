@@ -1,5 +1,6 @@
 'use client';
 
+import { useCurrency } from '@/components/currency/CurrencyProvider';
 import type { Property } from '@/types';
 import { cn } from '@/lib/cn';
 
@@ -42,6 +43,7 @@ export function StylizedMap({
   onPinTap,
 }: StylizedMapProps) {
   const isMobile = variant === 'mobile';
+  const { format } = useCurrency();
 
   function onPinClick(id: string) {
     onActivate(id);
@@ -112,7 +114,7 @@ export function StylizedMap({
           <button
             key={p.id}
             type="button"
-            aria-label={`${p.name} — €${p.rates[0].perNight}/night`}
+            aria-label={`${p.name} — ${format(p.rates[0].perNight)}/night`}
             onMouseEnter={() => onActivate(p.id)}
             onMouseLeave={onClear}
             onClick={() => onPinClick(p.id)}
@@ -128,7 +130,7 @@ export function StylizedMap({
               )}
             >
               <span className="size-1.5 rounded-full" style={{ background: p.neighborhoodColor }} />
-              €{p.rates[0].perNight}
+              {format(p.rates[0].perNight)}
               <span
                 aria-hidden
                 className="absolute -bottom-1 left-1/2 size-2 -translate-x-1/2 rotate-45 bg-inherit"

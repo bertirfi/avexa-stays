@@ -1,6 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import type { MockTrip } from '@/lib/trips';
 import { upcomingTrips, pastTrips } from '@/lib/trips';
+import { useCurrency } from '@/components/currency/CurrencyProvider';
 
 export function TripsList({ name }: { name: string }) {
   const upcoming = upcomingTrips();
@@ -46,6 +49,7 @@ export function TripsList({ name }: { name: string }) {
 }
 
 function UpcomingCard({ trip }: { trip: MockTrip }) {
+  const { format } = useCurrency();
   return (
     <article className="rounded-card border border-gray-line bg-white p-6 transition hover:shadow-[var(--shadow-card-hover)]">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -62,7 +66,11 @@ function UpcomingCard({ trip }: { trip: MockTrip }) {
         {trip.checkInTime && <KV k="Check-in" v={trip.checkInTime} />}
         {trip.checkOutTime && <KV k="Check-out" v={trip.checkOutTime} />}
         {trip.doorCodeStatus && <KV k="Door code" v={trip.doorCodeStatus} italic />}
-        <KV k="Total" v={`${trip.totalPrice} · ${trip.perNightRate}`} accent />
+        <KV
+          k="Total"
+          v={`${format(trip.totalPriceRon)} · ${format(trip.perNightRon)} / night · Member rate`}
+          accent
+        />
       </dl>
 
       <div className="mt-6 flex flex-wrap gap-3">
@@ -90,6 +98,7 @@ function UpcomingCard({ trip }: { trip: MockTrip }) {
 }
 
 function PastCard({ trip }: { trip: MockTrip }) {
+  const { format } = useCurrency();
   return (
     <article className="rounded-card border border-gray-line bg-white p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -102,7 +111,7 @@ function PastCard({ trip }: { trip: MockTrip }) {
         <StatusPill label={trip.status} tone="gray" />
       </div>
       <p className="mt-4 text-sm text-ink-60">
-        {trip.totalPrice} · {trip.perNightRate}
+        {format(trip.totalPriceRon)} · {format(trip.perNightRon)} / night · Member rate
       </p>
       <div className="mt-4 flex flex-wrap gap-3">
         <Link
