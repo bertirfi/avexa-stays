@@ -131,10 +131,16 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
   conectat al contului → „Internal error" 403); „other" + titlu descriptiv e corect.
   Implementat în `createReservation` (best-effort, nu pică booking-ul). `status:
   "modified"` în loc de `new` = comportament normal Hostaway post-creare, benign.
-- **Emailul de confirmare (decizia 13):** clientul folosește **ChargeAutomation.com**
-  (serviciu terț) — procesează și rezervările noastre (scrie `CA_PRE_ARRIVAL_LINK`
-  în guest note). Emailul CA se trimite prin mailerul CA, NU apare în conversațiile
-  Hostaway. De verificat în inbox/spam; dacă lipsește → scope/config în CA.
+- **Emailul de confirmare (decizia 13 REVIZUITĂ 2026-07-02):** clientul folosește
+  **ChargeAutomation.com** (terț) — generează linkul de check-in și îl scrie în notele
+  rezervării (`CA_PRE_ARRIVAL_LINK`, latență 9–60s), dar NU trimite email guestului
+  pentru rezervări direct/API. **Soluția noastră (implementată):**
+  `lib/hostaway/confirmation.ts` — după confirmarea booking-ului (în `after()` din
+  next/server, nu ține webhook-ul Stripe), așteptăm linkul CA (~95s max), compunem
+  confirmarea (date, oaspeți, total plătit RON, link check-in) și o trimitem pe
+  **conversația Hostaway** cu `communicationType: email` → guestul primește email +
+  mesajul rămâne vizibil în inbox-ul Hostaway (și răspunsurile guestului la fel).
+  Fallback: Resend (`RESEND_API_KEY` în Vercel). Best-effort — nu pică booking-ul.
 - **✅ Test #3 (Dec 15–17, rez. 62359556, 2026-07-02) — TOTUL VERDE, mistere rezolvate:**
   - **Status „modified" NU e de la noi** — timeline prins live: 19:39:35 status `new`
     + `paymentStatus: Paid` (charge-ul automat din cod!), 19:39:44 status devine
@@ -154,9 +160,16 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
   rezervări REALE în PMS. Recomandat: repune `HOSTAWAY_MOCK_RESERVATIONS=1` în Vercel
   Preview până la lansare.
 
+- **✅ Test #5 (Nov 10–12, rez. 62360739) — fluxul complet de email VERIFICAT:**
+  mesaj `sent` pe conversația Hostaway la +40s după plată, cu TOT conținutul: date,
+  2 oaspeți, „Total paid: 588 RON (VAT included)", **linkul CA de check-in inclus**,
+  breakdown în PMS (Base rate 548 / City tax 40), `Paid`. (Testul #4/62360545 a ieșit
+  fără link — fereastra de 26s era sub latența CA; lărgită la ~95s.)
+
 ### Rămase pe plăți
 - **Rezervări de test active în PMS (de anulat din dashboard după verificări):**
-  62358420 (Dec 8–10) și 62359556 (Dec 15–17) → apoi resync + mark cancelled în DB.
+  62358420 (Dec 8–10), 62359556 (Dec 15–17), 62360545 (Nov 24–26, emailul fără link),
+  62360739 (Nov 10–12, emailul complet cu link CA) → apoi resync + mark cancelled în DB.
 - **Sync gap:** cerință client = sub 15 min. Recomandare: **Hostaway Unified Webhooks**
   (`POST /v1/webhooks/unifiedWebhooks` — cele pe `/webhooks/reservations` sunt marcate
   deprecated) → endpoint `app/api/webhooks/hostaway` care upsertează availability la
