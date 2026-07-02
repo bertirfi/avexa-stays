@@ -165,6 +165,16 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
   2 oaspeți, „Total paid: 588 RON (VAT included)", **linkul CA de check-in inclus**,
   breakdown în PMS (Base rate 548 / City tax 40), `Paid`. (Testul #4/62360545 a ieșit
   fără link — fereastra de 26s era sub latența CA; lărgită la ~95s.)
+- **✅ Bucla ÎNCHISĂ (2026-07-02):** Robert a primit emailul cu linkul, a completat
+  check-in-ul ca guest, iar CA a scris totul înapoi în rezervare: date guest, telefon
+  actualizat, ora sosirii, întrebarea de facturare, `CA_PRE_CHECKIN_COMPLETE: Yes` —
+  identic cu fluxul rezervărilor de pe Booking. Decizia 13 (revizuită) e completă.
+- **💡 Plan viitor (client, 2026-07-02): înlocuirea ChargeAutomation cu tool propriu**
+  construit cu Claude Code (scapă de abonament). Funcțiile de replicat: link securizat
+  de check-in per rezervare (pe domeniul nostru), formular guest (date, oră sosire,
+  facturare), write-back în Hostaway (infra există deja), upsell-uri plătite prin
+  Stripe (ex. 1PM Late Check-out), programare emailuri pe conversația Hostaway
+  (infra există deja). Fezabil; de planificat post-lansare — NU acum.
 
 ### Rămase pe plăți
 - **Rezervări de test active în PMS (de anulat din dashboard după verificări):**
