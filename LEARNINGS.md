@@ -113,9 +113,27 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
 864 RON, `hostaway_reservation_id=-629323949` (mock), 1 event procesat, availability
 14–16 blocată. **Sidebar = Stripe = DB.** Test user: `checkout-test@avexastays.com`.
 
+### Dovezi test (P6b, 2026-07-02 — PASSED, cleanup pending)
+- **Idempotență:** Resend din Stripe Workbench pe `evt_1Tohd...` → 200; DB neschimbat
+  (tot 1 event procesat, tot 1 booking, același reservation id). Dubla apărare confirmată.
+- **Test REAL Hostaway:** mock scos din Vercel → redeploy → Little Gem **17–19 nov 2026**
+  ×2 adulți → Stripe **RON 588.00** (548 cazare + 40 city tax) → confirmare →
+  **`hostaway_reservation_id=62347427` (pozitiv = real)**. Hostaway: guest „Robert Ilie
+  (TEST)", totalPrice 588 RON, channelId 2000, comment cu tot breakdown-ul; calendar
+  **17+18 nov = reserved** (propagare ~30s; 19 = checkout day rămâne liber, corect);
+  cache-ul nostru blocat optimist instant. Checkout breakdown contract OK:
+  Accommodation €104 / City tax (≈ €7.62) / Total €112 „charged as 588 RON, VAT included".
+- **⚠ Finding: Hostaway ignoră `isPaid: 1` la POST /reservations** — rezervarea a ieșit
+  `isPaid: null`, `paymentStatus: "Unknown"`, `status: "modified"` (nu `new`). Riscul:
+  clientul vede sold neîncasat / automatizări de payment-request. De rezolvat (probabil
+  PUT follow-up după create sau payment record atașat) — PUT-ul de verificare a fost
+  blocat de permission classifier; decizia e la Robert.
+- **Cleanup:** Robert anulează rezervarea 62347427 din dashboard → apoi resync cache
+  (`/api/sync` cu `SYNC_SECRET`) + marchează booking-urile de test `cancelled` în DB.
+
 ### Rămase pe plăți
-- **P6b:** UN test real Hostaway (scoate mock, date îndepărtate, verifică blocarea
-  calendarului în PMS, anulează după) + resend-event din Stripe (aștepți `duplicate:true`).
+- **isPaid fix** (vezi finding-ul P6b de mai sus) + verifică emailul de confirmare
+  Hostaway ajuns la robertflorentinilie@gmail.com (decizia 13, automatizarea clientului).
 - **La lansare:** chei live + webhook de producție + fără mock; confirmă automatizarea
   de email Hostaway + că listing-urile n-au procesare de plată proprie; confirmă TVA
   inclus în baza Hostaway; multi-room (flip `MULTI_ROOM_ENABLED` + order_id există deja).
