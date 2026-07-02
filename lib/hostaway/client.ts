@@ -155,39 +155,6 @@ async function hostawayPost<T>(
   return body.result;
 }
 
-async function hostawayPut<T>(
-  path: string,
-  payload: unknown,
-  isRetry = false,
-): Promise<T> {
-  await space();
-  const token = await getAccessToken(isRetry);
-  const res = await fetch(`${BASE}${path}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache',
-    },
-    body: JSON.stringify(payload),
-    cache: 'no-store',
-  });
-
-  // 403 => token expired/invalid. Refresh once and retry.
-  if (res.status === 403 && !isRetry) return hostawayPut<T>(path, payload, true);
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new HostawayApiError(
-      `Hostaway PUT ${path} failed: HTTP ${res.status}`,
-      res.status,
-      body.slice(0, 2000),
-    );
-  }
-
-  const body = (await res.json()) as HostawayResponse<T>;
-  return body.result;
-}
-
 // Hostaway reservation channel for our own direct-site bookings.
 const DIRECT_CHANNEL_ID = 2000;
 // Shows as the reservation `source` in the Hostaway dashboard.
@@ -195,8 +162,10 @@ const RESERVATION_PROVIDER = 'avexastays';
 
 /**
  * Create a reservation after a successful Stripe payment. Payment NEVER flows
- * through Hostaway — this only records the paid booking (isPaid=1, full RON
- * total) so the calendar blocks and the client can invoice from Hostaway.
+ * through Hostaway — this only records the paid booking (full RON total plus
+ * an offline "paid" charge so paymentStatus reads "Paid") so the calendar
+ * blocks and the client can invoice from Hostaway with nothing left to
+ * collect.
  *
  * forceOverbooking=0 (deliberate): if the dates were taken in the race window,
  * Hostaway rejects and the webhook refunds the guest — a premium brand never
@@ -238,18 +207,26 @@ export async function createReservation(
     },
   );
 
-  // Hostaway ignores isPaid on POST (observed 2026-07-02: reservation created
-  // with isPaid=null / paymentStatus "Unknown"), which leaves the PMS showing
-  // a balance due and keeps charge automations from firing. A follow-up PUT
-  // sets it. Best-effort: the reservation already exists and blocks the
-  // calendar, so a failure here must not fail the booking.
+  // Hostaway ignores isPaid on both POST and PUT (verified 2026-07-02:
+  // reservations kept paymentStatus "Unknown", leaving the PMS showing a
+  // balance due and blocking charge automations). Payment state is derived
+  // from guest-payment charge records, so record one offline charge for the
+  // full collected amount. paymentMethod "other": "stripe" is reserved for
+  // charges made through Hostaway's own connected gateway and 500s here.
+  // Best-effort: the reservation already exists and blocks the calendar, so
+  // a failure here must never fail the booking.
   try {
-    await hostawayPut<HostawayReservation>(`/reservations/${reservation.id}`, {
-      isPaid: 1,
+    await hostawayPost<unknown>(`/guestPayments/charges/${reservation.id}`, {
+      title: 'Paid via Stripe on avexastays.com',
+      description: `Collected in full by the AVEXA website Stripe checkout: ${input.totalPrice} ${input.currency}.`,
+      amount: input.totalPrice,
+      paymentMethod: 'other',
+      status: 'paid',
+      scheduledDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
     });
   } catch (err) {
     console.warn(
-      `[hostaway] follow-up isPaid update failed for reservation ${reservation.id} — continuing`,
+      `[hostaway] offline paid-charge failed for reservation ${reservation.id} — PMS will show a balance due`,
       err,
     );
   }
