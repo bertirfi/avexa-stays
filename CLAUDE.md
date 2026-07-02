@@ -11,6 +11,10 @@ Premium direct-booking platform for Bucharest city-center apartments. Every deci
 
 Dark editorial aesthetic + gold accents. Positioning: "No front desk. No friction. No compromise." · 15% member advantage. Client: Smighi · Dev: Robert. Live at avexastays.com (root serves `coming-soon.html` until launch; real app ships to the `feat/nextjs-platform` preview).
 
+## Orchestration (every session)
+The orchestrator is **the selected advanced model** (Fable 5, Opus 4.8, or whatever Robert picks — it changes over time; never assume a specific one). It keeps only high-value work — planning, codebase/systems review, architecture, code structure, integration design, final review — and **delegates implementation aggressively** to cheaper models: moderate work → Sonnet 5, simple/repetitive → Haiku, split into MANY small self-contained tasks so no agent overflows its context. Full convention: the `efficient-fable` skill (model-agnostic efficient orchestration). Vet subagent output before trusting it.
+Subagent models are set by the `CLAUDE_CODE_SUBAGENT_MODEL` env var or `model:` frontmatter in `.claude/agents/*` — a `.md` instruction alone does NOT change subagent models.
+
 ## Tech stack
 - **Next.js 15** App Router · **TypeScript** strict · **Tailwind v4** · **motion** (import from `'motion/react'`, not framer-motion)
 - **Supabase** (Postgres + Auth + RLS) · **Hostaway** PMS = source of truth for availability/price, cached in Supabase
@@ -23,12 +27,6 @@ Dark editorial aesthetic + gold accents. Positioning: "No front desk. No frictio
 - `npm run dev` / `npm run build` / `npm run start`
 - `npm run lint` (auto-fix `npm run lint -- --fix`) · `npm run typecheck` — run both before every commit (also hook-enforced on code commits)
 - `npm run db:types` — regenerate Supabase types
-
-## Models — Opus plans, Sonnet builds
-- **Opus 4.8** — orchestrator: decomposition, architecture, tradeoffs, review, user-facing synthesis. Keeps judgment.
-- **Sonnet 5** — implementation/worker: bounded edits, repo/doc scans, tests (near-Opus quality, cheaper).
-- **Haiku 4.5** — cheapest high-volume passes: log reduction, mechanical edits.
-- Apply **efficient-fable** (registered skill) on non-trivial tasks: keep judgment with Opus, delegate token-heavy work to Sonnet/Haiku in parallel with self-contained handoff packets; vet subagent output before trusting it.
 
 ## Directory layout
 ```
