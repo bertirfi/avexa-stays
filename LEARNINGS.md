@@ -123,11 +123,21 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
   **17+18 nov = reserved** (propagare ~30s; 19 = checkout day rămâne liber, corect);
   cache-ul nostru blocat optimist instant. Checkout breakdown contract OK:
   Accommodation €104 / City tax (≈ €7.62) / Total €112 „charged as 588 RON, VAT included".
-- **⚠ Finding: Hostaway ignoră `isPaid: 1` la POST /reservations** — rezervarea a ieșit
-  `isPaid: null`, `paymentStatus: "Unknown"`, `status: "modified"` (nu `new`). Riscul:
-  clientul vede sold neîncasat / automatizări de payment-request. De rezolvat (probabil
-  PUT follow-up după create sau payment record atașat) — PUT-ul de verificare a fost
-  blocat de permission classifier; decizia e la Robert.
+- **✅ REZOLVAT — starea de plată în Hostaway (test #2, Dec 8–10, rez. 62358420):**
+  `isPaid` e IGNORAT și la POST și la PUT (verificat live). Starea de plată se derivă
+  din **guest-payment charges**: `POST /v1/guestPayments/charges/{reservationId}` cu
+  `{title, description, amount, paymentMethod: "other", status: "paid", scheduledDate}`
+  → `paymentStatus: "Paid"`. `paymentMethod: "stripe"` NU merge (rezervat gateway-ului
+  conectat al contului → „Internal error" 403); „other" + titlu descriptiv e corect.
+  Implementat în `createReservation` (best-effort, nu pică booking-ul). `status:
+  "modified"` în loc de `new` = comportament normal Hostaway post-creare, benign.
+- **Emailul de confirmare (decizia 13) — concluzie:** automatizarea clientului e
+  **charge automation** (legată de încasare). La rezervările de pe site nu are ce
+  încasa (banii vin prin Stripe-ul nostru, decizia 10), deci nu se declanșează —
+  verificat: 0 mesaje în conversație, niciun autopayment atașat. **Fix pe partea
+  clientului:** message automation pe „new reservation" care să includă canalul
+  direct/API (2000), cu template-ul de check-in. Se testează la următoarea rezervare
+  (automatizările nu se aplică retroactiv).
 - **Cleanup DONE (2026-07-02):** rezervarea 62347427 anulată din dashboard (11:25) →
   calendar Hostaway eliberat instant → sync rulat (8 proprietăți × 181 zile) → cache
   eliberat (Nov 17–18 + blocajul vechi Sep 14–16 de la mock) → ambele booking-uri de
@@ -137,8 +147,10 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
   Preview până la lansare.
 
 ### Rămase pe plăți
-- **isPaid fix** (vezi finding-ul P6b de mai sus) + verifică emailul de confirmare
-  Hostaway ajuns la robertflorentinilie@gmail.com (decizia 13, automatizarea clientului).
+- **Test #2 activ:** rezervarea 62358420 (Dec 8–10, 600 RON, „Paid") e lăsată în PMS
+  ca Robert să vadă starea financiară în dashboard și să configureze message
+  automation; la final: anulare din dashboard → resync → mark cancelled în DB.
+- **Client:** configurează message automation pt. canal direct (vezi concluzia email).
 - **La lansare:** chei live + webhook de producție + fără mock; confirmă automatizarea
   de email Hostaway + că listing-urile n-au procesare de plată proprie; confirmă TVA
   inclus în baza Hostaway; multi-room (flip `MULTI_ROOM_ENABLED` + order_id există deja).
