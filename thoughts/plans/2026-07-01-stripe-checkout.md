@@ -25,7 +25,8 @@
 - ✅ **P3 — `/api/checkout`:** session auth + Zod + server quote + pending insert + Stripe session (RON) + PaymentStep wiring (fake card form removed — Stripe hosts payment).
 - ✅ **P4 — webhook:** raw-body signature, double idempotency, Hostaway reservation (forceOverbooking=0), refund-on-failure + cancel + minimal Resend notice.
 - ✅ **P5 — confirmation + guards:** `/book/confirmation` (confirmed/pending-poll/refunded), `requireUser` on /checkout /my-trips /profile, fake ConfirmationStep deleted, sidebar flex ratio mirrors quote. (commit "feat(booking): real Stripe checkout…")
-- **P6 — end-to-end test on preview:** mock-first (4242 → booking row → mock reservation), then the ONE controlled real Hostaway test (far dates → verify calendar blocks → cancel), verify webhook idempotency (resend event).
+- ✅ **P6a — end-to-end MOCK test on preview (2026-07-02): PASSED.** Full browser run: login (session cookie + server guard OK) → The Little Gem, Sep 14–17, 2 adults → checkout (contact → PaymentStep) → Stripe hosted page (RON 864.00; line items accommodation 804 + city tax 60; email prefilled) → 4242 → redirect `/book/confirmation` → **BOOKING CONFIRMED**. DB verified: booking `confirmed`, accommodation 804 + tax 60 = 864 RON, display EUR@5.25, `hostaway_reservation_id=-629323949` (negative ⇒ mock, PMS untouched), stripe session+PI stored, 1 processed event, availability Sep 14–16 blocked (17 = checkout, corect). Sidebar "charged as 864 RON" == Stripe total == DB total.
+- **P6b — remaining:** ONE controlled REAL Hostaway test (unset `HOSTAWAY_MOCK_RESERVATIONS`, far dates, verify calendar blocks in Hostaway, cancel after) + idempotency spot-check (Stripe dashboard → Resend event → expect `duplicate:true`, no second reservation).
 - **P7 — senior review sweep (the /goal):** multi-agent whole-codebase review — security, correctness, clean-code, SEO fixes from QA, shippable/sellable quality bar.
 
 ## Setup (Robert)

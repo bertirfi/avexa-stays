@@ -24,10 +24,18 @@
   skill rewritten; `CLAUDE_CODE_SUBAGENT_MODEL` controls subagent models).
 - **Gotcha:** webpack `WasmHash ... reading 'length'` la build = cache `.next` corupt
   (Windows) → `rm -rf .next` și rebuild; NU e eroare de cod.
-- **NEXT (P6, blocked pe user):** rulează migrația `db/migrations/003_stripe.sql` în
-  Supabase; Vercel env Preview: `HOSTAWAY_MOCK_RESERVATIONS=1` + `STRIPE_WEBHOOK_SECRET`
-  (după înregistrarea endpointului în Stripe test) + opțional `RESEND_API_KEY`; apoi test
-  4242 end-to-end pe preview. **P7 = /review multi-agent sweep (queued next).**
+- **P6a MOCK E2E TEST: PASSED (2026-07-02)** — setup complet (migrația 003 rulată, webhook
+  Stripe sandbox „Avexa checkout" pe `checkout.session.completed`, env-uri Preview).
+  Browser flow complet verificat: login → Sep 14–17 ×2 adulți → Stripe RON 864.00 (804
+  cazare + 60 city tax, line items separate) → 4242 → BOOKING CONFIRMED. DB: status
+  confirmed, hostaway_reservation_id NEGATIV (mock), 1 processed event, availability
+  blocată 14–16. Test user: `checkout-test@avexastays.com` (creat via admin API,
+  confirmed). **Gotcha Stripe hosted checkout headless:** radio-ul Card e acoperit de un
+  `AccordionButton-expandedClickArea` invizibil — Playwright „not interactable"; fix =
+  `elementFromPoint` pe centrul rândului + dispatch secvență PointerEvent; apoi
+  `#cardNumber/#cardExpiry/#cardCvc/#billingName` sunt inputuri normale în main frame.
+  **P6b rămas:** UN test real Hostaway controlat (scoate mock, date îndepărtate, cancel
+  după) + resend-event idempotency check. **P7 = /review multi-agent sweep (queued).**
 - **Pending vechi:** rotire `SYNC_SECRET`; SEO fixes din QA (meta desc >155, H1 fără
   "apartments", keyword în primul paragraf).
 
