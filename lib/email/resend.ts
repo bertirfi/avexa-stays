@@ -1,12 +1,13 @@
 /**
  * Minimal transactional email via Resend HTTP API — server-only.
  *
- * Scope (deliberate): auth emails go through Supabase SMTP; the booking
- * confirmation goes out via the reservation's Hostaway conversation (see
- * lib/hostaway/confirmation.ts) with Resend as its fallback. The app itself
- * sends directly only the refund notice when payment succeeded but the dates
- * were taken (see the Stripe webhook). Best-effort: a missing key or API
- * failure must never break the money flow, only log.
+ * Scope (deliberate): auth emails go through Supabase SMTP; the guest
+ * check-in message goes EXCLUSIVELY via the reservation's Hostaway
+ * conversation (lib/hostaway/confirmation.ts — client rule: one email, no
+ * fallback sender). The app itself sends ONE email — the refund notice when
+ * payment succeeded but the dates were taken (see the Stripe webhook).
+ * Best-effort: a missing key or API failure must never break the money
+ * flow, only log.
  */
 const FROM = 'AVEXA Stays <office@avexastays.com>';
 

@@ -3,19 +3,18 @@ import {
   getReservationConversations,
   sendConversationMessage,
 } from './client';
-import { sendEmail } from '@/lib/email/resend';
 
 /**
- * Booking-confirmation message for direct website reservations (client
- * decision 2026-07-02, revising decision 13: ChargeAutomation generates the
- * pre-arrival check-in link for our reservations but never emails direct/API
- * guests, so WE deliver it).
+ * Check-in message for direct website reservations (client rule, final,
+ * 2026-07-02): the guest receives exactly ONE email — the ChargeAutomation
+ * check-in template with the reservation's unique CA link, sent through the
+ * reservation's Hostaway conversation (communicationType "email"), the same
+ * pipeline ChargeAutomation itself uses for OTA reservations. No other email,
+ * no fallback sender, no separate confirmation: if the CA link never appears
+ * we send NOTHING and log an error for the team instead.
  *
- * Primary channel: the reservation's Hostaway conversation with
- * communicationType "email" — the guest gets the email and the message (plus
- * any replies) stays visible in the Hostaway inbox for the client's team.
- * Fallback: Resend. Everything is best-effort — a failure here must never
- * affect the already-confirmed booking.
+ * Best-effort end to end — a failure here must never affect the confirmed
+ * booking. Runs post-response inside after().
  */
 
 const CA_LINK_RE = /https:\/\/app\.chargeautomation\.com\/securelink\/[A-Za-z0-9]+/;
@@ -23,13 +22,13 @@ const CA_LINK_RE = /https:\/\/app\.chargeautomation\.com\/securelink\/[A-Za-z0-9
 /**
  * ChargeAutomation writes CA_PRE_ARRIVAL_LINK into the reservation notes
  * with variable latency — observed live between ~9s and ~60s after creation.
- * Poll up to ~95s (we run inside after(), the response is long gone); the
- * confirmation is still worth sending without the link if CA is slower.
+ * Poll generously (~3.5 min, still inside Vercel's function window): without
+ * the link there is nothing to send.
  */
 async function findCheckinLink(
   reservationId: number,
-  tries = 15,
-  delayMs = 6_000,
+  tries = 25,
+  delayMs = 8_000,
 ): Promise<string | null> {
   for (let i = 0; i < tries; i += 1) {
     try {
@@ -47,48 +46,19 @@ async function findCheckinLink(
 
 export interface BookingConfirmationInput {
   reservationId: number;
-  guestEmail: string;
   guestFirstName: string;
-  propertyName: string;
-  checkIn: string; // YYYY-MM-DD
-  checkOut: string; // YYYY-MM-DD
-  guests: number;
-  totalRon: number;
 }
 
 /**
  * Mirrors the ChargeAutomation template the client uses for OTA reservations
- * (client request 2026-07-02: the guest gets ONE email, same wording on every
- * channel). CA posts this message itself for OTA bookings; we post it for
- * website bookings, through the same Hostaway conversation, so the sender
+ * (same wording on every channel; "Powered by ChargeAutomation" footer
+ * dropped). CA posts this message itself for OTA bookings; we post it for
+ * website bookings through the same Hostaway conversation, so the sender
  * ("Avexa Stays") and formatting match.
  */
-function confirmationBody(input: BookingConfirmationInput, checkinLink: string | null): string {
-  if (!checkinLink) {
-    // CA link never appeared — send a plain confirmation instead of a
-    // check-in invitation that would have nothing to link to.
-    return [
-      `Hi ${input.guestFirstName}!`,
-      '',
-      'Thank you for choosing Avexa Stays! We are thrilled to host you! ✨',
-      '',
-      `Check-in: ${input.checkIn} (from 3:00 PM)`,
-      `Check-out: ${input.checkOut} (until 11:00 AM)`,
-      `Guests: ${input.guests}`,
-      `Total paid: ${input.totalRon.toFixed(0)} RON (VAT included) — nothing left to pay on arrival.`,
-      '',
-      'Your online check-in link follows in a separate message.',
-      '',
-      'If you need anything, we are always here to help you! ☀️',
-      '',
-      'Avexa Stays | Anca & Vlad ❤️',
-      '',
-      `© ${new Date().getFullYear()} — Prime Gold Living SRL`,
-    ].join('\n');
-  }
-
+function confirmationBody(guestFirstName: string, checkinLink: string): string {
   return [
-    `Hi ${input.guestFirstName}!`,
+    `Hi ${guestFirstName}!`,
     '',
     'Thank you for choosing Avexa Stays! We are thrilled to host you! ✨',
     '',
@@ -107,40 +77,36 @@ function confirmationBody(input: BookingConfirmationInput, checkinLink: string |
   ].join('\n');
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
 export async function sendBookingConfirmation(input: BookingConfirmationInput): Promise<void> {
   try {
     const checkinLink = await findCheckinLink(input.reservationId);
-    const body = confirmationBody(input, checkinLink);
-
-    try {
-      const conversations = await getReservationConversations(input.reservationId);
-      const conversation =
-        conversations.find((c) => c.type === 'host-guest-email') ?? conversations[0];
-      if (!conversation) throw new Error('no conversation attached to reservation');
-      await sendConversationMessage(conversation.id, body);
-      return;
-    } catch (err) {
-      console.warn(
-        `[hostaway] conversation send failed for reservation ${input.reservationId} — falling back to Resend`,
-        err,
+    if (!checkinLink) {
+      console.error(
+        `[hostaway] CA check-in link never appeared for reservation ${input.reservationId} — nothing sent (client rule: the CA-link message is the only guest email)`,
       );
+      return;
     }
 
-    await sendEmail({
-      to: input.guestEmail,
-      subject: `Booking confirmed — ${input.propertyName}, ${input.checkIn} → ${input.checkOut}`,
-      html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#191919;line-height:1.6;max-width:520px;white-space:pre-line">${escapeHtml(body)}</div>`,
-    });
+    const body = confirmationBody(input.guestFirstName, checkinLink);
+
+    // The conversation is created by Hostaway moments after the reservation;
+    // retry a few times, then give up loudly — never through another sender.
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        const conversations = await getReservationConversations(input.reservationId);
+        const conversation =
+          conversations.find((c) => c.type === 'host-guest-email') ?? conversations[0];
+        if (!conversation) throw new Error('no conversation attached to reservation');
+        await sendConversationMessage(conversation.id, body);
+        return;
+      } catch (err) {
+        if (attempt === 3) throw err;
+        await new Promise((resolve) => setTimeout(resolve, 5_000));
+      }
+    }
   } catch (err) {
     console.error(
-      `[hostaway] booking confirmation failed for reservation ${input.reservationId}:`,
+      `[hostaway] check-in message failed for reservation ${input.reservationId}:`,
       err,
     );
   }
