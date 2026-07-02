@@ -155,6 +155,39 @@ async function hostawayPost<T>(
   return body.result;
 }
 
+async function hostawayPut<T>(
+  path: string,
+  payload: unknown,
+  isRetry = false,
+): Promise<T> {
+  await space();
+  const token = await getAccessToken(isRetry);
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+    },
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+  });
+
+  // 403 => token expired/invalid. Refresh once and retry.
+  if (res.status === 403 && !isRetry) return hostawayPut<T>(path, payload, true);
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new HostawayApiError(
+      `Hostaway PUT ${path} failed: HTTP ${res.status}`,
+      res.status,
+      body.slice(0, 2000),
+    );
+  }
+
+  const body = (await res.json()) as HostawayResponse<T>;
+  return body.result;
+}
+
 // Hostaway reservation channel for our own direct-site bookings.
 const DIRECT_CHANNEL_ID = 2000;
 // Shows as the reservation `source` in the Hostaway dashboard.
@@ -195,7 +228,7 @@ export async function createReservation(
     };
   }
 
-  return hostawayPost<HostawayReservation>(
+  const reservation = await hostawayPost<HostawayReservation>(
     `/reservations?forceOverbooking=0&provider=${RESERVATION_PROVIDER}`,
     {
       channelId: DIRECT_CHANNEL_ID,
@@ -204,6 +237,24 @@ export async function createReservation(
       status: 'new',
     },
   );
+
+  // Hostaway ignores isPaid on POST (observed 2026-07-02: reservation created
+  // with isPaid=null / paymentStatus "Unknown"), which leaves the PMS showing
+  // a balance due and keeps charge automations from firing. A follow-up PUT
+  // sets it. Best-effort: the reservation already exists and blocks the
+  // calendar, so a failure here must not fail the booking.
+  try {
+    await hostawayPut<HostawayReservation>(`/reservations/${reservation.id}`, {
+      isPaid: 1,
+    });
+  } catch (err) {
+    console.warn(
+      `[hostaway] follow-up isPaid update failed for reservation ${reservation.id} — continuing`,
+      err,
+    );
+  }
+
+  return reservation;
 }
 
 export function getListings(): Promise<HostawayListing[]> {
