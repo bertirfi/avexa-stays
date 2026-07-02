@@ -78,6 +78,9 @@ function confirmationBody(guestFirstName: string, checkinLink: string): string {
 }
 
 export async function sendBookingConfirmation(input: BookingConfirmationInput): Promise<void> {
+  // Mock reservations (HOSTAWAY_MOCK_RESERVATIONS) carry a negative id — the
+  // real PMS must never be polled for them.
+  if (input.reservationId <= 0) return;
   try {
     const checkinLink = await findCheckinLink(input.reservationId);
     if (!checkinLink) {
