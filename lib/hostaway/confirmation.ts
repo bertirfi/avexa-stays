@@ -22,13 +22,14 @@ const CA_LINK_RE = /https:\/\/app\.chargeautomation\.com\/securelink\/[A-Za-z0-9
 
 /**
  * ChargeAutomation writes CA_PRE_ARRIVAL_LINK into the reservation notes
- * ~10s after creation (observed live). Poll briefly; the confirmation is
- * still worth sending without the link if CA is slow.
+ * with variable latency — observed live between ~9s and ~60s after creation.
+ * Poll up to ~95s (we run inside after(), the response is long gone); the
+ * confirmation is still worth sending without the link if CA is slower.
  */
 async function findCheckinLink(
   reservationId: number,
-  tries = 6,
-  delayMs = 4_000,
+  tries = 15,
+  delayMs = 6_000,
 ): Promise<string | null> {
   for (let i = 0; i < tries; i += 1) {
     try {
