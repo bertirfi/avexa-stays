@@ -8,6 +8,17 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-07-02 — CONFIRMAT (client): contractul de afișare a prețului la checkout
+- **Breakdown-ul pe linii e obligatoriu și fix:** (1) **Accommodation** = prețul real al
+  cazării pe O singură linie (fără să se vadă vreodată split-ul 18%/3%); (2) **Extra
+  services** pe linie separată doar dacă există; (3) **City tax** pe linie separată,
+  mereu în RON real + echivalent „≈ €X.XX" când moneda de afișare ≠ RON; (4) **Total** +
+  „charged as X RON" + „VAT included". NU colapsa niciodată city tax în linia de cazare
+  și nu arăta un singur total fără breakdown. Contractul se aplică IDENTIC în: sidebar
+  (stay page) → BookingSummary/PaymentStep (checkout) → line items Stripe → coloane DB
+  (`accommodation_ron`/`extras_ron`/`city_tax_ron`/`total_ron`). Regula e codificată și
+  în `.claude/rules/pricing.md`; verificat live în testul E2E (804 + 60 = 864 RON).
+
 ### 2026-07-02 — RON-first pricing + REAL Stripe checkout built (P0→P5)
 - **Money model changed (client decisions, plan rev 2):** RON = money of record, charged via
   Stripe in RON; EUR (default)/RON/USD are display-only (`AVEXA_FX_RATE_EUR=5.25`,
