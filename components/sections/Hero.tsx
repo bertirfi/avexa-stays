@@ -62,7 +62,15 @@ export function Hero() {
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             className="inline-block"
           >
-            Bucharest City Center,
+            Bucharest City Center
+          </motion.span>{' '}
+          <motion.span
+            initial={{ opacity: 0, y: 46 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.09, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-block"
+          >
+            apartments,
           </motion.span>{' '}
           <motion.span
             initial={{ opacity: 0, y: 46 }}
@@ -77,6 +85,15 @@ export function Hero() {
             />
           </motion.span>
         </h1>
+        <motion.p
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-auto mt-5 max-w-[520px] text-[15px] leading-relaxed text-cream/60 md:text-base"
+        >
+          Premium Bucharest city center apartments — steps from Old Town and
+          Calea Victoriei, with digital check-in and member rates.
+        </motion.p>
       </div>
 
       {/* Hero search pill (bottom) */}

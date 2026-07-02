@@ -59,7 +59,8 @@ function buildLodgingSchema(property: Property, fxRateEur: number) {
     '@context': 'https://schema.org',
     '@type': ['Apartment', 'LodgingBusiness', 'Product'],
     name: property.name,
-    description: property.description.split('\n\n')[0],
+    // Curated + unique per suite (the editorial paragraphs repeat across suites).
+    description: property.metaDescription,
     image: absoluteUrl(property.cover),
     url: `${SITE_URL}/locations/${property.slug}`,
     address: {
@@ -137,14 +138,17 @@ export async function generateMetadata(
   const { slug } = await props.params;
   const property = await getPropertyData(slug);
   if (!property) return { title: 'Stay not found' };
-  const description = property.description.split('\n\n')[0];
+  // Curated per-property SERP copy — unique and ≤155 chars (SEO hard rule);
+  // the editorial description paragraphs are too long and repeat across suites.
+  const description = property.metaDescription;
+  const title = property.metaTitle ?? `${property.name} — ${property.subtitle}`;
   return {
-    title: `${property.name} — ${property.subtitle}`,
+    title,
     description,
     // Canonical always points to the slug URL (the id form is a duplicate).
     alternates: { canonical: `/locations/${property.slug}` },
     openGraph: {
-      title: `${property.name} — ${property.subtitle}`,
+      title,
       description,
       url: `${SITE_URL}/locations/${property.slug}`,
       type: 'website',

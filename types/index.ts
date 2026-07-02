@@ -94,6 +94,10 @@ export interface Property {
   stats: PropertyStat[];
   maxGuests: number;
   description: string;
+  /** SERP meta description — unique per property, ≤155 chars (SEO hard rule). */
+  metaDescription: string;
+  /** SERP title override for names that would push the title past 60 chars. */
+  metaTitle?: string;
   pitch?: string;
   goodToKnow?: string;
   checkin: string;

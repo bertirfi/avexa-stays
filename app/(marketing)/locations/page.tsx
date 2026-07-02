@@ -8,9 +8,10 @@ import type { Property } from '@/types';
 const SITE_URL = 'https://avexastays.com';
 
 export const metadata: Metadata = {
-  title: 'Locations in Bucharest',
+  // Primary keyword leads (SEO hard rule: home + locations carry it).
+  title: 'Bucharest City Center Apartments — Locations',
   description:
-    'Member rates and fully digital check-in at every AVEXA address across Bucharest City Center — Calea Victoriei, Old City Center, Universitate, and Piața Romană.',
+    'Member rates and fully digital check-in at every AVEXA apartment in Bucharest City Center — Old Town, Calea Victoriei, Universitate & Piața Romană.',
   alternates: { canonical: '/locations' },
 };
 

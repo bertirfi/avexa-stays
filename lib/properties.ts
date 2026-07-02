@@ -83,6 +83,8 @@ export const properties: Property[] = [
       { icon: 'bath', label: '1 Bathroom' },
     ],
     maxGuests: 2,
+    metaDescription:
+      'A chic studio for two inside the interwar Adriatica Palace, at the gateway to Old Town — a Bucharest city center apartment with digital check-in.',
     description:
       'Reside in a piece of Bucharest\'s history. Located within the iconic Palace of the "Adriatica" Society, this unique sanctuary blends interwar elegance with the AVEXA standard of tech-enabled hospitality.\n\nPositioned exactly at the gateway to the vibrant Old Town, you are completely connected to the city\'s pulse, yet insulated in absolute comfort.\n\nIf you\'re visiting Bucharest for a city break with just a backpack and a desire for adventure, this stylish, compact sanctuary offers everything you need to recharge in the heart of the city.\n\nA chic and comfortable bedroom featuring a cozy double bed, relaxing wall plants, a spacious closet, and fresh linens & towels. A modern, well-appointed bathroom equipped with a sleek shower cabin, sink, toilet, and fresh towels.\n\nA fully equipped kitchenette with a small refrigerator, coffee maker, toaster, microwave, induction cooktop, and kettle — perfect for preparing quick meals and drinks.\n\nThoughtful amenities: toiletries, coffee, tea, sugar, salt, pepper, oil, and vinegar are provided to make you feel at home.',
     pitch:
@@ -179,6 +181,8 @@ export const properties: Property[] = [
       { icon: 'bath', label: '1 Bathroom' },
     ],
     maxGuests: 4,
+    metaDescription:
+      'A botanical one-bedroom in the Adriatica Palace — soundproofed King bedroom, Dâmbovița River views, sleeps 4. Bucharest city center, digital check-in.',
     description:
       'Reside in a piece of Bucharest\'s history. Located within the iconic Palace of the "Adriatica" Society, this unique sanctuary blends interwar elegance with the AVEXA standard of tech-enabled hospitality.\n\nOverlooking the Dâmbovița River and positioned exactly at the gateway to the vibrant Old Town, you are completely connected to the city\'s pulse, yet insulated in absolute comfort.\n\nThe living area is a unique "botanical sanctuary" featuring nature-inspired green installations, smart TV streaming services, and a spacious sofa that converts into a comfortable Queen bed (160x200 cm).\n\nA completely soundproofed, exceptionally quiet bedroom featuring a King-size bed designed for deep relaxation.\n\nA modern spa-style bathroom with a walk-in shower, atmospheric LED lighting, and an in-unit washing machine. The kitchen is fully equipped including a stove, oven, dishwasher, and a premium coffee maker.',
     pitch:
@@ -275,6 +279,8 @@ export const properties: Property[] = [
       { icon: 'bath', label: '1 Bathroom' },
     ],
     maxGuests: 4,
+    metaDescription:
+      'One-bedroom directly on Calea Victoriei — two private balconies, Știrbey Palace views, 65-inch TV, sleeps 4. Digital check-in, Bucharest city center.',
     description:
       'Experience Bucharest from its most prestigious vantage point. Situated directly on Calea Victoriei, this sophisticated residence places you in the vibrant epicenter of the city\'s culture, fashion, and gastronomy.\n\nFrom world-class restaurants and artisanal coffee shops to high-end shopping and major landmarks, everything is within reach. This apartment offers a stunning blend of modern comfort and historic charm, boasting a direct view of the Stirbey Palace.\n\nStart your mornings with coffee on one of the two private balconies, overlooking the vibrant Calea Victoriei. Unwind in the living room with a massive 169 cm (65-inch) TV — perfect for movie nights.\n\nThe bedroom features a queen-size bed (160x200) with a premium orthopedic mattress. The living room sofa transforms into a comfortable 150x190 bed for extra guests.\n\nFully equipped kitchen with dishwasher, oven, full-size fridge, coffee maker, kettle, and toaster. A spa-like bathroom featuring modern design, LED mirror, and high-end finishes.',
     pitch:
@@ -368,6 +374,8 @@ export const properties: Property[] = [
       { icon: 'bath', label: '2 Bathrooms' },
     ],
     maxGuests: 4,
+    metaDescription:
+      'A quiet one-bedroom near Universitate, 2 minutes from Old Town — rare two bathrooms, sleeps 4. Bucharest city center apartment with digital check-in.',
     description:
       'Experience Bucharest from a sophisticated, central sanctuary. Situated just a 2-minute walk from the Old Town and minutes away from the central Universitate Subway Station, this residence places you at the vibrant epicenter of the city\'s culture, fashion, and gastronomy — while offering a surprisingly quiet, peaceful retreat from the urban bustle.\n\nFrom world-class restaurants to major landmarks, everything is within reach. This 5-star apartment is a masterclass in urban living, combining city-center excitement with the refined AVEXA standard of comfort and tech-enabled hospitality.\n\nThe spacious living space is uniquely modern, crafted to ensure a luxurious and relaxing stay in the heart of the urban center. A supremely quiet master bedroom featuring a Queen-size bed and premium linens, guaranteeing a restorative night\'s sleep.\n\nUnlike most central Bucharest rentals, this property features two contemporary bathrooms — one with a walk-in shower and one with a cabin shower — both prepared to pristine, immaculate standards.\n\nHigh-speed Wi-Fi, dedicated climate control, and a gourmet kitchen complete with a premium coffee machine to start your mornings focused and refreshed.',
     pitch:
@@ -464,6 +472,10 @@ export const properties: Property[] = [
       { icon: 'bath', label: '1 Bathroom' },
     ],
     maxGuests: 6,
+    // name + subtitle would render a 83-char title; keep the SERP title <60.
+    metaTitle: 'The Ultracentral Gem — Calea Victoriei',
+    metaDescription:
+      'Two-bedroom apartment for six with calming views over Calea Victoriei — dining for 6, family-ready. Bucharest city center, digital check-in.',
     description:
       'Welcome and enjoy this relaxing apartment, placed in a centrally located residence, set in the upscale Calea Victoriei area.\n\nSurrounded by fine restaurants, stylish shops, and major attractions, this elegant apartment is perfect for both family getaways and peaceful retreats. Relax and unwind while taking in the beautiful, calming views over Calea Victoriei.\n\nA stylish living room with a cozy dining area (table + 6 chairs) for you and your friends or family to enjoy. A spacious, comfortable sofa that converts into a bed (150 × 190 cm).\n\nTwo charming bedrooms: the first featuring a comfortable queen-size bed, a spacious closet, fresh linens & towels. The second featuring a single divan bed that easily converts into a comfortable queen-size bed, fresh linens & towels.\n\nA modern, luxurious bathroom with a walk-in shower, sink, toilet, and fresh towels. A fully equipped kitchen with a stove, oven, refrigerator, microwave, coffee maker, kettle, toaster, dishwasher and essentials.\n\nExtra amenities: toiletries, an iron & ironing board, good heating, A/C, washing machine with dryer. A baby crib and child seat are available upon request.',
     pitch:
@@ -558,6 +570,8 @@ export const properties: Property[] = [
       { icon: 'bath', label: '1 Bathroom' },
     ],
     maxGuests: 6,
+    metaDescription:
+      'Elegant two-bedroom on Calea Victoriei with Știrbei Palace views and a quiet green courtyard — sleeps 6. Digital check-in, Bucharest city center.',
     description:
       'Experience Bucharest from its most prestigious vantage point. Situated directly on Calea Victoriei, this sophisticated residence places you in the vibrant epicenter of the city\'s culture, fashion, and gastronomy.\n\nThis elegant 2-bedroom apartment combines modern design, comfort, and a touch of luxury — perfect for families, couples, groups, or business travelers.\n\nThe master bedroom features a queen-size bed and a large wardrobe. The second bedroom includes a 140x200 cm bed and another large wardrobe, ideal for families or friends traveling together.\n\nA fully equipped kitchen with stovetop, oven, large fridge, washing machine, toaster, kettle, and coffee maker. The spacious living room invites you to relax with a 164 cm smart TV and a 6-person dining table.\n\nA stylish bathroom featuring a walk-in shower and premium finishes. Beautiful views over Calea Victoriei and the Știrbei Palace. The building offers a quiet green courtyard at the back — the perfect balance between city energy and peaceful retreat.',
     pitch:
@@ -650,6 +664,8 @@ export const properties: Property[] = [
       { icon: 'bath', label: '1 Bathroom' },
     ],
     maxGuests: 6,
+    metaDescription:
+      'Freshly renovated two-bedroom over Calea Victoriei — Queen and double suites plus a sofa bed, dining for 6. Bucharest city center, digital check-in.',
     description:
       'Experience Bucharest from its most prestigious vantage point. Situated directly on Calea Victoriei, this sophisticated residence places you in the vibrant epicenter of the city\'s culture, fashion, and gastronomy.\n\nFrom world-class restaurants and artisanal coffee shops to high-end shopping and major landmarks, everything is within reach. This 5-star apartment is a masterclass in urban living, combining the excitement of the city center with the refined AVEXA standard of comfort and tech-enabled hospitality.\n\nFreshly renovated at the end of March 2026, this space blends high-end modern luxury with that warm, soulful feeling of being home. Perched directly over Calea Victoriei, Bucharest\'s most historic and vibrant boulevard, you are at the epicenter of the city\'s energy.\n\nBedroom 1 features a plush 160x200 Queen bed. Bedroom 2 features a cozy 140x200 Double bed. The living room is equipped with a high-comfort 150x200 sofa bed — perfect for extra guests.\n\nA large dining table for 6, perfect for long breakfasts or planning your city tours. Full kitchen with modern appliances including a dishwasher and dryer.',
     pitch:
@@ -743,6 +759,8 @@ export const properties: Property[] = [
       { icon: 'bath', label: '1 Bathroom' },
     ],
     maxGuests: 6,
+    metaDescription:
+      'Quiet two-bedroom for six by Piața Romană — steps from the metro, 10 minutes\' walk to Calea Victoriei. Digital check-in, Bucharest city center.',
     description:
       'Discover the perfect balance of central living and urban mobility. Located in the beating heart of the city, this stylish apartment offers immediate access to Bucharest\'s main subway network, making exploration completely effortless.\n\nEnjoy being just a 10-minute walk from Calea Victoriei and surrounded by a vibrant mix of top-tier restaurants, boutique shops, and must-see sights. It is a masterclass in smart city living, delivered with the signature AVEXA touch of luxury, peace, and seamless technology.\n\nA stylish, expansive living area designed for connection, featuring a cozy dining zone for six, perfect for families or groups.\n\nEngineered for versatility and long stays, featuring two charming bedrooms with wardrobes. The layout includes a plush Queen-size master bed and a comfortable double bed in the second suite.\n\nA modern, luxurious bathroom equipped with a sleek cabin shower and premium finishes, prepared with clinical precision to ensure your revitalization.\n\nStay effortlessly productive with high-speed Wi-Fi and dedicated climate control. The fully equipped gourmet kitchen, complete with a dishwasher and premium coffee maker, is stocked with essentials to keep your mornings focused and your stay hassle-free.',
     pitch:

@@ -12,7 +12,7 @@ import { JsonLd } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
   title: 'Member Benefits',
   description:
-    'Free to join, free forever. Every AVEXA member gets the lowest rate we offer — 15% off every booking, 25% off long stays, free cancellation, early check-in, late check-out, and a welcome package on every stay.',
+    'Free to join, free forever. Members get our lowest rate — 15% off every booking, 25% off long stays — plus free cancellation and early check-in.',
   alternates: { canonical: '/member-benefits' },
 };
 
