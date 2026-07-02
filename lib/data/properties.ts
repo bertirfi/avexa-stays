@@ -44,6 +44,22 @@ function withCoordinates(property: Property): Property {
   return coordinates ? { ...property, coordinates } : property;
 }
 
+/**
+ * SEO copy (SERP title/description) is code-owned editorial content, same as
+ * coordinates: the static catalog always wins over the `content` JSON cached
+ * in Supabase. The cached blob predates these fields (`as Property` hid the
+ * gap), which shipped property pages without any meta description.
+ */
+function withSeoFields(property: Property): Property {
+  const source = staticProperties.find((p) => p.id === property.id);
+  if (!source) return property;
+  return {
+    ...property,
+    metaDescription: source.metaDescription,
+    metaTitle: source.metaTitle,
+  };
+}
+
 export async function getAllPropertiesData(): Promise<Property[]> {
   try {
     const { data, error } = await getSupabaseAdmin()
@@ -55,7 +71,7 @@ export async function getAllPropertiesData(): Promise<Property[]> {
       throw new Error(error?.message ?? 'no property rows');
     }
     return data.map((row) =>
-      withCoordinates(applyLivePricing(row.content as unknown as Property, row.price_from_ron)),
+      withCoordinates(withSeoFields(applyLivePricing(row.content as unknown as Property, row.price_from_ron))),
     );
   } catch {
     return staticProperties.map(withCoordinates);
@@ -71,7 +87,7 @@ export async function getPropertyData(idOrSlug: string): Promise<Property | null
       .or(`id.eq.${safe},slug.eq.${safe}`)
       .maybeSingle();
     if (error || !data) throw new Error(error?.message ?? 'not found');
-    return withCoordinates(applyLivePricing(data.content as unknown as Property, data.price_from_ron));
+    return withCoordinates(withSeoFields(applyLivePricing(data.content as unknown as Property, data.price_from_ron)));
   } catch {
     const fallback = staticProperties.find((p) => p.id === safe || p.slug === safe);
     return fallback ? withCoordinates(fallback) : null;
