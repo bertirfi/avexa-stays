@@ -41,6 +41,7 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 # ============================================
 HOSTAWAY_ACCOUNT_ID=xxxxxxx
 HOSTAWAY_API_KEY=hosta_...
+HOSTAWAY_WEBHOOK_SECRET=                  # openssl rand -hex 24 — Basic-auth password for /api/webhooks/hostaway (login "avexa"); set the same value when registering the unified webhook
 
 # ============================================
 # AUTHENTICATION
