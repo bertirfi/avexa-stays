@@ -73,6 +73,22 @@ export interface HostawayResponse<T> {
 }
 
 /**
+ * One line of the reservation's price-breakdown table in the Hostaway
+ * dashboard ("Base rate", "City / Tourism tax", …). Line totals must sum to
+ * the reservation's totalPrice; isOverriddenByUser=1 tells Hostaway to keep
+ * our values instead of recalculating them from listing fee settings.
+ */
+export interface HostawayFinanceField {
+  type: 'price' | 'tax' | 'fee' | 'discount';
+  name: string;
+  title: string;
+  value: number;
+  total: number;
+  isIncludedInTotalPrice: 0 | 1;
+  isOverriddenByUser: 0 | 1;
+}
+
+/**
  * Reservation-creation payload — fields confirmed against the official docs
  * (create endpoint + reservation object). Booleans are 0/1 integers per
  * Hostaway convention; dates are plain YYYY-MM-DD.
@@ -93,6 +109,8 @@ export interface HostawayCreateReservationInput {
   /** Full amount the guest paid, in `currency` (RON for AVEXA). */
   totalPrice: number;
   currency: 'RON';
+  /** Price breakdown shown in the dashboard (accommodation / extras / city tax). */
+  financeField?: HostawayFinanceField[];
   /** Free-text details (invoice data, extras) — client invoices from Hostaway. */
   comment?: string;
 }

@@ -3,13 +3,15 @@ import type Stripe from 'stripe';
 import { getStripe } from '@/lib/stripe/client';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { createReservation } from '@/lib/hostaway/client';
+import type { HostawayFinanceField } from '@/lib/hostaway/types';
 import { refundNoticeEmail, sendEmail } from '@/lib/email/resend';
 import type { Database } from '@/types/database.types';
 
 /**
  * Stripe webhook — the ONLY place a paid booking becomes a Hostaway
  * reservation. Payment never flows through Hostaway; this records the paid
- * booking (isPaid=1, full RON total) after Stripe confirms the charge.
+ * booking (full RON total + offline "paid" charge + price-breakdown lines)
+ * after Stripe confirms the charge.
  *
  * Contract:
  * - Node runtime + raw body (`req.text()`): signature verification hashes the
@@ -128,6 +130,46 @@ export async function POST(req: Request) {
 
   try {
     const [firstName, ...rest] = booking.guest_name.trim().split(/\s+/);
+
+    // Dashboard price-breakdown lines (client decision: city tax must show as
+    // its own line, like channel reservations do). Totals must sum to totalPrice.
+    const accommodationRon = Number(booking.accommodation_ron);
+    const extrasRon = Number(booking.extras_ron);
+    const cityTaxRon = Number(booking.city_tax_ron);
+    const financeField: HostawayFinanceField[] = [
+      {
+        type: 'price',
+        name: 'baseRate',
+        title: 'Base rate',
+        value: accommodationRon,
+        total: accommodationRon,
+        isIncludedInTotalPrice: 1,
+        isOverriddenByUser: 1,
+      },
+      ...(extrasRon > 0
+        ? [
+            {
+              type: 'fee',
+              name: 'otherFees',
+              title: 'Extra services',
+              value: extrasRon,
+              total: extrasRon,
+              isIncludedInTotalPrice: 1,
+              isOverriddenByUser: 1,
+            } satisfies HostawayFinanceField,
+          ]
+        : []),
+      {
+        type: 'tax',
+        name: 'cityTax',
+        title: 'City / Tourism tax',
+        value: cityTaxRon,
+        total: cityTaxRon,
+        isIncludedInTotalPrice: 1,
+        isOverriddenByUser: 1,
+      },
+    ];
+
     const reservation = await createReservation({
       listingMapId: Number(session.metadata?.listingMapId),
       arrivalDate: booking.check_in,
@@ -143,6 +185,7 @@ export async function POST(req: Request) {
       numberOfGuests: booking.adults + booking.children + booking.infants,
       totalPrice: Number(booking.total_ron),
       currency: 'RON',
+      financeField,
       comment: reservationComment(booking, session),
     });
 
