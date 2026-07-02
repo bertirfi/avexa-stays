@@ -226,10 +226,17 @@ export interface Database {
           check_in: string;
           check_out: string;
           guests: number;
+          adults: number;
+          children: number;
+          infants: number;
           rate_plan: 'non_refundable' | 'flexible';
-          subtotal_ron: number;
-          fx_rate: number;
-          total_eur: number;
+          accommodation_ron: number;
+          extras_ron: number;
+          city_tax_ron: number;
+          total_ron: number;
+          extras: Json;
+          display_currency: string;
+          display_fx_rate: number | null;
           currency: string;
           status: 'pending' | 'confirmed' | 'cancelled';
           stripe_session_id: string | null;
@@ -241,7 +248,6 @@ export interface Database {
           invoice_vat: string | null;
           invoice_reg_com: string | null;
           invoice_address: string | null;
-          member_discount_applied: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -254,10 +260,17 @@ export interface Database {
           check_in: string;
           check_out: string;
           guests: number;
+          adults?: number;
+          children?: number;
+          infants?: number;
           rate_plan: 'non_refundable' | 'flexible';
-          subtotal_ron: number;
-          fx_rate: number;
-          total_eur: number;
+          accommodation_ron: number;
+          extras_ron?: number;
+          city_tax_ron: number;
+          total_ron: number;
+          extras?: Json;
+          display_currency?: string;
+          display_fx_rate?: number | null;
           currency?: string;
           status?: 'pending' | 'confirmed' | 'cancelled';
           stripe_session_id?: string | null;
@@ -269,7 +282,6 @@ export interface Database {
           invoice_vat?: string | null;
           invoice_reg_com?: string | null;
           invoice_address?: string | null;
-          member_discount_applied?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -282,10 +294,17 @@ export interface Database {
           check_in?: string;
           check_out?: string;
           guests?: number;
+          adults?: number;
+          children?: number;
+          infants?: number;
           rate_plan?: 'non_refundable' | 'flexible';
-          subtotal_ron?: number;
-          fx_rate?: number;
-          total_eur?: number;
+          accommodation_ron?: number;
+          extras_ron?: number;
+          city_tax_ron?: number;
+          total_ron?: number;
+          extras?: Json;
+          display_currency?: string;
+          display_fx_rate?: number | null;
           currency?: string;
           status?: 'pending' | 'confirmed' | 'cancelled';
           stripe_session_id?: string | null;
@@ -297,9 +316,26 @@ export interface Database {
           invoice_vat?: string | null;
           invoice_reg_com?: string | null;
           invoice_address?: string | null;
-          member_discount_applied?: boolean;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      processed_stripe_events: {
+        Row: {
+          event_id: string;
+          type: string;
+          created_at: string;
+        };
+        Insert: {
+          event_id: string;
+          type: string;
+          created_at?: string;
+        };
+        Update: {
+          event_id?: string;
+          type?: string;
+          created_at?: string;
         };
         Relationships: [];
       };

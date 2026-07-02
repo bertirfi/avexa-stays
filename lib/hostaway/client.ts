@@ -1,7 +1,9 @@
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type {
   HostawayCalendarDay,
+  HostawayCreateReservationInput,
   HostawayListing,
+  HostawayReservation,
   HostawayResponse,
   HostawayTokenResponse,
 } from './types';
@@ -106,6 +108,102 @@ async function hostawayGet<T>(path: string, isRetry = false): Promise<T> {
 
   const body = (await res.json()) as HostawayResponse<T>;
   return body.result;
+}
+
+/** Thrown on non-2xx Hostaway responses so callers can act on the detail. */
+export class HostawayApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly body: string,
+  ) {
+    super(message);
+    this.name = 'HostawayApiError';
+  }
+}
+
+async function hostawayPost<T>(
+  path: string,
+  payload: unknown,
+  isRetry = false,
+): Promise<T> {
+  await space();
+  const token = await getAccessToken(isRetry);
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+    },
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+  });
+
+  // 403 => token expired/invalid. Refresh once and retry.
+  if (res.status === 403 && !isRetry) return hostawayPost<T>(path, payload, true);
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new HostawayApiError(
+      `Hostaway POST ${path} failed: HTTP ${res.status}`,
+      res.status,
+      body.slice(0, 2000),
+    );
+  }
+
+  const body = (await res.json()) as HostawayResponse<T>;
+  return body.result;
+}
+
+// Hostaway reservation channel for our own direct-site bookings.
+const DIRECT_CHANNEL_ID = 2000;
+// Shows as the reservation `source` in the Hostaway dashboard.
+const RESERVATION_PROVIDER = 'avexastays';
+
+/**
+ * Create a reservation after a successful Stripe payment. Payment NEVER flows
+ * through Hostaway — this only records the paid booking (isPaid=1, full RON
+ * total) so the calendar blocks and the client can invoice from Hostaway.
+ *
+ * forceOverbooking=0 (deliberate): if the dates were taken in the race window,
+ * Hostaway rejects and the webhook refunds the guest — a premium brand never
+ * double-books. Idempotency is OURS (Hostaway has none): callers must check
+ * the booking row's hostaway_reservation_id before calling.
+ *
+ * HOSTAWAY_MOCK_RESERVATIONS=1 short-circuits with a fake reservation so the
+ * full checkout flow can be tested without touching the real PMS.
+ */
+export async function createReservation(
+  input: HostawayCreateReservationInput,
+): Promise<HostawayReservation> {
+  if (process.env.HOSTAWAY_MOCK_RESERVATIONS === '1') {
+    console.warn(
+      '[hostaway] MOCK reservation (HOSTAWAY_MOCK_RESERVATIONS=1) — real PMS not called',
+    );
+    return {
+      id: -Math.floor(1 + Math.random() * 1_000_000_000), // negative = unmistakably fake
+      listingMapId: input.listingMapId,
+      channelId: DIRECT_CHANNEL_ID,
+      arrivalDate: input.arrivalDate,
+      departureDate: input.departureDate,
+      guestName: input.guestName,
+      guestEmail: input.guestEmail,
+      totalPrice: input.totalPrice,
+      currency: input.currency,
+      status: 'new',
+      confirmationCode: 'MOCK',
+    };
+  }
+
+  return hostawayPost<HostawayReservation>(
+    `/reservations?forceOverbooking=0&provider=${RESERVATION_PROVIDER}`,
+    {
+      channelId: DIRECT_CHANNEL_ID,
+      ...input,
+      isPaid: 1, // Hostaway convention: booleans as 0/1 integers
+      status: 'new',
+    },
+  );
 }
 
 export function getListings(): Promise<HostawayListing[]> {

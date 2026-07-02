@@ -108,6 +108,15 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   const rate = property.rates.find((r) => r.id === rateId)!;
   const nights = nightsBetween(startDate, endDate);
 
+  // Flex has no independent per-night calendar price — it inherits the catalog
+  // flex/saver ratio on top of the live (saver-based) availability prices.
+  // MUST mirror lib/booking/quote.ts so the displayed total equals the charge.
+  const rateFactor = useMemo(() => {
+    const saver = property.rates[0]?.perNight;
+    const flex = property.rates[1]?.perNight;
+    return rateId === 'flex' && saver && flex ? flex / saver : 1;
+  }, [property.rates, rateId]);
+
   // Per-night member prices for the selected range: real prices from availability
   // where present, else the flat listing rate. Sum drives the total.
   const stayNightPrices = useMemo(() => {
@@ -115,11 +124,13 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     const out: number[] = [];
     const cur = new Date(startDate);
     for (let i = 0; i < nights; i += 1) {
-      out.push(availability?.[ymd(cur)]?.ron ?? rate.perNight);
+      const baseNight =
+        availability?.[ymd(cur)]?.ron ?? property.rates[0]?.perNight ?? rate.perNight;
+      out.push(Math.round(baseNight * rateFactor));
       cur.setDate(cur.getDate() + 1);
     }
     return out;
-  }, [availability, startDate, nights, rate.perNight]);
+  }, [availability, startDate, nights, property.rates, rate.perNight, rateFactor]);
 
   const staySubtotal = stayNightPrices.reduce((a, b) => a + b, 0);
   const isVariablePricing = new Set(stayNightPrices).size > 1;

@@ -7,7 +7,6 @@ import { Stepper } from '@/components/checkout/Stepper';
 import { BookingSummary } from '@/components/checkout/BookingSummary';
 import { ContactInfoStep, type ContactForm } from '@/components/checkout/ContactInfoStep';
 import { PaymentStep } from '@/components/checkout/PaymentStep';
-import { ConfirmationStep } from '@/components/checkout/ConfirmationStep';
 import {
   hydrate,
   readBooking,
@@ -15,7 +14,8 @@ import {
   type HydratedBooking,
 } from '@/lib/booking';
 
-type Step = 1 | 2 | 3;
+// Step 3 (confirmation) lives on /book/confirmation — Stripe redirects there.
+type Step = 1 | 2;
 
 const emptyForm = (): ContactForm => ({
   firstName: '',
@@ -83,21 +83,13 @@ export function CheckoutApp() {
               <ContactInfoStep form={form} setForm={setForm} onNext={() => setStep(2)} />
             )}
             {step === 2 && (
-              <PaymentStep
-                hydrated={hydrated}
-                form={form}
-                onBack={() => setStep(1)}
-                onNext={() => setStep(3)}
-              />
+              <PaymentStep hydrated={hydrated} form={form} onBack={() => setStep(1)} />
             )}
-            {step === 3 && <ConfirmationStep hydrated={hydrated} />}
           </section>
 
-          {step < 3 && (
-            <div className="lg:min-w-0">
-              <BookingSummary hydrated={hydrated} />
-            </div>
-          )}
+          <div className="lg:min-w-0">
+            <BookingSummary hydrated={hydrated} />
+          </div>
         </div>
       </div>
     </>

@@ -72,6 +72,46 @@ export interface HostawayResponse<T> {
   offset?: number;
 }
 
+/**
+ * Reservation-creation payload — fields confirmed against the official docs
+ * (create endpoint + reservation object). Booleans are 0/1 integers per
+ * Hostaway convention; dates are plain YYYY-MM-DD.
+ */
+export interface HostawayCreateReservationInput {
+  listingMapId: number;
+  arrivalDate: string; // YYYY-MM-DD
+  departureDate: string; // YYYY-MM-DD
+  guestName: string;
+  guestFirstName?: string;
+  guestLastName?: string;
+  guestEmail: string;
+  phone?: string;
+  adults: number;
+  children?: number;
+  infants?: number;
+  numberOfGuests: number;
+  /** Full amount the guest paid, in `currency` (RON for AVEXA). */
+  totalPrice: number;
+  currency: 'RON';
+  /** Free-text details (invoice data, extras) — client invoices from Hostaway. */
+  comment?: string;
+}
+
+/** Created reservation (subset of Hostaway's reservation object we rely on). */
+export interface HostawayReservation {
+  id: number;
+  listingMapId?: number;
+  channelId?: number;
+  arrivalDate?: string;
+  departureDate?: string;
+  guestName?: string | null;
+  guestEmail?: string | null;
+  totalPrice?: number | null;
+  currency?: string | null;
+  status?: string | null;
+  confirmationCode?: string | null;
+}
+
 export interface HostawayTokenResponse {
   token_type: string;
   expires_in: number;

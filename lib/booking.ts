@@ -128,8 +128,3 @@ export function shortDate(d: Date) {
 export function longDate(d: Date) {
   return `${MONTHS_SHORT[d.getMonth()]} ${String(d.getDate()).padStart(2, '0')}, ${d.getFullYear()}`;
 }
-
-export function generateConfirmationId() {
-  const part = Math.random().toString(36).slice(2, 10).toUpperCase();
-  return `AVX-${part}`;
-}

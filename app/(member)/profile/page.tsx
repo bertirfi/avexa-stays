@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ProfileApp } from '@/components/profile/ProfileApp';
+import { requireUser } from '@/lib/auth/server';
 
 export const metadata: Metadata = {
   title: 'Profile',
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  await requireUser('/profile');
   return <ProfileApp />;
 }

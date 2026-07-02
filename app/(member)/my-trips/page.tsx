@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { MyTripsApp } from '@/components/trips/MyTripsApp';
+import { requireUser } from '@/lib/auth/server';
 
 export const metadata: Metadata = {
   title: 'My Trips',
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function MyTripsPage() {
+export default async function MyTripsPage() {
+  await requireUser('/my-trips');
   return <MyTripsApp />;
 }
