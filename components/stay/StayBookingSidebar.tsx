@@ -11,6 +11,7 @@ import { MobileBookingBar } from '@/components/stay/MobileBookingBar';
 import type { Booking, GuestCounts, Property } from '@/types';
 import type { AvailabilityMap } from '@/lib/data/availability';
 import { ymd, parseYmd } from '@/lib/date';
+import { CITY_TAX_RON_PER_PERSON_NIGHT } from '@/lib/currency';
 import { readSearchPrefs } from '@/lib/searchPrefs';
 import { readUser } from '@/lib/booking';
 import { cn } from '@/lib/cn';
@@ -22,7 +23,8 @@ interface Props {
   availability?: AvailabilityMap;
 }
 
-const CITY_TAX_PER_PERSON = 3;
+// City tax: state tax, RON pass-through (no markup/fee) — see lib/currency.
+const CITY_TAX_PER_PERSON = CITY_TAX_RON_PER_PERSON_NIGHT;
 
 function formatDate(d: Date | null) {
   if (!d) return null;
@@ -106,7 +108,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     const out: number[] = [];
     const cur = new Date(startDate);
     for (let i = 0; i < nights; i += 1) {
-      out.push(availability?.[ymd(cur)]?.eur ?? rate.perNight);
+      out.push(availability?.[ymd(cur)]?.ron ?? rate.perNight);
       cur.setDate(cur.getDate() + 1);
     }
     return out;
@@ -145,7 +147,8 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
 
   const pricing = useMemo(() => {
     const occupants = guests.adults + guests.children;
-    const breakfastTotal = upgrades.breakfast ? 20 * nights * occupants : 0;
+    // Breakfast is priced in RON (105 ≈ €20/day/person, from the upgrades catalog).
+    const breakfastTotal = upgrades.breakfast ? 105 * nights * occupants : 0;
     const mainCityTax = CITY_TAX_PER_PERSON * nights * occupants;
     // Member stay price = sum of per-night prices (variable from availability,
     // else flat rate.perNight × nights).

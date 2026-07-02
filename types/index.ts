@@ -33,6 +33,7 @@ export interface PropertyPhoto {
 export interface PropertyRate {
   id: 'saver' | 'flex';
   name: string;
+  /** RON per night — money of record; convert only at display (lib/currency). */
   perNight: number;
   discount: number;
   refundable: boolean;
@@ -45,6 +46,7 @@ export interface PropertyRate {
 export interface PropertyUpgrade {
   id: 'breakfast' | 'late_checkout' | 'early_checkin';
   name: string;
+  /** RON — money of record. */
   price: number;
   unit: '/day/person' | '';
   free: boolean;
@@ -131,7 +133,9 @@ export interface AuthUser {
   avatar?: string;
 }
 
-// ── Booking (localStorage during Phase 2) ──────────────────────
+// ── Booking (localStorage; UI-only optimistic cache) ───────────
+// All money fields are RON (money of record). NEVER trusted server-side:
+// /api/checkout re-derives price + identity from Hostaway + the session.
 export interface Booking {
   propertyId: string;
   checkIn: string;

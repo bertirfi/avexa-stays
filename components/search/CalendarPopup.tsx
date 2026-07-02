@@ -7,9 +7,10 @@ import { Icon } from '@/components/Icon';
 import { ymd } from '@/lib/date';
 import { cn } from '@/lib/cn';
 
-/** Per-night price + availability, keyed by 'YYYY-MM-DD'. Optional — when absent
- *  the calendar renders plain dates (e.g. the homepage search pill). */
-type PriceByDate = Record<string, { eur: number; available: boolean }>;
+/** Per-night price (RON — money of record) + availability, keyed by
+ *  'YYYY-MM-DD'. Optional — when absent the calendar renders plain dates
+ *  (e.g. the homepage search pill). */
+type PriceByDate = Record<string, { ron: number; available: boolean }>;
 
 interface CalendarPopupProps {
   startDate: Date | null;
@@ -85,7 +86,7 @@ function MonthGrid({
           const info = priceByDate?.[ymd(d)];
           const unavailable = info ? !info.available : false;
           const disabled = isPast || unavailable;
-          const price = info?.available ? info.eur : null;
+          const price = info?.available ? info.ron : null;
           const isStart = startDate && sameDay(d, startDate);
           const isEnd = endDate && sameDay(d, endDate);
           const inRange =

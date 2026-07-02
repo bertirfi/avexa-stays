@@ -1,51 +1,35 @@
-# Plan — Stripe checkout → Hostaway reservation → confirmation
+# Plan — Stripe checkout → Hostaway reservation (RON-first)
 
-**Date:** 2026-07-01 · **Status:** awaiting approval · **Mode:** Stripe TEST first, then live at launch.
+**Rev 2 — 2026-07-02** (supersedes Rev 1 after client decisions) · **Status: approved, building** · Stripe TEST first, live at launch.
 
-## Goal
-Turn the current localStorage checkout simulation into a real flow: guest pays via Stripe Checkout → webhook creates a Hostaway reservation + persists the booking → confirmation email. All on the `feat/nextjs-platform` preview with test card `4242`.
+## Locked decisions (client, 2026-07-02)
+1. **RON is the money of record.** Real price computed and CHARGED in RON, always (Stripe currency `ron`; Hostaway reservation records the same RON total).
+2. **Display currencies: EUR (default), RON, USD** via a switcher. Display-only division: `AVEXA_FX_RATE_EUR=5.25`, `AVEXA_FX_RATE_USD=4.65` (env, configurable). Variant A: compute RON → divide for display.
+3. **Accommodation formula (per night):** `ceil(base_RON × 1.18 × 1.03)` — multiplicative, confirmed. Env: `AVEXA_MARKUP_PERCENT=18`, `AVEXA_PAYMENT_FEE_PERCENT=3` (renamed from AVEXA_FX_MARGIN_PERCENT). Shown as ONE "total price" line, never the split.
+4. **City tax: 10 RON / night / person, STRICT** on every reservation. Separate "City Tax" line, NO markup/fee (pass-through). Always real RON; show "≈ equivalent" when display ≠ RON.
+5. **VAT included** in the final price — never added on top. Show "VAT included" near the total. (Whether Hostaway base is VAT-inclusive → confirm with client before live; doesn't change code structure.)
+6. **Extras = variant (ii):** priced from DB (`services`/`booking_services`), sent to Stripe as inline `price_data` line items — NOT Stripe products. Separate "Extra services" line. (Extras still mock per listing; wiring ready for when they're final.)
+7. **Checkout breakdown:** Accommodation total → Extra services (if any) → City Tax (RON + equivalent) → TOTAL (charged RON, displayed in selected currency) + "VAT included".
+8. **Login mandatory, members only** (`user_id NOT NULL`), never guest checkout.
+9. **Single-room v1** + HIDE "add room" UI on stay pages (re-enable at multi-room phase).
+10. **Payment architecture:** Stripe on OUR site only — do NOT use Hostaway's Stripe integration (double-ownership risk). Flow: Stripe → webhook → website → Hostaway API. Hostaway gets the reservation record (`isPaid=1`, full RON total), never the money.
+11. **Hostaway reservation:** `totalPrice` = full amount charged (RON), currency RON, ALL guest + reservation data transmitted (client invoices from Hostaway; NO e-Factura module in code).
+12. **forceOverbooking=0 + auto-refund on conflict — in v1** (premium brand: refund > double-booking). Conflict → Stripe refund + booking `cancelled` + minimal email to guest.
+13. **Confirmation email: sent by Hostaway** (client verifies the automation). We do NOT build a booking-confirmation email. **Resend stays** for auth emails (Supabase SMTP, done) + the ONE minimal refund-conflict email (app-side, needs `RESEND_API_KEY` in Vercel).
+14. **Testing (c)→(b):** build with Hostaway creation MOCKED (`HOSTAWAY_MOCK_RESERVATIONS=1`) → test Stripe+DB end-to-end on preview (4242) → then ONE controlled real test on far-off dates, cancelled after. Never pollute the real PMS.
 
-## Current state (from research)
-- **`bookings` table already exists** (`db/migrations/001_init.sql:86-118`) with all needed columns (order_id, user_id, property_id, hostaway_reservation_id, subtotal_ron, fx_rate, total_eur, status, stripe_session_id, guest_*, invoice_*). Schema-only — never written yet. RLS = select-own; writes go through service-role (`getSupabaseAdmin`).
-- **Hostaway client is read-only** (`lib/hostaway/client.ts`): token flow + rate-limit throttle solved; only GET helpers. Property→listing map done (`lib/hostaway/mapping.ts`, `properties.hostaway_listing_id`).
-- **No** `lib/stripe/`, `/api/checkout`, or `/api/webhooks/stripe`. `stripe` SDK not installed. `STRIPE_*` env referenced but unset.
-- **The seam:** `components/checkout/PaymentStep.tsx:26-29` (fake card form → `onNext()`). Replace with server call → Stripe.
-- **No server auth guard** on `/(member)` — only client localStorage check.
+## Phases
+- ✅ **P0 — RON-first pricing core:** `lib/pricing.ts` rewrite (accommodationRonPerNight, cityTaxRon, display rates env), new client-safe `lib/currency.ts` (format/convert), availability + live-pricing + static catalog → RON semantics, env renames, `rules/pricing.md` rewrite, dead `lib/fx.ts` code removed.
+- **P1 — display layer (delegated slices):** CurrencyProvider (server layout passes env rates) + switcher in Nav; sidebar/checkout RON breakdown per decision 7 + hide add-room; property cards + map pins + JSON-LD display conversion.
+- **P2 — DB + integration libs:** migration `003_stripe.sql` (`stripe_session_id UNIQUE`, `processed_stripe_events`); `npm i stripe`; `lib/stripe/client.ts`; extend Hostaway client with `hostawayPost` + `calculatePrice` + `createReservation` (+ mock flag); server quote builder (`lib/booking/quote.ts`).
+- **P3 — `/api/checkout`:** session auth (Supabase `getUser`), Zod input (only ids/dates/guests/contact — never price), server quote, insert `bookings` `pending` (service-role), Stripe session (RON, line items per breakdown), return url; PaymentStep → POST → `window.location.href`.
+- **P4 — webhook `/api/webhooks/stripe`:** raw body (`req.text()`) + signature, `runtime='nodejs'`, idempotent (session-id unique + events table), Hostaway `createReservation` (forceOverbooking=0) → on conflict: Stripe refund + booking `cancelled` + minimal Resend email; on success: booking `confirmed` + `hostaway_reservation_id` + optimistic availability write.
+- **P5 — confirmation + guard:** `/book/confirmation?session_id=` reads the real booking; server auth guard on `/(member)` layout; remove fabricated AVX- confirmation.
+- **P6 — end-to-end test on preview:** mock-first (4242 → booking row → mock reservation), then the ONE controlled real Hostaway test (far dates → verify calendar blocks → cancel), verify webhook idempotency (resend event).
+- **P7 — senior review sweep (the /goal):** multi-agent whole-codebase review — security, correctness, clean-code, SEO fixes from QA, shippable/sellable quality bar.
 
-## Security guarantees baked in (the 2 QA blockers)
-1. **Price is server-derived, never client-sent.** `/api/checkout` accepts only `propertyId/checkIn/checkOut/guests`, re-checks availability + price server-side (Hostaway `calculatePrice` + `lib/pricing`), and creates the Stripe session with the server amount. Client `total` is UI-only.
-2. **Identity from the Supabase session.** `user_id` comes from `getSupabaseServerClient().auth.getUser()` in the checkout route (never localStorage). Server guard added to `/(member)`.
-
-## Architecture
-```
-StayBookingSidebar → /checkout (ContactInfo → Pay)
-  Pay → POST /api/checkout {propertyId,checkIn,checkOut,guests, contact}
-     → auth.getUser(); quote = Hostaway calculatePrice (RON) → member EUR via lib/pricing
-     → insert bookings rows status=pending (service-role), order_id
-     → Stripe Checkout Session (EUR cents, metadata=booking) → return session.url
-  → redirect to Stripe → guest pays (4242)
-  → success_url /book/confirmation?session_id=... (reads real booking)
-Stripe → POST /api/webhooks/stripe (raw body, verify sig, runtime=nodejs)
-  → checkout.session.completed & paid → idempotent (stripe_session_id UNIQUE + processed_stripe_events)
-     → Hostaway createReservation (channelId 2000 direct, currency RON, isPaid 1)
-     → update booking status=confirmed + hostaway_reservation_id
-     → optimistic availability write; send confirmation email (Resend)
-```
-
-## Phases (commit + review each)
-- **P0 — DB migration `003_stripe.sql`:** add `stripe_session_id UNIQUE` on bookings; `processed_stripe_events(event_id text pk, created_at)`. Apply to Supabase.
-- **P1 — server libs:** `npm i stripe`; `lib/stripe/client.ts` (singleton); extend `lib/hostaway/client.ts` with `hostawayPost`, `calculatePrice`, `createReservation`; `lib/booking-quote.ts` server quote (propertyId+dates+guests → live availability + RON + member EUR).
-- **P2 — `/api/checkout/route.ts`:** session auth, server quote, insert pending bookings, create Stripe session, return url. Wire `PaymentStep` → fetch → `window.location.href`.
-- **P3 — `/api/webhooks/stripe/route.ts`:** raw body + signature, idempotent handler, Hostaway reservation, booking→confirmed, email, availability write.
-- **P4 — confirmation + guard:** `/book/confirmation` reads real booking; server guard in `app/(member)/layout.tsx`; replace fabricated `ConfirmationStep`.
-- **P5 — test on preview:** register webhook in Stripe dashboard (get `whsec_`), test 4242 end-to-end (booking row + Hostaway reservation + email), verify idempotency.
-
-## Open decisions (defaults chosen; confirm before go-live)
-1. **Hostaway `totalPrice` basis.** Default: record Hostaway's own `calculatePrice` RON on the reservation; guest is charged our member EUR (base + 18% markup + FX); the markup difference is AVEXA's margin, tracked in the bookings row (`subtotal_ron` vs `total_eur`), not inside Hostaway. → confirm with client this matches their owner-payout/accounting model.
-2. **`forceOverbooking`.** Default for v1: `1` (trust the live pre-check + our idempotency) — avoids a failed booking after a successful charge. Hardening follow-up: `0` + auto-refund-on-conflict. → confirm risk appetite.
-3. **Calendar auto-block** unconfirmed in docs → verify in staging that a created reservation blocks the dates; else add `PUT /listings/{id}/calendar`.
-
-## Setup the user must do
-- Add **`RESEND_API_KEY`** to Vercel env (Preview) — app-sent booking emails need it (separate from the Supabase SMTP config used for auth emails). Also `NEXT_PUBLIC_BASE_URL` = preview URL.
-- After P3 deploys: Stripe Dashboard (test) → Developers → Webhooks → add `https://<preview>/api/webhooks/stripe` → subscribe `checkout.session.completed` → copy `whsec_` → Vercel env `STRIPE_WEBHOOK_SECRET`.
-- Apply migration `003` to Supabase.
+## Setup (Robert)
+- Vercel env (Preview): `RESEND_API_KEY` (conflict-refund email), later `STRIPE_WEBHOOK_SECRET` (after P4 deploy: Stripe dashboard test → add endpoint `https://<preview>/api/webhooks/stripe` → `checkout.session.completed` → copy `whsec_`).
+- Vercel env (optional now, required at launch): `AVEXA_MARKUP_PERCENT=18`, `AVEXA_PAYMENT_FEE_PERCENT=3`, `AVEXA_FX_RATE_EUR=5.25`, `AVEXA_FX_RATE_USD=4.65` (code defaults already match).
+- Apply migration `003_stripe.sql` in Supabase (SQL provided at P2).
+- Hostaway: verify guest-confirmation automation is ON for new direct reservations; verify listings have NO own payment processing (we charge via Stripe only).

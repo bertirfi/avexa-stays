@@ -1,10 +1,10 @@
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { effectiveEurPerNight } from '@/lib/pricing';
+import { accommodationRonPerNight } from '@/lib/pricing';
 import { ymd } from '@/lib/date';
 
 export interface DayPrice {
-  /** Member EUR per night (RON → EUR via the pricing pipeline). */
-  eur: number;
+  /** Accommodation RON per night (money of record; convert only at display). */
+  ron: number;
   available: boolean;
   minStay: number;
 }
@@ -40,7 +40,7 @@ export async function getAvailabilityMap(
     const map: AvailabilityMap = {};
     for (const row of data) {
       map[row.date] = {
-        eur: effectiveEurPerNight(Number(row.price_ron)),
+        ron: accommodationRonPerNight(Number(row.price_ron)),
         available: Boolean(row.available),
         minStay: row.min_stay ?? 1,
       };

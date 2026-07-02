@@ -5,18 +5,21 @@ import type { NeighborhoodId, Property, PropertyRate, PropertyUpgrade } from '@/
  * by Claude Design handoff. All 8 suites in Bucharest City Centre.
  */
 
+// Money of record: RON (display converts via lib/currency).
 const baseUpgrades: PropertyUpgrade[] = [
-  { id: 'breakfast', name: 'Breakfast', price: 20, unit: '/day/person', free: false },
-  { id: 'late_checkout', name: 'Late check-out', price: 20, unit: '', free: true },
-  { id: 'early_checkin', name: 'Early check-in', price: 20, unit: '', free: true },
+  { id: 'breakfast', name: 'Breakfast', price: 105, unit: '/day/person', free: false },
+  { id: 'late_checkout', name: 'Late check-out', price: 105, unit: '', free: true },
+  { id: 'early_checkin', name: 'Early check-in', price: 105, unit: '', free: true },
 ];
 
-function rates(saverEur: number, flexEur: number): PropertyRate[] {
+// Static-fallback nightly rates in RON (used only when Supabase is down;
+// live prices overlay from Hostaway via applyLivePricing).
+function rates(saverRon: number, flexRon: number): PropertyRate[] {
   return [
     {
       id: 'saver',
       name: 'Member Saver',
-      perNight: saverEur,
+      perNight: saverRon,
       discount: 15,
       refundable: false,
       perks: [
@@ -30,7 +33,7 @@ function rates(saverEur: number, flexEur: number): PropertyRate[] {
     {
       id: 'flex',
       name: 'Member Flex',
-      perNight: flexEur,
+      perNight: flexRon,
       discount: 5,
       refundable: true,
       perks: [
@@ -100,7 +103,7 @@ export const properties: Property[] = [
       { id: 10, label: 'Exterior View', src: '/listings/101/23-exterior.jpeg' },
       { id: 11, label: 'Building Entrance', src: '/listings/101/25-building-entrance.jpeg' },
     ],
-    rates: rates(79, 89),
+    rates: rates(415, 467),
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchenette', 'Elevator',
@@ -196,7 +199,7 @@ export const properties: Property[] = [
       { id: 10, label: 'Living Room', src: '/listings/201/32-apartment-view.jpeg' },
       { id: 11, label: 'Staircase', src: '/listings/201/34-staircase.jpeg' },
     ],
-    rates: rates(109, 125),
+    rates: rates(572, 656),
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -290,7 +293,7 @@ export const properties: Property[] = [
       { id: 8, label: 'Open Streets Festival', src: '/listings/202/33-open-streets.jpeg' },
       { id: 9, label: 'Restaurant Nearby', src: '/listings/202/37-restaurant.jpeg' },
     ],
-    rates: rates(139, 159),
+    rates: rates(730, 835),
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -385,7 +388,7 @@ export const properties: Property[] = [
       { id: 9, label: 'Bathroom 1 — Vanity', src: '/listings/203/06-bathroom1-basins.jpeg' },
       { id: 10, label: 'Bathroom 2', src: '/listings/203/07-bathroom2.jpeg' },
     ],
-    rates: rates(129, 145),
+    rates: rates(677, 761),
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -485,7 +488,7 @@ export const properties: Property[] = [
       { id: 14, label: 'Open Streets Festival', src: '/listings/301/33-open-streets.jpeg' },
       { id: 15, label: 'Restaurant Nearby', src: '/listings/301/37-restaurant.jpeg' },
     ],
-    rates: rates(149, 166),
+    rates: rates(782, 872),
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Parking', 'Free Wi-Fi', 'Family rooms', 'Non-smoking rooms',
@@ -573,7 +576,7 @@ export const properties: Property[] = [
       { id: 8, label: 'Open Streets Festival', src: '/listings/302/33-open-streets.jpeg' },
       { id: 9, label: 'Restaurant Nearby', src: '/listings/302/37-restaurant.jpeg' },
     ],
-    rates: rates(139, 159),
+    rates: rates(730, 835),
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -664,7 +667,7 @@ export const properties: Property[] = [
       { id: 7, label: 'Bathroom', src: '/listings/303/08-bathroom.jpeg' },
       { id: 8, label: 'Living Room', src: '/listings/303/09-living-room.jpeg' },
     ],
-    rates: rates(149, 169),
+    rates: rates(782, 887),
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -764,7 +767,7 @@ export const properties: Property[] = [
       { id: 14, label: 'Terrace', src: '/listings/304/12-terrace.jpeg' },
       { id: 15, label: 'Street View', src: '/listings/304/13-street-view.jpeg' },
     ],
-    rates: rates(119, 135),
+    rates: rates(625, 709),
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',

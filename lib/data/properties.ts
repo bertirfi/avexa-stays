@@ -1,23 +1,26 @@
 import { properties as staticProperties } from '@/lib/properties';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { effectiveEurPerNight } from '@/lib/pricing';
+import { accommodationRonPerNight } from '@/lib/pricing';
 import { PROPERTY_COORDINATES } from '@/lib/propertyCoordinates';
 import type { Property } from '@/types';
 
 /**
  * Server-side property data access. Reads the curated editorial content +
- * live `price_from_ron` from Supabase, converting the price to EUR via the
- * pricing pipeline. Falls back to the bundled static catalog whenever Supabase
- * is unreachable (offline builds, outages) so rendering never fails — prices
- * then revert to the original hardcoded rates until the next live render.
+ * live `price_from_ron` from Supabase, deriving the charged RON price via the
+ * pricing pipeline (RON is the money of record; display converts later).
+ * Falls back to the bundled static catalog whenever Supabase is unreachable
+ * (offline builds, outages) so rendering never fails — prices then revert to
+ * the static RON rates until the next live render.
  */
 
-/** Rebuild rates[].perNight from the live RON price; rates[0] = effective EUR. */
+/** Rebuild rates[].perNight (RON) from the live base price; rates[0] = charged RON. */
 function applyLivePricing(property: Property, priceFromRon: number | null): Property {
   const base = property.rates[0]?.perNight;
   if (!priceFromRon || priceFromRon <= 0 || !base || base <= 0) return property;
 
-  const effective = effectiveEurPerNight(priceFromRon);
+  // Flex (rates[1]) has no independent Hostaway price — it inherits the
+  // flex/saver ratio baked into the static catalog.
+  const effective = accommodationRonPerNight(priceFromRon);
   const factor = effective / base;
   return {
     ...property,
