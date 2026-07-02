@@ -6,6 +6,120 @@
 
 ---
 
+## 💳 PLĂȚI — referință consolidată (la zi: 2026-07-02, P0→P6a done)
+
+> Sursa de adevăr pentru tot ce s-a decis și construit pe plăți. Regulile sunt
+> codificate și în `.claude/rules/pricing.md` + `.claude/rules/hostaway.md` +
+> `.claude/rules/api-validation.md` (se încarcă automat pe fișierele relevante).
+
+### Deciziile clientului (locked)
+1. **RON = banul real.** Se calculează și se ÎNCASEAZĂ mereu în RON (Stripe currency
+   `ron`); Hostaway înregistrează același total RON. EUR (default) / RON / USD = doar
+   AFIȘARE, prin împărțire la rate fixe env: `AVEXA_FX_RATE_EUR=5.25`,
+   `AVEXA_FX_RATE_USD=4.65`. Switcher în nav (desktop + mobile overlay).
+2. **Formula cazare/noapte:** `ceil(base_RON × 1.18 × 1.03)` — multiplicativ (+21.54%).
+   Env: `AVEXA_MARKUP_PERCENT=18` (marja AVEXA) + `AVEXA_PAYMENT_FEE_PERCENT=3` (cost
+   procesare; REDENUMIT din `AVEXA_FX_MARGIN_PERCENT`). Knobs server-only, niciodată
+   per-listing, niciodată în client.
+3. **City tax: 10 RON/noapte/persoană STRICT** (adults+children; infants nu), pass-through
+   FĂRĂ markup/fee, mereu RON real + „≈ echivalent" la afișare non-RON.
+4. **Contractul de breakdown la checkout (identic peste tot):** Accommodation (O linie,
+   fără split 18%/3%) → Extra services (linie separată, doar dacă există) → City tax
+   (linie separată) → Total + „charged as X RON" + „VAT included". Se respectă în:
+   sidebar → BookingSummary/PaymentStep → line items Stripe → coloane DB.
+5. **TVA inclus** în preț, nu se adaugă nimic; caption „VAT included". (De confirmat cu
+   clientul că baza Hostaway e cu TVA inclus — nu blochează codul.)
+6. **Extras = varianta (ii):** preț din DB (`services`/`booking_services`; momentan doar
+   breakfast 105 RON/zi/pers din catalogul de upgrades), trimise la Stripe ca
+   `price_data` inline — NICIODATĂ produse în catalogul Stripe.
+7. **Login obligatoriu, doar membri** (`user_id NOT NULL`); niciodată guest checkout.
+8. **Single-room v1**: UI-ul „Add another room" ASCUNS (`MULTI_ROOM_ENABLED=false` în
+   StayBookingSidebar — flip la faza multi-room; logica a rămas cablată).
+9. **Arhitectura plății: DOAR Stripe-ul nostru pe site.** NU se folosește integrarea
+   Stripe din Hostaway (dublă-deținere = risc dublă-taxare). Flux: site → Stripe →
+   webhook → site → Hostaway API. Hostaway primește doar ÎNREGISTRAREA (isPaid=1,
+   totalul RON complet plătit, channelId 2000 „direct", provider=avexastays), niciodată bani.
+10. **forceOverbooking=0 + refund automat în v1**: orice eșec la crearea rezervării după
+    plată ⇒ refund integral Stripe (idempotency key `refund_<sessionId>`) + booking
+    `cancelled` + email minimal. Brand premium: NICIODATĂ dublă-rezervare.
+11. **Emailul de confirmare îl trimite HOSTAWAY** (automatizările clientului — de
+    verificat că-s pornite). App-ul trimite UN singur email: refund-conflict, prin
+    Resend HTTP (`lib/email/resend.ts`, expeditor office@avexastays.com).
+12. **Facturarea se face din Hostaway** (fără modul e-Factura în cod) — de-aia TOATE
+    datele (breakdown, invoice company/VAT/RegCom/adresă, display context, Stripe ids)
+    merg în `comment`-ul rezervării Hostaway.
+13. **Testare: mock-first** (`HOSTAWAY_MOCK_RESERVATIONS=1` ⇒ id rezervare NEGATIV, PMS
+    neatins), apoi UN test real controlat pe date îndepărtate, anulat după.
+
+### Harta codului (unde modifici ce)
+- **Formula + knobs:** `lib/pricing.ts` (accommodationRonPerNight, cityTaxRon,
+  getDisplayRates; server-only). **Afișare:** `lib/currency.ts` (client-safe: formatMoney,
+  formatApproxEquivalent, CITY_TAX_RON_PER_PERSON_NIGHT) + `components/currency/`
+  (CurrencyProvider — rates vin din layout server; CurrencySwitcher în Nav).
+- **Quote server = SINGURA sursă de preț pt. bani:** `lib/booking/quote.ts` — citește
+  calendarul LIVE Hostaway (nu cache-ul!), aplică formula per noapte, flex = raportul
+  flex/saver din catalog (sidebar-ul oglindește EXACT același calcul via `rateFactor`).
+- **Checkout API:** `app/api/checkout/route.ts` — identitate din sesiunea Supabase, Zod
+  (clientul trimite DOAR id/date/oaspeți/contact — NICIODATĂ preț), insert booking
+  `pending` (service-role), sesiune Stripe RON (bani = ×100), `idempotencyKey
+  checkout_<bookingId>`, redirect `session.url`. La eșec sesiune ⇒ booking `cancelled`.
+- **Webhook:** `app/api/webhooks/stripe/route.ts` — `runtime='nodejs'`, RAW body
+  (`req.text()`, NICIODATĂ `req.json()` — semnătura pică), dublă idempotență
+  (`processed_stripe_events` fast-path + lock pe rândul de booking:
+  status/hostaway_reservation_id), `createReservation` → confirmed + blocare optimistă
+  availability; orice throw ⇒ refund + cancelled + email; refund eșuat ⇒ 500 (Stripe
+  reîncearcă, cheile idempotente fac retry-ul sigur).
+- **Hostaway write:** `lib/hostaway/client.ts` — `hostawayPost` (throttle + 403-retry ca
+  GET) + `createReservation` + `HostawayApiError`; mock flag; tipuri în
+  `lib/hostaway/types.ts`. Convenții Hostaway: booleeni ca 0/1, `numberOfGuests` =
+  adults+children+infants, fără idempotență nativă (a noastră e în DB).
+- **UI checkout:** `components/checkout/PaymentStep.tsx` (FĂRĂ formular de card — Stripe
+  găzduiește; POST → redirect; stări 401/409/network), CheckoutApp 2 pași (fostul
+  ConfirmationStep fals ȘTERS), confirmarea reală = `app/book/confirmation/page.tsx`
+  (confirmed/pending-poll/refunded; `BookingConfirmedEffects` curăță draftul local).
+- **Guards:** `lib/auth/server.ts` → `requireUser()` pe paginile /checkout, /my-trips,
+  /profile (mirror-ul localStorage NU e autorizare).
+- **DB:** `db/migrations/003_stripe.sql` — coloane RON (accommodation/extras/city_tax/
+  total), adults/children/infants, `extras` jsonb, display_currency/display_fx_rate,
+  UNIQUE `(stripe_session_id, property_id)` (multi-room-proof), `processed_stripe_events`
+  (RLS on, fără politici = doar service-role). `types/database.types.ts` ținut manual în sync.
+- **Strat de date RON:** catalogul static `lib/properties.ts` convertit ×5.25 (round-trip
+  exact la vechile prețuri EUR), `DayPrice.ron` în availability, applyLivePricing → RON,
+  upgrades RON (breakfast 105).
+
+### Env & servicii (cine unde stă)
+- **Vercel Preview:** `STRIPE_SECRET_KEY` + `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+  (sandbox), `STRIPE_WEBHOOK_SECRET` (whsec al destinației), `HOSTAWAY_MOCK_RESERVATIONS=1`,
+  `RESEND_API_KEY`. Pricing knobs opționale (default-urile din cod = spec).
+- **Stripe sandbox:** destinație „Avexa checkout" → DOAR `checkout.session.completed` →
+  URL-ul de BRANCH (stabil): `.../api/webhooks/stripe`. **La lansare:** endpoint separat
+  pe domeniul de producție + chei live în Production + scoate mock-ul.
+- Gotcha Vercel: env-urile intră DOAR la deploy nou (am declanșat redeploy cu commit gol);
+  probe rapid: POST fără semnătură ⇒ 400 `missing_signature`; cu semnătură falsă ⇒ 400
+  `invalid_signature` (dacă whsec e văzut) vs 500 `not_configured` (dacă lipsește).
+
+### Fix-uri făcute pe drum (relevante pt. bani)
+- **TZ date shift**: `toISOString().slice(0,10)` muta check-in/out cu o zi în RO — înlocuit
+  cu `ymd()` (altfel rezervai altă noapte decât plăteai!).
+- **Reset parolă 404** (`/auth/reset-password` → `/reset-password`) — flux auth reparat.
+- **QuoteExtra ca `type` (nu `interface`)** — altfel nu satisface `Json` la insert (index
+  signature implicită există doar pe type-aliasuri).
+- **Build crash `WasmHash ... reading 'length'`** = cache `.next` corupt pe Windows ⇒
+  `rm -rf .next`, NU e eroare de cod.
+
+### Dovezi test (P6a mock, 2026-07-02 — PASSED)
+Login → Little Gem Sep 14–17 ×2 → Stripe **RON 864.00** (804 cazare + 60 city tax, linii
+separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57). DB: confirmed,
+864 RON, `hostaway_reservation_id=-629323949` (mock), 1 event procesat, availability
+14–16 blocată. **Sidebar = Stripe = DB.** Test user: `checkout-test@avexastays.com`.
+
+### Rămase pe plăți
+- **P6b:** UN test real Hostaway (scoate mock, date îndepărtate, verifică blocarea
+  calendarului în PMS, anulează după) + resend-event din Stripe (aștepți `duplicate:true`).
+- **La lansare:** chei live + webhook de producție + fără mock; confirmă automatizarea
+  de email Hostaway + că listing-urile n-au procesare de plată proprie; confirmă TVA
+  inclus în baza Hostaway; multi-room (flip `MULTI_ROOM_ENABLED` + order_id există deja).
+
 ## ⏯ Session Resume Notes (newest first)
 
 ### 2026-07-02 — CONFIRMAT (client): contractul de afișare a prețului la checkout
