@@ -180,13 +180,17 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
   (infra există deja). Fezabil; de planificat post-lansare — NU acum.
 
 ### Rămase pe plăți
-- **Rezervări de test active în PMS (de anulat din dashboard după verificări):**
-  62358420 (Dec 8–10), 62359556 (Dec 15–17), 62360545 (Nov 24–26, emailul fără link),
-  62360739 (Nov 10–12, emailul complet cu link CA) → apoi resync + mark cancelled în DB.
-- **Sync gap:** cerință client = sub 15 min. Recomandare: **Hostaway Unified Webhooks**
-  (`POST /v1/webhooks/unifiedWebhooks` — cele pe `/webhooks/reservations` sunt marcate
-  deprecated) → endpoint `app/api/webhooks/hostaway` care upsertează availability la
-  orice eveniment de rezervare (secunde în loc de ≤15 min); cron-ul rămâne backstop.
+- **✅ Cleanup teste COMPLET (2026-07-02):** toate rezervările de test anulate din
+  dashboard (62358420, 62359556, 62360545, 62360739, 62364470); DB = 8/8 bookings
+  `cancelled`, zero blocaje stale în cache de la teste (blocajele rămase = rezervări
+  reale de pe canale, oglindite corect din Hostaway).
+- **✅ Sync gap REZOLVAT — unified webhook LIVE + auto-cleanup DOVEDIT (2026-07-02):**
+  anularea manuală a lui 62364470 din dashboard a declanșat: webhook 34481 primește
+  `reservation.updated` 18:34:56 (HTTP 200) → booking-ul DB trece singur pe `cancelled`
+  la 18:34:58 (**+2s**) → cache-ul de calendar se eliberează singur (Nov 3–4
+  `available=true`, identic cu PMS-ul) — zero intervenție manuală. Cron-ul de 15 min
+  rămâne backstop (de înregistrat la lansare); webhook-ul arată spre PREVIEW —
+  re-înregistrare pe URL-ul de producție la lansare.
 - **Client:** verifică emailul CA în inbox/spam; config CA (scope canale) dacă lipsește;
   întrebare la CA de ce scrie nota (flip „modified") doar la rezervările API.
 - **La lansare:** chei live + webhook de producție + fără mock; confirmă automatizarea
