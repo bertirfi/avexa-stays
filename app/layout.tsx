@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { jakarta, manrope, dmMono } from '@/lib/fonts';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { ChromeScrollProvider } from '@/components/chrome/ChromeScrollProvider';
+import { CurrencyProvider } from '@/components/currency/CurrencyProvider';
+import { getDisplayRates } from '@/lib/pricing';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -41,7 +43,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="font-body antialiased">
         <AuthProvider>
-          <ChromeScrollProvider>{children}</ChromeScrollProvider>
+          {/* Display rates come from server env — RON stays the money of record. */}
+          <CurrencyProvider rates={getDisplayRates()}>
+            <ChromeScrollProvider>{children}</ChromeScrollProvider>
+          </CurrencyProvider>
         </AuthProvider>
       </body>
     </html>
