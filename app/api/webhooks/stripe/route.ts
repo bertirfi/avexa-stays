@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import type Stripe from 'stripe';
 import { getStripe } from '@/lib/stripe/client';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { createReservation } from '@/lib/hostaway/client';
+import { sendBookingConfirmation } from '@/lib/hostaway/confirmation';
 import type { HostawayFinanceField } from '@/lib/hostaway/types';
 import { refundNoticeEmail, sendEmail } from '@/lib/email/resend';
 import type { Database } from '@/types/database.types';
@@ -205,6 +206,27 @@ export async function POST(req: Request) {
       .eq('property_id', booking.property_id)
       .gte('date', booking.check_in)
       .lt('date', booking.check_out);
+
+    // Confirmation email AFTER the response (never holds Stripe's delivery):
+    // waits for ChargeAutomation's check-in link, then messages the guest via
+    // the Hostaway conversation (visible in the client's inbox).
+    after(async () => {
+      const { data: property } = await admin
+        .from('properties')
+        .select('name')
+        .eq('id', booking.property_id)
+        .maybeSingle();
+      await sendBookingConfirmation({
+        reservationId: reservation.id,
+        guestEmail: booking.guest_email,
+        guestFirstName: booking.guest_name.trim().split(/\s+/)[0] || 'there',
+        propertyName: property?.name ?? 'your AVEXA suite',
+        checkIn: booking.check_in,
+        checkOut: booking.check_out,
+        guests: booking.adults + booking.children + booking.infants,
+        totalRon: Number(booking.total_ron),
+      });
+    });
 
     return NextResponse.json({ received: true, reservation: reservation.id });
   } catch (err) {

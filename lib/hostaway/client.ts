@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type {
   HostawayCalendarDay,
+  HostawayConversation,
   HostawayCreateReservationInput,
   HostawayListing,
   HostawayReservation,
@@ -232,6 +233,31 @@ export async function createReservation(
   }
 
   return reservation;
+}
+
+export function getReservation(id: number | string): Promise<HostawayReservation> {
+  return hostawayGet<HostawayReservation>(`/reservations/${id}`);
+}
+
+export function getReservationConversations(
+  reservationId: number | string,
+): Promise<HostawayConversation[]> {
+  return hostawayGet<HostawayConversation[]>(`/conversations?reservationId=${reservationId}`);
+}
+
+/**
+ * Send a message on a reservation's guest conversation. communicationType
+ * "email" (the default) makes Hostaway email the guest AND keeps the message
+ * visible in the Hostaway inbox — the client's team sees it and any replies.
+ */
+export function sendConversationMessage(
+  conversationId: number,
+  body: string,
+): Promise<unknown> {
+  return hostawayPost<unknown>(`/conversations/${conversationId}/messages`, {
+    body,
+    communicationType: 'email',
+  });
 }
 
 export function getListings(): Promise<HostawayListing[]> {

@@ -128,6 +128,16 @@ export interface HostawayReservation {
   currency?: string | null;
   status?: string | null;
   confirmationCode?: string | null;
+  /** ChargeAutomation writes its pre-arrival check-in link into these notes. */
+  guestNote?: string | null;
+  hostNote?: string | null;
+}
+
+/** Guest conversation attached to a reservation (Hostaway inbox thread). */
+export interface HostawayConversation {
+  id: number;
+  type?: string | null;
+  recipientEmail?: string | null;
 }
 
 export interface HostawayTokenResponse {
