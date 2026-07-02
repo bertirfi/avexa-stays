@@ -8,6 +8,29 @@
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-07-02 — RON-first pricing + REAL Stripe checkout built (P0→P5)
+- **Money model changed (client decisions, plan rev 2):** RON = money of record, charged via
+  Stripe in RON; EUR (default)/RON/USD are display-only (`AVEXA_FX_RATE_EUR=5.25`,
+  `AVEXA_FX_RATE_USD=4.65`); formula `ceil(base_RON×1.18×1.03)`; city tax 10 RON/night/pers
+  pass-through pe linie separată; VAT included; `AVEXA_FX_MARGIN_PERCENT` renamed →
+  `AVEXA_PAYMENT_FEE_PERCENT`. Catalog static + availability + upgrades toate în RON.
+- **Full checkout flow LIVE in cod (comituri: currency display + booking core):**
+  `/api/checkout` (sesiune+Zod+quote live Hostaway+insert pending+Stripe session RON) →
+  Stripe → `/api/webhooks/stripe` (raw body, dublă idempotență, createReservation
+  forceOverbooking=0, refund automat la orice eșec + email Resend minimal) →
+  `/book/confirmation`. Guards server (`requireUser`) pe /checkout /my-trips /profile.
+  `HOSTAWAY_MOCK_RESERVATIONS=1` pt. test fără PMS real. PaymentStep fără card fals.
+- **Orchestration docs made model-agnostic** (CLAUDE.md near-top section + efficient-fable
+  skill rewritten; `CLAUDE_CODE_SUBAGENT_MODEL` controls subagent models).
+- **Gotcha:** webpack `WasmHash ... reading 'length'` la build = cache `.next` corupt
+  (Windows) → `rm -rf .next` și rebuild; NU e eroare de cod.
+- **NEXT (P6, blocked pe user):** rulează migrația `db/migrations/003_stripe.sql` în
+  Supabase; Vercel env Preview: `HOSTAWAY_MOCK_RESERVATIONS=1` + `STRIPE_WEBHOOK_SECRET`
+  (după înregistrarea endpointului în Stripe test) + opțional `RESEND_API_KEY`; apoi test
+  4242 end-to-end pe preview. **P7 = /review multi-agent sweep (queued next).**
+- **Pending vechi:** rotire `SYNC_SECRET`; SEO fixes din QA (meta desc >155, H1 fără
+  "apartments", keyword în primul paragraf).
+
 ### 2026-07-01 — Steering framework restructure + OAuth/Resend live
 - **Restructured project steering per Anthropic's "steering" article** (commit 72fe47c).
   Instructions now placed by load timing + authority instead of one big CLAUDE.md:

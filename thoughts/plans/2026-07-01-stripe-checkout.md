@@ -20,11 +20,11 @@
 
 ## Phases
 - ✅ **P0 — RON-first pricing core:** `lib/pricing.ts` rewrite (accommodationRonPerNight, cityTaxRon, display rates env), new client-safe `lib/currency.ts` (format/convert), availability + live-pricing + static catalog → RON semantics, env renames, `rules/pricing.md` rewrite, dead `lib/fx.ts` code removed.
-- **P1 — display layer (delegated slices):** CurrencyProvider (server layout passes env rates) + switcher in Nav; sidebar/checkout RON breakdown per decision 7 + hide add-room; property cards + map pins + JSON-LD display conversion.
-- **P2 — DB + integration libs:** migration `003_stripe.sql` (`stripe_session_id UNIQUE`, `processed_stripe_events`); `npm i stripe`; `lib/stripe/client.ts`; extend Hostaway client with `hostawayPost` + `calculatePrice` + `createReservation` (+ mock flag); server quote builder (`lib/booking/quote.ts`).
-- **P3 — `/api/checkout`:** session auth (Supabase `getUser`), Zod input (only ids/dates/guests/contact — never price), server quote, insert `bookings` `pending` (service-role), Stripe session (RON, line items per breakdown), return url; PaymentStep → POST → `window.location.href`.
-- **P4 — webhook `/api/webhooks/stripe`:** raw body (`req.text()`) + signature, `runtime='nodejs'`, idempotent (session-id unique + events table), Hostaway `createReservation` (forceOverbooking=0) → on conflict: Stripe refund + booking `cancelled` + minimal Resend email; on success: booking `confirmed` + `hostaway_reservation_id` + optimistic availability write.
-- **P5 — confirmation + guard:** `/book/confirmation?session_id=` reads the real booking; server auth guard on `/(member)` layout; remove fabricated AVX- confirmation.
+- ✅ **P1 — display layer (delegated slices):** CurrencyProvider + Nav switcher; sidebar/checkout RON breakdown per decision 7 + add-room hidden; cards + map pins + JSON-LD conversion. (commit "feat(currency): EUR/RON/USD display…")
+- ✅ **P2 — DB + integration libs:** migration `003_stripe.sql`; stripe + zod installed; `lib/stripe/client.ts`; Hostaway `hostawayPost` + `createReservation` (+ `HOSTAWAY_MOCK_RESERVATIONS`); `lib/booking/quote.ts` (live calendar read; skipped `calculatePrice` — decision 11 records OUR charged total).
+- ✅ **P3 — `/api/checkout`:** session auth + Zod + server quote + pending insert + Stripe session (RON) + PaymentStep wiring (fake card form removed — Stripe hosts payment).
+- ✅ **P4 — webhook:** raw-body signature, double idempotency, Hostaway reservation (forceOverbooking=0), refund-on-failure + cancel + minimal Resend notice.
+- ✅ **P5 — confirmation + guards:** `/book/confirmation` (confirmed/pending-poll/refunded), `requireUser` on /checkout /my-trips /profile, fake ConfirmationStep deleted, sidebar flex ratio mirrors quote. (commit "feat(booking): real Stripe checkout…")
 - **P6 — end-to-end test on preview:** mock-first (4242 → booking row → mock reservation), then the ONE controlled real Hostaway test (far dates → verify calendar blocks → cancel), verify webhook idempotency (resend event).
 - **P7 — senior review sweep (the /goal):** multi-agent whole-codebase review — security, correctness, clean-code, SEO fixes from QA, shippable/sellable quality bar.
 
