@@ -56,30 +56,55 @@ export interface BookingConfirmationInput {
   totalRon: number;
 }
 
+/**
+ * Mirrors the ChargeAutomation template the client uses for OTA reservations
+ * (client request 2026-07-02: the guest gets ONE email, same wording on every
+ * channel). CA posts this message itself for OTA bookings; we post it for
+ * website bookings, through the same Hostaway conversation, so the sender
+ * ("Avexa Stays") and formatting match.
+ */
 function confirmationBody(input: BookingConfirmationInput, checkinLink: string | null): string {
-  const lines = [
-    `Hi ${input.guestFirstName},`,
-    '',
-    `Your stay at ${input.propertyName} is confirmed — thank you for booking direct with AVEXA Stays.`,
-    '',
-    `Check-in: ${input.checkIn} (from 3:00 PM)`,
-    `Check-out: ${input.checkOut} (until 11:00 AM)`,
-    `Guests: ${input.guests}`,
-    `Total paid: ${input.totalRon.toFixed(0)} RON (VAT included) — nothing left to pay on arrival.`,
-  ];
-  if (checkinLink) {
-    lines.push(
+  if (!checkinLink) {
+    // CA link never appeared — send a plain confirmation instead of a
+    // check-in invitation that would have nothing to link to.
+    return [
+      `Hi ${input.guestFirstName}!`,
       '',
-      `Complete your online check-in here: ${checkinLink}`,
-      'It takes two minutes and unlocks your arrival instructions.',
-    );
+      'Thank you for choosing Avexa Stays! We are thrilled to host you! ✨',
+      '',
+      `Check-in: ${input.checkIn} (from 3:00 PM)`,
+      `Check-out: ${input.checkOut} (until 11:00 AM)`,
+      `Guests: ${input.guests}`,
+      `Total paid: ${input.totalRon.toFixed(0)} RON (VAT included) — nothing left to pay on arrival.`,
+      '',
+      'Your online check-in link follows in a separate message.',
+      '',
+      'If you need anything, we are always here to help you! ☀️',
+      '',
+      'Avexa Stays | Anca & Vlad ❤️',
+      '',
+      `© ${new Date().getFullYear()} — Prime Gold Living SRL`,
+    ].join('\n');
   }
-  lines.push(
+
+  return [
+    `Hi ${input.guestFirstName}!`,
     '',
-    'No front desk. No friction. No compromise.',
-    'AVEXA Stays · avexastays.com · office@avexastays.com',
-  );
-  return lines.join('\n');
+    'Thank you for choosing Avexa Stays! We are thrilled to host you! ✨',
+    '',
+    'To activate your digital access, please complete your quick 2-minute online check-in below this message.',
+    '👇👇👇',
+    '',
+    '📌 IMPORTANT: Your self-check-in instructions will be found on this exact check-in link on your arrival day at 12:00 PM, BUT ONLY AFTER the online form is 100% completed.',
+    '',
+    'If you need anything, we are always here to help you! ☀️',
+    '',
+    'Avexa Stays | Anca & Vlad ❤️',
+    '',
+    `Complete Your Online Check-In: ${checkinLink}`,
+    '',
+    `© ${new Date().getFullYear()} — Prime Gold Living SRL`,
+  ].join('\n');
 }
 
 function escapeHtml(text: string): string {
