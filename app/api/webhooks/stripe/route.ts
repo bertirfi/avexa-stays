@@ -2,7 +2,7 @@ import { NextResponse, after } from 'next/server';
 import type Stripe from 'stripe';
 import { getStripe } from '@/lib/stripe/client';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { createReservation } from '@/lib/hostaway/client';
+import { createReservation, findRecentDirectReservation } from '@/lib/hostaway/client';
 import { sendBookingConfirmation } from '@/lib/hostaway/confirmation';
 import type { HostawayFinanceField } from '@/lib/hostaway/types';
 import { refundNoticeEmail, sendEmail } from '@/lib/email/resend';
@@ -129,6 +129,42 @@ export async function POST(req: Request) {
     .update({ stripe_payment_intent_id: paymentIntentId })
     .eq('id', booking.id);
 
+  // Narrowed alias: TS does not carry the `!booking` narrowing into the nested
+  // confirmBooking closure (it could be called later), so bind it once here.
+  const confirmedBooking: BookingRow = booking;
+
+  // Confirm the booking exactly once — shared by the normal success path and
+  // the orphan-adoption path so their booking-update logic never diverges.
+  async function confirmBooking(reservationId: number): Promise<void> {
+    await admin
+      .from('bookings')
+      .update({
+        status: 'confirmed',
+        hostaway_reservation_id: String(reservationId),
+      })
+      .eq('id', confirmedBooking.id);
+
+    // Optimistic cache update so our own calendar blocks immediately
+    // (the 15-min sync will reconcile with Hostaway's truth).
+    await admin
+      .from('availability')
+      .update({ available: false })
+      .eq('property_id', confirmedBooking.property_id)
+      .gte('date', confirmedBooking.check_in)
+      .lt('date', confirmedBooking.check_out);
+
+    // The ONE guest email, AFTER the response (never holds Stripe's
+    // delivery): wait for ChargeAutomation's check-in link, then post the
+    // CA-template message on the Hostaway conversation (client rule: no
+    // other email, ever).
+    after(() =>
+      sendBookingConfirmation({
+        reservationId,
+        guestFirstName: confirmedBooking.guest_name.trim().split(/\s+/)[0] || 'there',
+      }),
+    );
+  }
+
   try {
     const [firstName, ...rest] = booking.guest_name.trim().split(/\s+/);
 
@@ -190,41 +226,36 @@ export async function POST(req: Request) {
       comment: reservationComment(booking, session),
     });
 
-    await admin
-      .from('bookings')
-      .update({
-        status: 'confirmed',
-        hostaway_reservation_id: String(reservation.id),
-      })
-      .eq('id', booking.id);
-
-    // Optimistic cache update so our own calendar blocks immediately
-    // (the 15-min sync will reconcile with Hostaway's truth).
-    await admin
-      .from('availability')
-      .update({ available: false })
-      .eq('property_id', booking.property_id)
-      .gte('date', booking.check_in)
-      .lt('date', booking.check_out);
-
-    // The ONE guest email, AFTER the response (never holds Stripe's
-    // delivery): wait for ChargeAutomation's check-in link, then post the
-    // CA-template message on the Hostaway conversation (client rule: no
-    // other email, ever).
-    after(() =>
-      sendBookingConfirmation({
-        reservationId: reservation.id,
-        guestFirstName: booking.guest_name.trim().split(/\s+/)[0] || 'there',
-      }),
-    );
+    await confirmBooking(reservation.id);
 
     return NextResponse.json({ received: true, reservation: reservation.id });
   } catch (err) {
-    // Conflict or failure AFTER payment → full refund, never a double-booking.
+    // Failure AFTER payment. But the create POST may actually have landed while
+    // the response was lost (ambiguous 2xx, network reset, 5xx-after-create):
+    // refunding then would leave an unpaid reservation blocking the calendar.
+    // So BEFORE refunding, try to adopt a matching reservation already in the
+    // PMS; only refund if none exists.
     console.error(
-      'webhook: reservation failed — refunding:',
+      'webhook: reservation create failed — attempting adoption before refund:',
       err instanceof Error ? err.message : err,
     );
+
+    const orphan = await findRecentDirectReservation({
+      listingMapId: Number(session.metadata?.listingMapId),
+      arrivalDate: booking.check_in,
+      departureDate: booking.check_out,
+      guestEmail: booking.guest_email,
+    });
+    if (orphan) {
+      await confirmBooking(orphan.id);
+      console.log(
+        `webhook: adopted orphaned reservation ${orphan.id} after ambiguous create`,
+      );
+      return NextResponse.json({ received: true, reservation: orphan.id, adopted: true });
+    }
+
+    // No reservation exists in the PMS → safe to refund, never a double-booking.
+    console.error('webhook: no orphaned reservation found — refunding');
 
     let refunded = false;
     if (paymentIntentId) {

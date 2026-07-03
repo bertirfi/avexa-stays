@@ -17,7 +17,12 @@ import {
  * booking. Runs post-response inside after().
  */
 
-const CA_LINK_RE = /https:\/\/app\.chargeautomation\.com\/securelink\/[A-Za-z0-9]+/;
+const CA_LINK_RE =
+  /https:\/\/app\.chargeautomation\.com\/securelink\/[A-Za-z0-9_-]+(?:\?[\w=&%.-]*)?/;
+
+// Overall budget for the whole confirmation attempt. Vercel's function window
+// is 300s and is shared with the synchronous webhook work; 230s leaves margin.
+const DEADLINE_MS = 230_000;
 
 /**
  * ChargeAutomation writes CA_PRE_ARRIVAL_LINK into the reservation notes
@@ -27,19 +32,32 @@ const CA_LINK_RE = /https:\/\/app\.chargeautomation\.com\/securelink\/[A-Za-z0-9
  */
 async function findCheckinLink(
   reservationId: number,
+  deadline: number,
   tries = 25,
   delayMs = 8_000,
 ): Promise<string | null> {
   for (let i = 0; i < tries; i += 1) {
+    if (Date.now() >= deadline) return null; // out of budget — caller logs
     try {
       const reservation = await getReservation(reservationId);
       const notes = `${reservation.guestNote ?? ''}\n${reservation.hostNote ?? ''}`;
       const match = notes.match(CA_LINK_RE);
       if (match) return match[0];
+      // The link is present but the regex missed it — surface loudly so we can
+      // fix the pattern instead of silently sending nothing to the guest.
+      const idx = notes.toLowerCase().indexOf('chargeautomation.com');
+      if (idx !== -1) {
+        const from = Math.max(0, idx - 20);
+        console.error(
+          `[hostaway] CA link present but unmatched for reservation ${reservationId} — regex needs updating. Around: ${notes.slice(from, from + 120)}`,
+        );
+      }
     } catch {
       // transient read failure — keep polling
     }
-    if (i < tries - 1) await new Promise((resolve) => setTimeout(resolve, delayMs));
+    if (i < tries - 1 && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
   }
   return null;
 }
@@ -81,9 +99,19 @@ export async function sendBookingConfirmation(input: BookingConfirmationInput): 
   // Mock reservations (HOSTAWAY_MOCK_RESERVATIONS) carry a negative id — the
   // real PMS must never be polled for them.
   if (input.reservationId <= 0) return;
+
+  // Overall budget for polling + send, so we never overrun Vercel's function
+  // window and get killed mid-send.
+  const deadline = Date.now() + DEADLINE_MS;
   try {
-    const checkinLink = await findCheckinLink(input.reservationId);
+    const checkinLink = await findCheckinLink(input.reservationId, deadline);
     if (!checkinLink) {
+      if (Date.now() >= deadline) {
+        console.error(
+          `[hostaway] confirmation deadline exceeded for reservation ${input.reservationId} — nothing sent`,
+        );
+        return;
+      }
       console.error(
         `[hostaway] CA check-in link never appeared for reservation ${input.reservationId} — nothing sent (client rule: the CA-link message is the only guest email)`,
       );
@@ -104,6 +132,12 @@ export async function sendBookingConfirmation(input: BookingConfirmationInput): 
         return;
       } catch (err) {
         if (attempt === 3) throw err;
+        if (Date.now() >= deadline) {
+          console.error(
+            `[hostaway] confirmation deadline exceeded for reservation ${input.reservationId} — nothing sent`,
+          );
+          return;
+        }
         await new Promise((resolve) => setTimeout(resolve, 5_000));
       }
     }

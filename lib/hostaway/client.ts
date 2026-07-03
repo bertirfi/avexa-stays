@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { sendEmail } from '@/lib/email/resend';
 import type {
   HostawayCalendarDay,
   HostawayConversation,
@@ -25,13 +26,39 @@ const BASE = 'https://api.hostaway.com/v1';
 const PROVIDER = 'hostaway';
 const MIN_CALL_SPACING_MS = 750; // ~13 req / 10s ceiling, under the 15/10s limit
 const TOKEN_SAFETY_WINDOW_MS = 60_000;
+const MAX_429_RETRIES = 2; // beyond the initial attempt
+const DEFAULT_429_BACKOFF_MS = [2_000, 4_000]; // when Retry-After is absent
+const RETRY_AFTER_CAP_MS = 10_000;
 
 let lastCallAt = 0;
+// Collapses concurrent refreshes in THIS instance onto one token request.
+// Cross-instance races remain possible but are harmless: both tokens are
+// valid — Hostaway does not revoke a prior token when it issues a new one.
+let inFlightToken: Promise<string> | null = null;
 
 async function space(): Promise<void> {
   const wait = lastCallAt + MIN_CALL_SPACING_MS - Date.now();
   if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
   lastCallAt = Date.now();
+}
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * How long to wait before a 429 retry: the server's Retry-After (seconds,
+ * capped at 10s) when present, else exponential 2s → 4s by attempt index.
+ */
+function backoffForAttempt(res: Response, attempt: number): number {
+  const header = res.headers.get('retry-after');
+  if (header) {
+    const seconds = Number(header);
+    if (Number.isFinite(seconds) && seconds >= 0) {
+      return Math.min(seconds * 1000, RETRY_AFTER_CAP_MS);
+    }
+  }
+  return DEFAULT_429_BACKOFF_MS[Math.min(attempt, DEFAULT_429_BACKOFF_MS.length - 1)];
 }
 
 async function requestNewToken(): Promise<{ token: string; expiresAt: string }> {
@@ -63,6 +90,24 @@ async function requestNewToken(): Promise<{ token: string; expiresAt: string }> 
   return { token: data.access_token, expiresAt };
 }
 
+/** Request a fresh token and cache it. Single-flighted by getAccessToken. */
+async function refreshAccessToken(): Promise<string> {
+  const supabase = getSupabaseAdmin();
+  const { token, expiresAt } = await requestNewToken();
+  const { error } = await supabase.from('integration_tokens').upsert({
+    provider: PROVIDER,
+    access_token: token,
+    token_type: 'Bearer',
+    expires_at: expiresAt,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) {
+    // A cache-write failure must not block the caller — the token is valid.
+    console.error('integration_tokens upsert failed:', error.message);
+  }
+  return token;
+}
+
 async function getAccessToken(forceRefresh = false): Promise<string> {
   const supabase = getSupabaseAdmin();
 
@@ -80,35 +125,37 @@ async function getAccessToken(forceRefresh = false): Promise<string> {
     }
   }
 
-  const { token, expiresAt } = await requestNewToken();
-  const { error } = await supabase.from('integration_tokens').upsert({
-    provider: PROVIDER,
-    access_token: token,
-    token_type: 'Bearer',
-    expires_at: expiresAt,
-    updated_at: new Date().toISOString(),
-  });
-  if (error) {
-    // A cache-write failure must not block the caller — the token is valid.
-    console.error('integration_tokens upsert failed:', error.message);
+  // Single-flight: concurrent callers in this instance await the same refresh.
+  if (!inFlightToken) {
+    inFlightToken = refreshAccessToken().finally(() => {
+      inFlightToken = null;
+    });
   }
-  return token;
+  return inFlightToken;
 }
 
 async function hostawayGet<T>(path: string, isRetry = false): Promise<T> {
-  await space();
-  const token = await getAccessToken(isRetry);
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { Authorization: `Bearer ${token}`, 'Cache-Control': 'no-cache' },
-    cache: 'no-store',
-  });
+  // 429 handling is orthogonal to the 403-refresh: retry up to MAX_429_RETRIES
+  // times, backing off per Retry-After (else exponential), then give up.
+  for (let attempt = 0; ; attempt += 1) {
+    await space();
+    const token = await getAccessToken(isRetry);
+    const res = await fetch(`${BASE}${path}`, {
+      headers: { Authorization: `Bearer ${token}`, 'Cache-Control': 'no-cache' },
+      cache: 'no-store',
+    });
 
-  // 403 => token expired/invalid. Refresh once and retry.
-  if (res.status === 403 && !isRetry) return hostawayGet<T>(path, true);
-  if (!res.ok) throw new Error(`Hostaway GET ${path} failed: HTTP ${res.status}`);
+    // 403 => token expired/invalid. Refresh once and retry.
+    if (res.status === 403 && !isRetry) return hostawayGet<T>(path, true);
+    if (res.status === 429 && attempt < MAX_429_RETRIES) {
+      await sleep(backoffForAttempt(res, attempt));
+      continue;
+    }
+    if (!res.ok) throw new Error(`Hostaway GET ${path} failed: HTTP ${res.status}`);
 
-  const body = (await res.json()) as HostawayResponse<T>;
-  return body.result;
+    const body = (await res.json()) as HostawayResponse<T>;
+    return body.result;
+  }
 }
 
 /** Thrown on non-2xx Hostaway responses so callers can act on the detail. */
@@ -123,37 +170,57 @@ export class HostawayApiError extends Error {
   }
 }
 
+/**
+ * The create POST returned 2xx but the response could not be parsed into a
+ * reservation with a numeric id — so the reservation MAY exist in the PMS.
+ * The caller must NOT blindly refund: it should first try to adopt the
+ * possibly-orphaned reservation (see findRecentDirectReservation).
+ */
+export class HostawayAmbiguousCreateError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'HostawayAmbiguousCreateError';
+  }
+}
+
 async function hostawayPost<T>(
   path: string,
   payload: unknown,
   isRetry = false,
 ): Promise<T> {
-  await space();
-  const token = await getAccessToken(isRetry);
-  const res = await fetch(`${BASE}${path}`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache',
-    },
-    body: JSON.stringify(payload),
-    cache: 'no-store',
-  });
+  // 429 handling mirrors hostawayGet and stays independent of the 403-refresh.
+  for (let attempt = 0; ; attempt += 1) {
+    await space();
+    const token = await getAccessToken(isRetry);
+    const res = await fetch(`${BASE}${path}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+      },
+      body: JSON.stringify(payload),
+      cache: 'no-store',
+    });
 
-  // 403 => token expired/invalid. Refresh once and retry.
-  if (res.status === 403 && !isRetry) return hostawayPost<T>(path, payload, true);
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new HostawayApiError(
-      `Hostaway POST ${path} failed: HTTP ${res.status}`,
-      res.status,
-      body.slice(0, 2000),
-    );
+    // 403 => token expired/invalid. Refresh once and retry.
+    if (res.status === 403 && !isRetry) return hostawayPost<T>(path, payload, true);
+    if (res.status === 429 && attempt < MAX_429_RETRIES) {
+      await sleep(backoffForAttempt(res, attempt));
+      continue;
+    }
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new HostawayApiError(
+        `Hostaway POST ${path} failed: HTTP ${res.status}`,
+        res.status,
+        body.slice(0, 2000),
+      );
+    }
+
+    const body = (await res.json()) as HostawayResponse<T>;
+    return body.result;
   }
-
-  const body = (await res.json()) as HostawayResponse<T>;
-  return body.result;
 }
 
 // Hostaway reservation channel for our own direct-site bookings.
@@ -208,6 +275,15 @@ export async function createReservation(
     },
   );
 
+  // The POST returned 2xx — but if the body did not parse into a reservation
+  // with a numeric id we cannot trust it, and the reservation MAY still exist.
+  // Signal ambiguity so the caller adopts instead of blindly refunding.
+  if (!reservation || typeof reservation.id !== 'number') {
+    throw new HostawayAmbiguousCreateError(
+      'create POST returned 2xx but the response was unparseable — the reservation MAY exist in the PMS',
+    );
+  }
+
   // Hostaway ignores isPaid on both POST and PUT (verified 2026-07-02:
   // reservations kept paymentStatus "Unknown", leaving the PMS showing a
   // balance due and blocking charge automations). Payment state is derived
@@ -226,10 +302,36 @@ export async function createReservation(
       scheduledDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
     });
   } catch (err) {
-    console.warn(
+    console.error(
       `[hostaway] offline paid-charge failed for reservation ${reservation.id} — PMS will show a balance due`,
       err,
     );
+    // Best-effort ops alert so the team can add the charge by hand. Stripe
+    // already collected the money; this failure only affects the PMS display.
+    // Its own try/catch — an email failure must never fail the booking.
+    try {
+      await sendEmail({
+        to: 'office@avexastays.com',
+        subject: `[OPS] Hostaway shows balance due — reservation ${reservation.id}`,
+        html: `
+          <div style="font-family:Arial,Helvetica,sans-serif;color:#191919;line-height:1.6">
+            <p>The offline "paid" charge could not be recorded for Hostaway
+            reservation <strong>${reservation.id}</strong>, so the PMS shows a
+            balance due.</p>
+            <p>Amount already collected via Stripe:
+            <strong>${input.totalPrice} ${input.currency}</strong>.</p>
+            <p>Stripe has already collected the money in full — please add the
+            offline charge to this reservation manually in Hostaway so the
+            balance clears.</p>
+          </div>
+        `,
+      });
+    } catch (mailErr) {
+      console.error(
+        `[hostaway] ops alert email failed for reservation ${reservation.id}`,
+        mailErr,
+      );
+    }
   }
 
   return reservation;
@@ -237,6 +339,50 @@ export async function createReservation(
 
 export function getReservation(id: number | string): Promise<HostawayReservation> {
   return hostawayGet<HostawayReservation>(`/reservations/${id}`);
+}
+
+/**
+ * Find a direct-site reservation that may already exist in the PMS for these
+ * exact dates + guest — used to ADOPT a possibly-orphaned reservation after an
+ * ambiguous create (2xx but unparseable, or a network reset after the POST
+ * landed) instead of refunding a guest whose reservation is silently blocking
+ * the calendar.
+ *
+ * The list endpoint returns an array in `result`. We narrow client-side to our
+ * own channel (2000), an exact arrival/departure match, a case-insensitive
+ * guest-email match, and a non-cancelled status, then return the newest match.
+ * Never throws: any failure yields null so the caller falls back to refunding.
+ */
+export async function findRecentDirectReservation(input: {
+  listingMapId: number;
+  arrivalDate: string;
+  departureDate: string;
+  guestEmail: string;
+}): Promise<HostawayReservation | null> {
+  try {
+    const list = await hostawayGet<HostawayReservation[]>(
+      `/reservations?listingId=${input.listingMapId}` +
+        `&arrivalStartDate=${input.arrivalDate}&arrivalEndDate=${input.arrivalDate}`,
+    );
+    if (!Array.isArray(list)) return null;
+
+    const wantedEmail = input.guestEmail.trim().toLowerCase();
+    const matches = list.filter(
+      (r) =>
+        r.channelId === DIRECT_CHANNEL_ID &&
+        r.arrivalDate === input.arrivalDate &&
+        r.departureDate === input.departureDate &&
+        (r.guestEmail ?? '').trim().toLowerCase() === wantedEmail &&
+        !/cancel/i.test(r.status ?? ''),
+    );
+    if (!matches.length) return null;
+
+    // Newest first: prefer the highest id (Hostaway ids increase monotonically).
+    matches.sort((a, b) => b.id - a.id);
+    return matches[0];
+  } catch {
+    return null;
+  }
 }
 
 export function getReservationConversations(

@@ -1,13 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { getListings, getListingCalendar } from '@/lib/hostaway/client';
-import type { Database } from '@/types/database.types';
+import { getListings } from '@/lib/hostaway/client';
+import { SYNC_WINDOW_DAYS, syncListingAvailability } from '@/lib/hostaway/sync';
 
 export const dynamic = 'force-dynamic';
-
-const SYNC_DAYS = 180;
-
-type AvailabilityInsert = Database['public']['Tables']['availability']['Insert'];
 
 function isAuthed(request: Request): boolean {
   const auth = request.headers.get('authorization') ?? '';
@@ -40,10 +36,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: propsError.message }, { status: 500 });
   }
 
-  const start = new Date().toISOString().slice(0, 10);
-  const end = new Date(Date.now() + SYNC_DAYS * 86_400_000).toISOString().slice(0, 10);
-
-  // One listings call (8 listings) instead of one per property.
+  // One listings call (8 listings) for the bed/bath backfill — availability +
+  // price come from the shared syncListingAvailability helper per property.
   const listings = await getListings();
   const listingById = new Map(listings.map((l) => [String(l.id), l]));
 
@@ -55,43 +49,17 @@ export async function GET(request: Request) {
     const listing = listingById.get(String(listingId));
 
     try {
-      const calendar = await getListingCalendar(listingId, start, end);
+      // Availability, nightly price, price_from_ron and last_synced_at — the
+      // single source of truth shared with the unified webhook.
+      const { days, priceFrom } = await syncListingAvailability({
+        propertyId: prop.id,
+        listingMapId: Number(listingId),
+      });
 
-      const rows: AvailabilityInsert[] = calendar
-        .filter((d) => Boolean(d.date))
-        .map((d) => {
-          const available = d.isAvailable === 1 || d.status === 'available';
-          const price =
-            typeof d.price === 'number' && d.price > 0
-              ? d.price
-              : (listing?.price ?? 0);
-          return {
-            property_id: prop.id,
-            date: d.date,
-            available,
-            price_ron: price,
-            min_stay: d.minimumStay ?? 1,
-          };
-        });
-
-      if (rows.length) {
-        const { error } = await supabase
-          .from('availability')
-          .upsert(rows, { onConflict: 'property_id,date' });
-        if (error) throw new Error(`availability upsert: ${error.message}`);
-      }
-
-      const openPrices = rows
-        .filter((r) => r.available && r.price_ron > 0)
-        .map((r) => r.price_ron);
-      const priceFrom = openPrices.length
-        ? Math.min(...openPrices)
-        : (listing?.price ?? null);
-
+      // Bed/bath backfill is sync-only metadata (not part of the cache).
       await supabase
         .from('properties')
         .update({
-          price_from_ron: priceFrom,
           bedrooms:
             typeof listing?.bedroomsNumber === 'number'
               ? listing.bedroomsNumber
@@ -100,11 +68,10 @@ export async function GET(request: Request) {
             typeof listing?.bathroomsNumber === 'number'
               ? listing.bathroomsNumber
               : undefined,
-          last_synced_at: new Date().toISOString(),
         })
         .eq('id', prop.id);
 
-      summary.push({ id: prop.id, listingId, days: rows.length, priceFrom });
+      summary.push({ id: prop.id, listingId, days, priceFrom });
     } catch (e) {
       summary.push({
         id: prop.id,
@@ -114,5 +81,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, days: SYNC_DAYS, synced: summary });
+  return NextResponse.json({ ok: true, days: SYNC_WINDOW_DAYS, synced: summary });
 }

@@ -2,8 +2,7 @@ import { NextResponse, after } from 'next/server';
 import { timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { getListingCalendar } from '@/lib/hostaway/client';
-import type { Database } from '@/types/database.types';
+import { syncListingAvailability } from '@/lib/hostaway/sync';
 
 /**
  * Hostaway unified webhook — near-real-time availability. Hostaway pushes
@@ -17,8 +16,8 @@ import type { Database } from '@/types/database.types';
  *   webhook is registered via POST /v1/webhooks/unifiedWebhooks. 401 otherwise.
  * - Tolerant payload parsing: Hostaway does not publicly document the exact
  *   delivery shape, so we accept the reservation object either nested under
- *   `data` or at the top level, and log a compact PII-free summary line to
- *   calibrate against real deliveries.
+ *   `data` or at the top level. A compact PII-free summary line can be enabled
+ *   with HOSTAWAY_WEBHOOK_DEBUG=1 to calibrate against real deliveries.
  * - Always 200 fast (Hostaway may disable endpoints that keep failing); the
  *   actual work runs post-response in after(). Everything is idempotent:
  *   the availability upsert mirrors Hostaway truth and the booking-status
@@ -29,9 +28,6 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const WEBHOOK_LOGIN = 'avexa';
-const REFRESH_DAYS = 180;
-
-type AvailabilityInsert = Database['public']['Tables']['availability']['Insert'];
 
 function isAuthorized(request: Request): boolean {
   const secret = process.env.HOSTAWAY_WEBHOOK_SECRET;
@@ -68,55 +64,70 @@ const BodySchema = z
   })
   .passthrough();
 
-/** Re-pull the affected listing's calendar and mirror it into the cache. */
-async function refreshListingAvailability(listingMapId: number): Promise<void> {
+/**
+ * Re-pull the affected listing's calendar and mirror it into the cache via the
+ * shared helper (identical behaviour to the sync cron). Returns the property_id
+ * it refreshed so the cancellation path can skip re-syncing the same listing.
+ */
+async function refreshListingAvailability(listingMapId: number): Promise<string | null> {
   const supabase = getSupabaseAdmin();
   const { data: prop } = await supabase
     .from('properties')
     .select('id')
     .eq('hostaway_listing_id', String(listingMapId))
     .maybeSingle();
-  if (!prop) return; // a listing we don't sell on the site
+  if (!prop) return null; // a listing we don't sell on the site
 
-  const start = new Date().toISOString().slice(0, 10);
-  const end = new Date(Date.now() + REFRESH_DAYS * 86_400_000).toISOString().slice(0, 10);
-  const calendar = await getListingCalendar(listingMapId, start, end);
-
-  const rows: AvailabilityInsert[] = calendar
-    .filter((d) => Boolean(d.date))
-    .map((d) => ({
-      property_id: prop.id,
-      date: d.date,
-      available: d.isAvailable === 1 || d.status === 'available',
-      price_ron: typeof d.price === 'number' && d.price > 0 ? d.price : 0,
-      min_stay: d.minimumStay ?? 1,
-    }));
-  if (!rows.length) return;
-
-  const { error } = await supabase
-    .from('availability')
-    .upsert(rows, { onConflict: 'property_id,date' });
-  if (error) throw new Error(`availability upsert: ${error.message}`);
-
-  const openPrices = rows.filter((r) => r.available && r.price_ron > 0).map((r) => r.price_ron);
-  await supabase
-    .from('properties')
-    .update({
-      price_from_ron: openPrices.length ? Math.min(...openPrices) : undefined,
-      last_synced_at: new Date().toISOString(),
-    })
-    .eq('id', prop.id);
+  await syncListingAvailability({ propertyId: prop.id, listingMapId });
+  return prop.id;
 }
 
-/** If the event is one of OUR reservations being cancelled in the PMS, close the booking. */
-async function reconcileBookingStatus(reservationId: number, status: string): Promise<void> {
+/**
+ * If the event is one of OUR reservations being cancelled in the PMS, close the
+ * booking AND free the cache — even when the payload carried no listingMapId.
+ * Resolves the booking's property → that property's Hostaway listing → sync.
+ * `alreadySyncedPropertyId` lets the caller avoid a second sync when the
+ * listingMapId path already refreshed this same property in this request.
+ */
+async function reconcileBookingStatus(
+  reservationId: number,
+  status: string,
+  alreadySyncedPropertyId: string | null,
+): Promise<void> {
   if (!/cancel/i.test(status)) return;
   const supabase = getSupabaseAdmin();
-  await supabase
+
+  // Flip the booking first (idempotent: only confirmed/pending → cancelled).
+  const { data: booking } = await supabase
     .from('bookings')
     .update({ status: 'cancelled' })
     .eq('hostaway_reservation_id', String(reservationId))
-    .neq('status', 'cancelled');
+    .neq('status', 'cancelled')
+    .select('property_id')
+    .maybeSingle();
+  if (!booking) return; // not one of ours, or already cancelled
+
+  // Free the calendar even without a listingMapId in the payload — resolve the
+  // listing from the booking's property. Best-effort: never block the cancel.
+  if (booking.property_id === alreadySyncedPropertyId) return; // already refreshed
+  try {
+    const { data: prop } = await supabase
+      .from('properties')
+      .select('hostaway_listing_id')
+      .eq('id', booking.property_id)
+      .maybeSingle();
+    if (prop?.hostaway_listing_id) {
+      await syncListingAvailability({
+        propertyId: booking.property_id,
+        listingMapId: Number(prop.hostaway_listing_id),
+      });
+    }
+  } catch (err) {
+    console.error(
+      '[hostaway-webhook] cache-free after cancel failed:',
+      err instanceof Error ? err.message : err,
+    );
+  }
 }
 
 export async function POST(request: Request) {
@@ -141,27 +152,31 @@ export async function POST(request: Request) {
   const flat = ReservationShapeSchema.safeParse(raw);
   const reservation = nested ?? (flat.success ? flat.data : null);
 
-  // PII-free calibration line — shows the real delivery shape in the logs.
-  console.log(
-    '[hostaway-webhook]',
-    JSON.stringify({
-      object: parsed.data.object ?? null,
-      event: parsed.data.event ?? null,
-      keys: Object.keys(raw as Record<string, unknown>).slice(0, 12),
-      reservationId: reservation?.id ?? null,
-      listingMapId: reservation?.listingMapId ?? null,
-      status: reservation?.status ?? null,
-    }),
-  );
+  // Bounded PII-free line, gated behind HOSTAWAY_WEBHOOK_DEBUG=1 (only enabled
+  // while calibrating against real deliveries) — primitives only, no raw keys.
+  if (process.env.HOSTAWAY_WEBHOOK_DEBUG === '1') {
+    console.log(
+      '[hostaway-webhook]',
+      JSON.stringify({
+        event: parsed.data.event ?? null,
+        reservationId: reservation?.id ?? null,
+        listingMapId: reservation?.listingMapId ?? null,
+        status: reservation?.status ?? null,
+      }),
+    );
+  }
 
   if (reservation?.listingMapId || reservation?.id) {
     after(async () => {
       try {
+        // Track which property the listingMapId path already refreshed so the
+        // cancellation path below does not sync the same listing twice.
+        let syncedPropertyId: string | null = null;
         if (reservation.listingMapId) {
-          await refreshListingAvailability(reservation.listingMapId);
+          syncedPropertyId = await refreshListingAvailability(reservation.listingMapId);
         }
         if (reservation.id && reservation.status) {
-          await reconcileBookingStatus(reservation.id, reservation.status);
+          await reconcileBookingStatus(reservation.id, reservation.status, syncedPropertyId);
         }
       } catch (err) {
         console.error(
