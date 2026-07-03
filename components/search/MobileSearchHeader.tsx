@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/chrome/Logo';
 import { MobileSearchOverlay } from '@/components/search/MobileSearchOverlay';
-import { readUser, type StoredUser } from '@/lib/booking';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { signOutClient } from '@/lib/auth/client';
 import { cn } from '@/lib/cn';
 
@@ -27,22 +27,11 @@ export function MobileSearchHeader() {
   const pathname = usePathname();
   const isSearchPage = pathname === '/' || pathname === '/locations';
 
+  const { user } = useAuth();
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [user, setUser] = useState<StoredUser | null>(null);
   const lastY = useRef(0);
-
-  useEffect(() => {
-    const sync = () => setUser(readUser());
-    sync();
-    window.addEventListener('avexa:auth-changed', sync);
-    window.addEventListener('storage', sync);
-    return () => {
-      window.removeEventListener('avexa:auth-changed', sync);
-      window.removeEventListener('storage', sync);
-    };
-  }, []);
 
   useEffect(() => {
     function onScroll() {
@@ -59,7 +48,7 @@ export function MobileSearchHeader() {
 
   if (!isSearchPage) return null;
 
-  const loggedIn = !!user?.loggedIn;
+  const loggedIn = !!user;
 
   return (
     <>

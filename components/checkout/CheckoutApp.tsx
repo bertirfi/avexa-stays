@@ -7,12 +7,13 @@ import { Stepper } from '@/components/checkout/Stepper';
 import { BookingSummary } from '@/components/checkout/BookingSummary';
 import { ContactInfoStep, type ContactForm } from '@/components/checkout/ContactInfoStep';
 import { PaymentStep } from '@/components/checkout/PaymentStep';
-import {
-  hydrate,
-  readBooking,
-  readUser,
-  type HydratedBooking,
-} from '@/lib/booking';
+import { hydrate, readBooking, type HydratedBooking } from '@/lib/booking';
+
+/** Server-derived contact prefill (from the validated Supabase session). */
+export interface InitialContact {
+  fullName: string;
+  email: string;
+}
 
 // Step 3 (confirmation) lives on /book/confirmation — Stripe redirects there.
 type Step = 1 | 2;
@@ -36,30 +37,27 @@ const emptyForm = (): ContactForm => ({
   companyCountry: '',
 });
 
-export function CheckoutApp() {
+export function CheckoutApp({ initialContact }: { initialContact: InitialContact }) {
   const [hydrated, setHydrated] = useState<HydratedBooking | null>(null);
-  const [user, setUser] = useState<{ loggedIn: boolean; email?: string; firstName?: string; lastName?: string } | null>(null);
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<Step>(1);
-  const [form, setForm] = useState<ContactForm>(() => emptyForm());
+  const [form, setForm] = useState<ContactForm>(() => {
+    // Prefill name/email from the server-validated session (first word = first
+    // name, remainder = last name). The rest of the form fills client-side.
+    const [firstName, ...rest] = initialContact.fullName.split(/\s+/).filter(Boolean);
+    return {
+      ...emptyForm(),
+      firstName: firstName ?? '',
+      lastName: rest.join(' '),
+      email: initialContact.email,
+    };
+  });
 
-  // Read localStorage on mount
+  // Read the booking draft from localStorage on mount (UI-only optimistic cache).
   useEffect(() => {
     setMounted(true);
-    const u = readUser();
-    setUser(u);
     const b = readBooking();
     if (b) setHydrated(hydrate(b));
-
-    // Pre-fill form from logged-in user
-    if (u?.loggedIn) {
-      setForm((prev) => ({
-        ...prev,
-        firstName: u.firstName ?? prev.firstName,
-        lastName: u.lastName ?? prev.lastName,
-        email: u.email ?? prev.email,
-      }));
-    }
   }, []);
 
   // Scroll to top on step change
@@ -68,8 +66,6 @@ export function CheckoutApp() {
   }, [step, mounted]);
 
   if (!mounted) return <SkeletonShell />;
-
-  if (!user?.loggedIn) return <AuthGate />;
 
   if (!hydrated) return <NoBookingGate />;
 
@@ -97,26 +93,6 @@ export function CheckoutApp() {
 }
 
 /* ── Gates ───────────────────────────────────────────────────────── */
-
-function AuthGate() {
-  return (
-    <div className="mx-auto flex max-w-md flex-col items-center justify-center px-6 py-32 text-center">
-      <div className="mb-6 grid size-20 place-items-center rounded-2xl bg-gold-pale">
-        <Icon name="key" size={32} className="text-gold-dark" />
-      </div>
-      <h2 className="font-display text-3xl">Sign in to book</h2>
-      <p className="mt-3 text-ink-80">
-        Log in or create a free account to complete your reservation. Your member discount will be applied automatically.
-      </p>
-      <Link
-        href="/login?next=/checkout"
-        className="mt-8 inline-flex items-center gap-2 rounded-full bg-ink px-8 py-4 font-semibold text-cream transition hover:bg-gold hover:text-ink"
-      >
-        Log in or sign up →
-      </Link>
-    </div>
-  );
-}
 
 function NoBookingGate() {
   return (

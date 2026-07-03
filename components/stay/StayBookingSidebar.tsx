@@ -14,7 +14,7 @@ import type { AvailabilityMap } from '@/lib/data/availability';
 import { ymd, parseYmd } from '@/lib/date';
 import { CITY_TAX_RON_PER_PERSON_NIGHT } from '@/lib/currency';
 import { readSearchPrefs } from '@/lib/searchPrefs';
-import { readUser } from '@/lib/booking';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { cn } from '@/lib/cn';
 
 interface Props {
@@ -66,11 +66,11 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   // Multi-room state
   const [addedRoomIds, setAddedRoomIds] = useState<string[]>([]);
 
+  const { user } = useAuth();
+  const loggedIn = !!user;
   const [mounted, setMounted] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
   useEffect(() => {
     setMounted(true);
-    setLoggedIn(!!readUser()?.loggedIn);
     // Carry the search selection (dates + guests) into the sidebar so the user
     // doesn't have to re-pick dates after searching on the homepage / locations.
     const p = readSearchPrefs();

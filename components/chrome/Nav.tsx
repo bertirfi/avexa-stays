@@ -7,7 +7,7 @@ import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/chrome/Logo';
 import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
 import { CurrencySwitcher } from '@/components/currency/CurrencySwitcher';
-import { readUser, type StoredUser } from '@/lib/booking';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { signOutClient } from '@/lib/auth/client';
 import { cn } from '@/lib/cn';
 
@@ -26,22 +26,10 @@ export function Nav() {
   const isSearchPage = pathname === '/' || pathname === '/locations';
 
   const { pinned, navHidden } = useChromeScroll();
+  const { user, loading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [user, setUser] = useState<StoredUser | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  // Read auth on mount + react to the D-key demo toggle / cross-tab changes
-  useEffect(() => {
-    const sync = () => setUser(readUser());
-    sync();
-    window.addEventListener('avexa:auth-changed', sync);
-    window.addEventListener('storage', sync);
-    return () => {
-      window.removeEventListener('avexa:auth-changed', sync);
-      window.removeEventListener('storage', sync);
-    };
-  }, []);
 
   // Close the account menu on outside click / Escape
   useEffect(() => {
@@ -61,13 +49,17 @@ export function Nav() {
   }, [menuOpen]);
 
   const transparent = isHome && !pinned;
-  const loggedIn = !!user?.loggedIn;
-  const displayName = user?.firstName || user?.name || user?.email || 'Guest';
+  const loggedIn = !!user;
+  const fullName =
+    typeof user?.user_metadata?.full_name === 'string'
+      ? user.user_metadata.full_name.trim()
+      : '';
+  const displayName = fullName || user?.email || 'Guest';
   const initial = displayName.trim().charAt(0).toUpperCase() || 'A';
 
   function logout() {
+    // AuthProvider's onAuthStateChange clears the useAuth() context for us.
     void signOutClient();
-    setUser(null);
     setMenuOpen(false);
     router.push('/');
   }
@@ -120,7 +112,14 @@ export function Nav() {
 
             <CurrencySwitcher tone={transparent ? 'dark' : 'light'} />
 
-            {loggedIn ? (
+            {loading ? (
+              // Neutral placeholder — same footprint as the avatar button, so
+              // neither "Sign up" nor the avatar flashes before auth resolves.
+              <div
+                aria-hidden
+                className="size-9 animate-pulse rounded-full bg-ink/10"
+              />
+            ) : loggedIn ? (
               <div className="relative" ref={menuRef}>
                 <button
                   type="button"

@@ -128,15 +128,6 @@ export interface SearchParams {
   guests?: GuestCounts;
 }
 
-// ── Auth stub (localStorage) ───────────────────────────────────
-export interface AuthUser {
-  loggedIn: boolean;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  avatar?: string;
-}
-
 // ── Booking (localStorage; UI-only optimistic cache) ───────────
 // All money fields are RON (money of record). NEVER trusted server-side:
 // /api/checkout re-derives price + identity from Hostaway + the session.

@@ -1,6 +1,16 @@
 import { getProperty } from '@/lib/properties';
 import type { Booking, Property, PropertyRate } from '@/types';
 
+/**
+ * Booking-draft localStorage helpers + hydration for the checkout flow.
+ *
+ * Scope: the `avexa_booking` draft ONLY — an optimistic, UI-only cache of the
+ * suite/dates/guests the visitor picked, never trusted server-side (/api/checkout
+ * re-derives price + identity from Hostaway + the Supabase session). Auth state is
+ * NOT stored here: identity of record lives in the httpOnly Supabase session, and
+ * client components read it via `useAuth()` (components/auth/AuthProvider.tsx).
+ */
+
 export interface HydratedBooking {
   raw: Booking;
   property: Property;
@@ -10,8 +20,6 @@ export interface HydratedBooking {
 }
 
 const BOOKING_KEY = 'avexa_booking';
-const USER_KEY = 'avexa_user';
-const HAS_TRIPS_KEY = 'avexa_has_trips';
 
 export function readBooking(): Booking | null {
   if (typeof window === 'undefined') return null;
@@ -35,74 +43,6 @@ export function clearBooking() {
   try {
     window.localStorage.removeItem(BOOKING_KEY);
   } catch {}
-}
-
-export function markHasTrips() {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(HAS_TRIPS_KEY, 'true');
-  } catch {}
-}
-
-export interface StoredUser {
-  loggedIn: boolean;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  name?: string; // legacy combined name
-  method?: 'email' | 'google' | 'apple' | 'demo';
-}
-
-export function readUser(): StoredUser | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = window.localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as StoredUser) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function writeUser(user: StoredUser) {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(USER_KEY, JSON.stringify(user));
-  } catch {}
-}
-
-export function clearUser() {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.removeItem(USER_KEY);
-    window.localStorage.removeItem(HAS_TRIPS_KEY);
-  } catch {}
-}
-
-export function hasTrips(): boolean {
-  if (typeof window === 'undefined') return false;
-  try {
-    return window.localStorage.getItem(HAS_TRIPS_KEY) === 'true';
-  } catch {
-    return false;
-  }
-}
-
-export function setHasTrips(value: boolean) {
-  if (typeof window === 'undefined') return;
-  try {
-    if (value) window.localStorage.setItem(HAS_TRIPS_KEY, 'true');
-    else window.localStorage.removeItem(HAS_TRIPS_KEY);
-  } catch {}
-}
-
-/** Demo helper — names the user from an email prefix ("alice@x.com" → "Alice") */
-export function nameFromEmail(email: string): string {
-  const prefix = (email.split('@')[0] || 'Guest').replace(/[._-]+/g, ' ').trim();
-  return prefix
-    .split(' ')
-    .map((p) => (p ? p[0].toUpperCase() + p.slice(1) : ''))
-    .join(' ')
-    .trim() || 'Guest';
 }
 
 export function hydrate(b: Booking): HydratedBooking | null {

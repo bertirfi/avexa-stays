@@ -9,12 +9,14 @@ export const metadata: Metadata = {
 };
 
 export default async function CheckoutPage() {
-  // Members only — real gate is this server-side session check; the client
-  // AuthGate below is just the friendly UX for the same rule.
-  await requireUser('/checkout');
+  // Members only — the server-side session check IS the gate (anonymous
+  // visitors are redirected to /login). Contact prefill comes from the session.
+  const user = await requireUser('/checkout');
+  const fullName = (user.user_metadata?.full_name as string | undefined)?.trim() ?? '';
+  const email = user.email ?? '';
   return (
     <div className="bg-cream pt-20 md:pt-24">
-      <CheckoutApp />
+      <CheckoutApp initialContact={{ fullName, email }} />
     </div>
   );
 }

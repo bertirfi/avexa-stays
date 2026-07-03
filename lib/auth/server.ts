@@ -3,10 +3,9 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 import type { User } from '@supabase/supabase-js';
 
 /**
- * Server-side auth guard for protected pages. The client-side localStorage
- * mirror (`readUser`) is UI-only and spoofable — every protected page/route
- * must derive identity from the validated Supabase session via this helper
- * (api-validation rule).
+ * Server-side auth guard for protected pages. The client-side `useAuth()`
+ * context is UI-only — every protected page/route must derive identity from
+ * the validated Supabase session via this helper (api-validation rule).
  */
 export async function requireUser(next: string): Promise<User> {
   const supabase = await getSupabaseServerClient();

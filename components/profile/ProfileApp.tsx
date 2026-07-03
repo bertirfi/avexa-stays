@@ -2,93 +2,49 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { Icon } from '@/components/Icon';
-import { readUser, writeUser, type StoredUser } from '@/lib/booking';
+import { useState } from 'react';
 import { signOutClient } from '@/lib/auth/client';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { PersonalDetailsCard } from '@/components/profile/PersonalDetailsCard';
 import { ToggleRow } from '@/components/profile/ToggleRow';
 
-const PHONE_KEY = 'avexa_phone';
-
-function readPhone(): string {
-  if (typeof window === 'undefined') return '';
-  try {
-    return window.localStorage.getItem(PHONE_KEY) || '';
-  } catch {
-    return '';
-  }
+/** Server-derived profile seed (from the validated Supabase session + row). */
+export interface InitialProfile {
+  email: string;
+  fullName: string;
+  phone: string;
 }
 
-function writePhone(value: string) {
-  if (typeof window === 'undefined') return;
-  try {
-    if (value) window.localStorage.setItem(PHONE_KEY, value);
-    else window.localStorage.removeItem(PHONE_KEY);
-  } catch {}
+/** Split a full name into first / last for the details form. */
+function splitName(fullName: string): { first: string; last: string } {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  return { first: parts[0] ?? '', last: parts.slice(1).join(' ') };
 }
 
-/** Split a stored user into first / last name, handling the legacy combined `name`. */
-function splitName(user: StoredUser): { first: string; last: string; full: string } {
-  const first = user.firstName ?? '';
-  const last = user.lastName ?? '';
-  if (first || last) {
-    return { first, last, full: `${first} ${last}`.trim() };
-  }
-  const parts = (user.name || '').trim().split(/\s+/).filter(Boolean);
-  return {
-    first: parts[0] || '',
-    last: parts.slice(1).join(' '),
-    full: (user.name || '').trim(),
-  };
-}
-
-export function ProfileApp() {
+export function ProfileApp({ initialProfile }: { initialProfile: InitialProfile }) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<StoredUser | null>(null);
-  const [phone, setPhone] = useState('');
+  const { first: initialFirst, last: initialLast } = splitName(initialProfile.fullName);
 
-  // Preferences (local UI state — demo only)
+  const [first, setFirst] = useState(initialFirst);
+  const [last, setLast] = useState(initialLast);
+  const [phone, setPhone] = useState(initialProfile.phone);
+
+  // Preferences (local UI state — persistence lands in a later workstream)
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [marketing, setMarketing] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-    setUser(readUser());
-    setPhone(readPhone());
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="bg-cream pt-40">
-        <div className="mx-auto h-12 w-full max-w-[720px] animate-pulse rounded-full bg-gray-light" />
-      </div>
-    );
-  }
-
-  if (!user?.loggedIn) return <AuthGate />;
-
-  const { first, last, full } = splitName(user);
-  const displayName = full || 'Your Profile';
-  const initial = (full || user.email || 'U').charAt(0).toUpperCase();
+  const fullName = `${first} ${last}`.trim();
+  const displayName = fullName || 'Your Profile';
+  const initial = (fullName || initialProfile.email || 'U').charAt(0).toUpperCase();
 
   async function handleSave(next: { first: string; last: string; phone: string }) {
-    if (!user) return;
     const nextFull = `${next.first} ${next.last}`.trim();
-    const updated: StoredUser = {
-      ...user,
-      firstName: next.first,
-      lastName: next.last,
-      name: nextFull || user.name,
-    };
-    // Optimistic local mirror (instant UI)
-    writeUser(updated);
-    writePhone(next.phone);
-    setUser(updated);
+    // Optimistic local state (instant UI); Nav updates itself via
+    // onAuthStateChange once the metadata write below lands.
+    setFirst(next.first);
+    setLast(next.last);
     setPhone(next.phone);
-    // Persist to Supabase so edits survive a reload (the mirror re-reads from here).
+    // Persist to Supabase so edits survive a reload.
     try {
       const supabase = getSupabaseBrowserClient();
       await supabase.auth.updateUser({ data: { full_name: nextFull } });
@@ -127,7 +83,7 @@ export function ProfileApp() {
         <PersonalDetailsCard
           firstName={first}
           lastName={last}
-          email={user.email ?? ''}
+          email={initialProfile.email}
           phone={phone}
           onSave={handleSave}
         />
@@ -195,28 +151,6 @@ export function ProfileApp() {
           </p>
         </section>
       </div>
-    </div>
-  );
-}
-
-/* ── Sign-in gate (mirrors checkout AuthGate) ─────────────────────── */
-
-function AuthGate() {
-  return (
-    <div className="mx-auto flex max-w-md flex-col items-center justify-center px-6 py-32 text-center">
-      <div className="mb-6 grid size-20 place-items-center rounded-2xl bg-gold-pale">
-        <Icon name="user" size={32} className="text-gold-dark" />
-      </div>
-      <h2 className="font-display text-3xl">Sign in to view your profile</h2>
-      <p className="mt-3 text-ink-80">
-        Log in or create a free account to manage your personal details, stays, and preferences.
-      </p>
-      <Link
-        href="/login?next=/profile"
-        className="mt-8 inline-flex items-center gap-2 rounded-full bg-ink px-8 py-4 font-semibold text-cream transition hover:bg-gold hover:text-ink"
-      >
-        Log in or sign up →
-      </Link>
     </div>
   );
 }

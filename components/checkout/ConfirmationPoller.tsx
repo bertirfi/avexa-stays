@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { clearBooking, markHasTrips } from '@/lib/booking';
+import { clearBooking } from '@/lib/booking';
 
 /**
  * While a booking is still `pending` (webhook in flight), re-fetch the server
@@ -29,14 +29,13 @@ export function ConfirmationPoller() {
 }
 
 /**
- * One-shot client effects when a booking lands confirmed: clear the
- * localStorage draft (so /checkout stops offering a stale booking) and set
- * the has-trips UI flag.
+ * One-shot client effect when a booking lands confirmed: clear the localStorage
+ * draft so /checkout stops offering a stale booking. The trip itself now shows
+ * up on /my-trips straight from the DB — no client-side has-trips flag needed.
  */
 export function BookingConfirmedEffects() {
   useEffect(() => {
     clearBooking();
-    markHasTrips();
   }, []);
 
   return null;
