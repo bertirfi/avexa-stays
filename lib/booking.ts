@@ -1,4 +1,5 @@
 import { getProperty } from '@/lib/properties';
+import { parseYmd } from '@/lib/date';
 import type { Booking, Property, PropertyRate } from '@/types';
 
 /**
@@ -50,12 +51,17 @@ export function hydrate(b: Booking): HydratedBooking | null {
   if (!property) return null;
   const rate = property.rates.find((r) => r.id === b.rateId) ?? property.rates[0];
   if (!rate) return null;
+  // Parse 'YYYY-MM-DD' at LOCAL midnight (lib/date) — `new Date(str)` reads it as
+  // UTC midnight, which shows the previous day for western (negative-offset) zones.
+  const checkInDate = parseYmd(b.checkIn);
+  const checkOutDate = parseYmd(b.checkOut);
+  if (!checkInDate || !checkOutDate) return null;
   return {
     raw: b,
     property,
     rate,
-    checkInDate: new Date(b.checkIn),
-    checkOutDate: new Date(b.checkOut),
+    checkInDate,
+    checkOutDate,
   };
 }
 

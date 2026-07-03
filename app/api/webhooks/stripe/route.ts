@@ -207,6 +207,21 @@ export async function POST(req: Request) {
       },
     ];
 
+    // Defense in depth: the DB total (what we're about to record in Hostaway as
+    // paid) MUST equal what Stripe actually charged. If they differ, refuse to
+    // create the reservation — the catch path refunds; no reservation was made.
+    if (
+      session.amount_total !== null &&
+      Math.round(Number(booking.total_ron) * 100) !== session.amount_total
+    ) {
+      console.error(
+        `webhook: amount mismatch — DB total_ron ${booking.total_ron} (${Math.round(
+          Number(booking.total_ron) * 100,
+        )} bani) != Stripe amount_total ${session.amount_total} bani`,
+      );
+      throw new Error('amount mismatch: DB total_ron does not match Stripe amount_total');
+    }
+
     const reservation = await createReservation({
       listingMapId: Number(session.metadata?.listingMapId),
       arrivalDate: booking.check_in,

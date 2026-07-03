@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { cn } from '@/lib/cn';
 
@@ -46,25 +47,56 @@ export function ContactInfoStep({ form, setForm, onNext }: Props) {
       <h1 className="font-display text-3xl md:text-4xl">Contact Info</h1>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="First Name">
-          <Input value={form.firstName} onChange={set('firstName')} placeholder="Jordan" required />
+        <Field label="First Name" htmlFor="contact-firstName">
+          <Input
+            id="contact-firstName"
+            autoComplete="given-name"
+            value={form.firstName}
+            onChange={set('firstName')}
+            placeholder="Jordan"
+            required
+          />
         </Field>
-        <Field label="Last Name">
-          <Input value={form.lastName} onChange={set('lastName')} placeholder="Smith" required />
+        <Field label="Last Name" htmlFor="contact-lastName">
+          <Input
+            id="contact-lastName"
+            autoComplete="family-name"
+            value={form.lastName}
+            onChange={set('lastName')}
+            placeholder="Smith"
+            required
+          />
         </Field>
       </div>
       <Hint>As shown on your ID or passport</Hint>
 
-      <Field label="Email Address">
-        <Input type="email" value={form.email} onChange={set('email')} placeholder="your@email.com" required />
+      <Field label="Email Address" htmlFor="contact-email">
+        <Input
+          id="contact-email"
+          type="email"
+          autoComplete="email"
+          value={form.email}
+          onChange={set('email')}
+          placeholder="your@email.com"
+          required
+        />
         <Hint>We&apos;ll send your booking confirmation here.</Hint>
       </Field>
 
-      <Field label="Phone number">
+      <Field label="Phone number" htmlFor="contact-phone">
         <div className="flex gap-2">
-          <Input value={form.prefix} onChange={set('prefix')} className="w-20" />
           <Input
+            id="contact-prefix"
+            autoComplete="tel-country-code"
+            aria-label="Country calling code"
+            value={form.prefix}
+            onChange={set('prefix')}
+            className="w-20"
+          />
+          <Input
+            id="contact-phone"
             type="tel"
+            autoComplete="tel-national"
             value={form.phone}
             onChange={set('phone')}
             placeholder="712 345 678"
@@ -74,22 +106,44 @@ export function ContactInfoStep({ form, setForm, onNext }: Props) {
         </div>
       </Field>
 
-      <Field label="Street Address">
-        <Input value={form.street} onChange={set('street')} placeholder="Street name and number" required />
+      <Field label="Street Address" htmlFor="contact-street">
+        <Input
+          id="contact-street"
+          autoComplete="street-address"
+          value={form.street}
+          onChange={set('street')}
+          placeholder="Street name and number"
+          required
+        />
       </Field>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="City">
-          <Input value={form.city} onChange={set('city')} placeholder="Bucharest" required />
+        <Field label="City" htmlFor="contact-city">
+          <Input
+            id="contact-city"
+            autoComplete="address-level2"
+            value={form.city}
+            onChange={set('city')}
+            placeholder="Bucharest"
+            required
+          />
         </Field>
-        <Field label="Country">
-          <Input value={form.country} onChange={set('country')} placeholder="Romania" required />
+        <Field label="Country" htmlFor="contact-country">
+          <Input
+            id="contact-country"
+            autoComplete="country-name"
+            value={form.country}
+            onChange={set('country')}
+            placeholder="Romania"
+            required
+          />
         </Field>
       </div>
 
       <div className="border-t border-gray-line pt-6">
-        <Field label="Booking type">
+        <Field label="Booking type" htmlFor="contact-accountType">
           <select
+            id="contact-accountType"
             value={form.accountType}
             onChange={set('accountType')}
             className="block w-full rounded-2xl border border-gray-line bg-white px-4 py-3 text-sm transition focus:border-ink focus:outline-none"
@@ -104,26 +158,62 @@ export function ContactInfoStep({ form, setForm, onNext }: Props) {
       {isBiz && (
         <fieldset className="space-y-4 rounded-card border border-gold/30 bg-gold-pale/40 p-5">
           <legend className="px-2 font-mono-label text-gold-dark">Business invoice details</legend>
-          <Field label="Company Name">
-            <Input value={form.companyName} onChange={set('companyName')} placeholder="Company SRL" />
+          <Field label="Company Name" htmlFor="contact-companyName">
+            <Input
+              id="contact-companyName"
+              autoComplete="organization"
+              value={form.companyName}
+              onChange={set('companyName')}
+              placeholder="Company SRL"
+            />
           </Field>
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="VAT Number (CUI / CIF)">
-              <Input value={form.vatNumber} onChange={set('vatNumber')} placeholder="RO12345678" />
+            <Field label="VAT Number (CUI / CIF)" htmlFor="contact-vatNumber">
+              <Input
+                id="contact-vatNumber"
+                autoComplete="off"
+                value={form.vatNumber}
+                onChange={set('vatNumber')}
+                placeholder="RO12345678"
+              />
             </Field>
-            <Field label="Trade Register No. (J)">
-              <Input value={form.regNumber} onChange={set('regNumber')} placeholder="J40/1234/2020" />
+            <Field label="Trade Register No. (J)" htmlFor="contact-regNumber">
+              <Input
+                id="contact-regNumber"
+                autoComplete="off"
+                value={form.regNumber}
+                onChange={set('regNumber')}
+                placeholder="J40/1234/2020"
+              />
             </Field>
           </div>
-          <Field label="Registered Address">
-            <Input value={form.companyStreet} onChange={set('companyStreet')} placeholder="Street name and number" />
+          <Field label="Registered Address" htmlFor="contact-companyStreet">
+            <Input
+              id="contact-companyStreet"
+              autoComplete="street-address"
+              value={form.companyStreet}
+              onChange={set('companyStreet')}
+              placeholder="Street name and number"
+            />
           </Field>
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="City">
-              <Input value={form.companyCity} onChange={set('companyCity')} placeholder="Bucharest" />
+            <Field label="City" htmlFor="contact-companyCity">
+              <Input
+                id="contact-companyCity"
+                autoComplete="address-level2"
+                value={form.companyCity}
+                onChange={set('companyCity')}
+                placeholder="Bucharest"
+              />
             </Field>
-            <Field label="Country">
-              <Input value={form.companyCountry} onChange={set('companyCountry')} placeholder="Romania" />
+            <Field label="Country" htmlFor="contact-companyCountry">
+              <Input
+                id="contact-companyCountry"
+                autoComplete="country-name"
+                value={form.companyCountry}
+                onChange={set('companyCountry')}
+                placeholder="Romania"
+              />
             </Field>
           </div>
         </fieldset>
@@ -148,8 +238,8 @@ export function ContactInfoStep({ form, setForm, onNext }: Props) {
 
       <p className="text-xs text-ink-60">
         Expect emails and mobile updates from AVEXA to keep you informed about your bookings and our services. By clicking &quot;Next&quot;, you agree that your information will be handled per our{' '}
-        <a className="underline hover:text-gold-dark" href="/terms">terms and conditions</a> and{' '}
-        <a className="underline hover:text-gold-dark" href="/privacy">Privacy Policy</a>.
+        <Link className="underline hover:text-gold-dark" href="/terms">terms and conditions</Link> and{' '}
+        <Link className="underline hover:text-gold-dark" href="/privacy">Privacy Policy</Link>.
       </p>
 
       <button
@@ -162,12 +252,23 @@ export function ContactInfoStep({ form, setForm, onNext }: Props) {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  /** id of the control this label names — explicit for a11y + autofill. */
+  htmlFor: string;
+  children: React.ReactNode;
+}) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-ink">{label}</span>
+    <div className="block">
+      <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-ink">
+        {label}
+      </label>
       {children}
-    </label>
+    </div>
   );
 }
 

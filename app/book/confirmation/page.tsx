@@ -129,21 +129,9 @@ export default async function BookingConfirmationPage({
             </Link>
           </>
         ) : (
-          <>
-            <ConfirmationPoller />
-            <p className="font-mono-label text-[10px] uppercase tracking-widest text-gold-dark">
-              Finalizing your booking
-            </p>
-            <h1 className="mt-2 font-display text-2xl font-extrabold text-ink">
-              Payment received — confirming your suite…
-            </h1>
-            <p className="mt-3 text-ink/70">
-              This takes a few seconds. The page updates automatically.
-            </p>
-            <div className="mt-8 h-1 w-full overflow-hidden rounded-full bg-ink/10">
-              <div className="h-full w-1/3 animate-pulse rounded-full bg-gold" />
-            </div>
-          </>
+          // The poller owns the whole pending presentation: it pulses while the
+          // webhook lands, then swaps to a calm fallback instead of looping forever.
+          <ConfirmationPoller />
         )}
       </div>
     </main>

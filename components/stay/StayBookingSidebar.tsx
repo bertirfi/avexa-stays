@@ -108,6 +108,11 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   const rate = property.rates.find((r) => r.id === rateId)!;
   const nights = nightsBetween(startDate, endDate);
 
+  // Breakfast per-day-per-person price from the property's own upgrades catalog
+  // (RON, money of record) — never hardcoded. Mirrors lib/booking/quote so the
+  // sidebar estimate lines up with the authoritative checkout quote.
+  const breakfastPrice = property.upgrades.find((u) => u.id === 'breakfast')?.price ?? 0;
+
   // Flex has no independent per-night calendar price — it inherits the catalog
   // flex/saver ratio on top of the live (saver-based) availability prices.
   // MUST mirror lib/booking/quote.ts so the displayed total equals the charge.
@@ -165,8 +170,9 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
 
   const pricing = useMemo(() => {
     const occupants = guests.adults + guests.children;
-    // Breakfast is priced in RON (105 ≈ €20/day/person, from the upgrades catalog).
-    const breakfastTotal = upgrades.breakfast ? 105 * nights * occupants : 0;
+    // Breakfast is priced in RON from the property's upgrades catalog (real
+    // per-day-per-person price — no hardcoded figure).
+    const breakfastTotal = upgrades.breakfast ? breakfastPrice * nights * occupants : 0;
     const mainCityTax = CITY_TAX_PER_PERSON * nights * occupants;
     // Member stay price = sum of per-night prices (variable from availability,
     // else flat rate.perNight × nights).
@@ -188,7 +194,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
       combinedTotal,
       occupants,
     };
-  }, [staySubtotal, nights, guests, upgrades, addedRooms]);
+  }, [staySubtotal, nights, guests, upgrades, addedRooms, breakfastPrice]);
 
   // RON total actually charged — combinedTotal only applies once multi-room
   // re-enables (roomCount stays 1 in practice while MULTI_ROOM_ENABLED is false).
@@ -609,7 +615,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
             </div>
             {currency !== 'RON' && (
               <p className="mt-0.5 text-right text-[11px] text-ink-60">
-                charged as {effectiveTotal} RON
+                charged as {effectiveTotal.toLocaleString('en-US')} RON
               </p>
             )}
             <p className="mt-1 text-right text-[11px] text-ink-60">VAT included</p>

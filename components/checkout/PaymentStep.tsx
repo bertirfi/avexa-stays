@@ -5,11 +5,14 @@ import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import type { HydratedBooking } from '@/lib/booking';
 import type { ContactForm } from '@/components/checkout/ContactInfoStep';
+import type { QuoteState } from '@/components/checkout/CheckoutApp';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
 
 interface Props {
   hydrated: HydratedBooking;
   form: ContactForm;
+  /** Authoritative server quote — the amount shown here and charged. */
+  quoteState: QuoteState;
   onBack: () => void;
 }
 
@@ -25,14 +28,17 @@ type PayState =
  * server-side and returns the Stripe session URL. The client never sends a
  * price.
  */
-export function PaymentStep({ hydrated, form, onBack }: Props) {
+export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
   const isBiz = form.accountType === 'business';
   const { currency, format } = useCurrency();
   const [state, setState] = useState<PayState>({ status: 'idle' });
 
   const raw = hydrated.raw;
-  const totalRon = raw.total;
-  const totalDisplay = format(totalRon);
+  // Money shown MUST be the authoritative server quote (never the draft). Until
+  // it lands, the amount reads as a skeleton and Pay stays disabled.
+  const quote = quoteState.status === 'quoted' ? quoteState.quote : null;
+  const totalRon = quote?.totalRon ?? null;
+  const totalDisplay = totalRon !== null ? format(totalRon) : null;
 
   async function pay() {
     setState({ status: 'redirecting' });
@@ -80,6 +86,15 @@ export function PaymentStep({ hydrated, form, onBack }: Props) {
         return;
       }
       if (res.status === 409) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        if (data?.error === 'already_processing') {
+          setState({
+            status: 'error',
+            message:
+              'A payment for this stay is already processing — check My Trips in a moment before paying again.',
+          });
+          return;
+        }
         setState({
           status: 'error',
           unavailable: true,
@@ -93,7 +108,11 @@ export function PaymentStep({ hydrated, form, onBack }: Props) {
     }
   }
 
+  // Pay is blocked until the authoritative quote is in hand (quoting/unavailable/
+  // error) and while redirecting — we never send the guest to Stripe on a price
+  // we haven't confirmed server-side this session.
   const busy = state.status === 'redirecting';
+  const canPay = quote !== null && !busy;
 
   return (
     <div className="space-y-6">
@@ -102,11 +121,19 @@ export function PaymentStep({ hydrated, form, onBack }: Props) {
       <div className="flex items-end justify-between">
         <div>
           <p className="text-sm text-ink-60">Amount to be paid</p>
-          <p className="font-display text-4xl">{totalDisplay}</p>
-          {currency !== 'RON' && (
-            <p className="mt-1 text-xs text-ink-60">charged as {totalRon} RON</p>
+          {totalDisplay !== null && totalRon !== null ? (
+            <>
+              <p className="font-display text-4xl">{totalDisplay}</p>
+              {currency !== 'RON' && (
+                <p className="mt-1 text-xs text-ink-60">
+                  charged as {totalRon.toLocaleString('en-US')} RON
+                </p>
+              )}
+              <p className="mt-0.5 text-xs text-ink-60">VAT included</p>
+            </>
+          ) : (
+            <span className="mt-1 block h-10 w-40 animate-pulse rounded-lg bg-gray-light" />
           )}
-          <p className="mt-0.5 text-xs text-ink-60">VAT included</p>
         </div>
         <span className="font-mono-label flex items-center gap-1.5 text-gold-dark">
           <Icon name="shield" size={14} /> Secure Payment
@@ -173,11 +200,15 @@ export function PaymentStep({ hydrated, form, onBack }: Props) {
         <button
           type="button"
           onClick={pay}
-          disabled={busy}
+          disabled={!canPay}
           className="flex flex-1 items-center justify-center gap-2 rounded-full bg-ink py-3 font-semibold text-cream transition hover:bg-gold hover:text-ink disabled:cursor-wait disabled:opacity-70"
         >
           <Icon name="shield" size={16} />
-          {busy ? 'Redirecting to secure payment…' : `Pay ${totalDisplay}`}
+          {busy
+            ? 'Redirecting to secure payment…'
+            : quote === null
+              ? 'Confirming price…'
+              : `Pay ${totalDisplay}`}
         </button>
       </div>
     </div>

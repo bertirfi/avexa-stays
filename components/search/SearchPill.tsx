@@ -10,6 +10,7 @@ import { GuestPopup } from '@/components/search/GuestPopup';
 import { useSearch, type SearchPanel } from '@/components/search/SearchContext';
 import { neighborhoods } from '@/lib/neighborhoods';
 import type { GuestCounts } from '@/types';
+import { ymd } from '@/lib/date';
 import { cn } from '@/lib/cn';
 
 interface SearchPillProps {
@@ -120,8 +121,10 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
   function go() {
     const params = new URLSearchParams();
     if (location && location !== 'all') params.set('where', location);
-    if (startDate) params.set('checkIn', startDate.toISOString().slice(0, 10));
-    if (endDate) params.set('checkOut', endDate.toISOString().slice(0, 10));
+    // Local 'YYYY-MM-DD' (lib/date) — toISOString would shift the day in
+    // negative-offset timezones, sending the wrong check-in to /locations.
+    if (startDate) params.set('checkIn', ymd(startDate));
+    if (endDate) params.set('checkOut', ymd(endDate));
     params.set('adults', String(guests.adults));
     params.set('children', String(guests.children));
     params.set('infants', String(guests.infants));

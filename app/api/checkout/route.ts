@@ -4,6 +4,7 @@ import { getStripe } from '@/lib/stripe/client';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { quoteBooking } from '@/lib/booking/quote';
+import { CheckoutBodySchema } from '@/lib/booking/schema';
 import { getDisplayRates } from '@/lib/pricing';
 
 /**
@@ -19,35 +20,6 @@ import { getDisplayRates } from '@/lib/pricing';
  */
 
 export const runtime = 'nodejs';
-
-const optionalTrimmed = (max: number) =>
-  z
-    .string()
-    .trim()
-    .max(max)
-    .optional()
-    .transform((v) => (v ? v : null));
-
-const BodySchema = z.object({
-  propertyId: z.string().trim().min(1).max(40),
-  checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  adults: z.number().int().min(1).max(10),
-  children: z.number().int().min(0).max(10),
-  infants: z.number().int().min(0).max(10),
-  rateId: z.enum(['saver', 'flex']),
-  breakfast: z.boolean().default(false),
-  displayCurrency: z.enum(['EUR', 'RON', 'USD']).default('EUR'),
-  contact: z.object({
-    name: z.string().trim().min(2).max(120),
-    email: z.string().trim().email().max(200),
-    phone: optionalTrimmed(40),
-    invoiceCompany: optionalTrimmed(200),
-    invoiceVat: optionalTrimmed(40),
-    invoiceRegCom: optionalTrimmed(60),
-    invoiceAddress: optionalTrimmed(400),
-  }),
-});
 
 const RATE_PLAN: Record<'saver' | 'flex', 'non_refundable' | 'flexible'> = {
   saver: 'non_refundable',
@@ -65,9 +37,11 @@ export async function POST(req: Request) {
   }
 
   // 2 — Validate input (ids/dates/guests/contact only — never money).
-  let body: z.infer<typeof BodySchema>;
+  // Shared schema with /api/quote so the previewed price and the charge are
+  // derived from an identical input contract (lib/booking/schema).
+  let body: z.infer<typeof CheckoutBodySchema>;
   try {
-    body = BodySchema.parse(await req.json());
+    body = CheckoutBodySchema.parse(await req.json());
   } catch {
     return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
   }
@@ -92,6 +66,44 @@ export async function POST(req: Request) {
   const rates = getDisplayRates();
   const displayFxRate =
     body.displayCurrency === 'RON' ? null : rates[body.displayCurrency];
+
+  // 3b — Supersede any stale pending rows for the SAME stay by this user.
+  // Repeat Pay clicks / back-button retries must not pile up pending bookings
+  // or leave live Stripe sessions open: expire each old session (best-effort),
+  // then mark the row cancelled before creating the fresh one.
+  const { data: stalePendings } = await admin
+    .from('bookings')
+    .select('id, stripe_session_id')
+    .eq('user_id', user.id)
+    .eq('property_id', quote.propertyId)
+    .eq('check_in', quote.checkIn)
+    .eq('check_out', quote.checkOut)
+    .eq('status', 'pending');
+  for (const stale of stalePendings ?? []) {
+    if (stale.stripe_session_id) {
+      // A session already PAID (e.g. in another tab) must never be superseded:
+      // cancelling its row would make the Stripe webhook ignore the payment —
+      // money kept with no reservation and no refund. Let its webhook finish.
+      try {
+        const staleSession = await getStripe().checkout.sessions.retrieve(
+          stale.stripe_session_id,
+        );
+        if (staleSession.payment_status === 'paid') {
+          return NextResponse.json({ error: 'already_processing' }, { status: 409 });
+        }
+      } catch {
+        // Can't inspect the session — leave this row untouched rather than
+        // risk superseding a payment we cannot see.
+        continue;
+      }
+      try {
+        await getStripe().checkout.sessions.expire(stale.stripe_session_id);
+      } catch {
+        // Already expired — cancelling the row is enough.
+      }
+    }
+    await admin.from('bookings').update({ status: 'cancelled' }).eq('id', stale.id);
+  }
 
   // 4 — Persist the pending booking (service-role; RLS has no client write path).
   const { data: booking, error: insertError } = await admin
