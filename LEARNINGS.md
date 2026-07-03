@@ -199,6 +199,30 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-07-03 — VALIDARE FINALĂ POST-SWEEP: mock E2E + 2 teste REALE, totul verde
+- **Mock E2E (Feb 8–10 2027, 708 RON):** fluxul NOU cap-coadă — quote server pe checkout
+  (bannerul „Prices were refreshed" a apărut live = protecția anti-divergență funcționează),
+  contact precompletat din sesiune, Stripe RON 708.00 exact, id negativ (PMS neatins,
+  guard-ul C1 ține), my-trips a afișat instant cardul „Upcoming". Curățat (DB+cache).
+- **Test real #8 (62409437, Mar 9–11 2027, 619 RON):** predicția formulei = quote-ul serverului
+  = Stripe = DB = Hostaway (Base rate 579 / City tax 40 / Total paid 619); Paid instant;
+  webhook created+updated×3 toate 200; mesajul unic cu link CA + template, `sent`.
+  Observație: webhook-ul instant oglindește calendarul PMS ÎNAINTE de propagare (~2 min) —
+  blocarea optimistă e temporar suprascrisă, apoi self-heal la următorul eveniment. Benign
+  (quote-ul live + forceOverbooking=0 protejează banii), documentat.
+- **Test real #9 (62410602, Mar 2–4 2027, 810 RON, guest_email = gmail-ul lui Robert):**
+  emailul cu linkul CA a plecat către destinatarul real (conv-recipient verificat) —
+  livrarea în inbox confirmată de client. Nota: după F3, emailul din checkout se
+  precompletează din SESIUNE — la teste, dacă vrei emailul în alt inbox, editează câmpul.
+- **Dublă auto-curățenie LIVE:** ambele anulate din dashboard → bookings auto-cancelled
+  la +2s fiecare (18:40:04→06 și 18:40:18→21), cache eliberat pe toate 4 datele, PMS liber.
+- **SYNC_SECRET ROTIT complet:** valoare nouă în .env.local + Vercel (paste de Robert),
+  redeploy, verificat live (sync 200 cu secretul nou). Vechiul secret e mort.
+- **Newsletter mutat pe Resend Audiences** (contul existent; fără abonament Brevo):
+  `RESEND_AUDIENCE_ID` de creat în dashboard Resend când vrea clientul newsletter live.
+- **Stare finală:** mock=1 pe preview; DB 11/11 bookings cancelled; zero rezervări de test
+  active în PMS; pipeline-ul de plăți validat de 2× pe PMS-ul real după fix sweep.
+
 ### 2026-07-03 — FIX SWEEP COMPLET F3–F7 (autonom, multi-agent, totul verificat live)
 - **Toate workstream-urile din review-ul P7 sunt închise** (detalii + evidence per fază în
   `thoughts/research/2026-07-02-p7-review-findings.md`, secțiunea "Ordinea de fix"):
