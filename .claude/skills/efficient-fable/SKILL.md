@@ -1,6 +1,6 @@
 ---
 name: efficient-fable
-description: Efficient orchestration for ANY advanced orchestrator model (Fable 5, Opus 4.8, or whatever the user selects — it changes over time). Use on codebase-heavy or token-heavy work; the orchestrator keeps judgment (planning, reviews, architecture, integration, final review) and delegates implementation aggressively to cheaper subagents (Sonnet 5 for moderate work, Haiku for simple/repetitive) split into many small self-contained tasks.
+description: Efficient orchestration for ANY advanced orchestrator model (Fable 5, Opus 4.8, or whatever the user selects — it changes over time). Use on codebase-heavy or token-heavy work; the orchestrator keeps judgment (planning, reviews, architecture, integration, final review) and delegates implementation aggressively to cheaper subagents (Sonnet 5 for bulk/mechanical and moderate work — never Haiku) split into many small self-contained tasks.
 ---
 
 # Efficient Orchestration (model-agnostic)
@@ -16,10 +16,15 @@ and summarization that do not require the orchestrator's full judgment.
 - **Orchestrator (the selected advanced model):** keeps ONLY high-value work —
   planning, codebase review, systems review, architecture, code structure,
   integration design, final review.
-- **Sonnet 5:** moderate implementation — bounded edits, feature slices,
-  component wiring, test writing.
-- **Haiku:** simple/repetitive — mechanical edits, log reduction, inventory
-  scans, format conversions.
+- **Sonnet 5:** all delegated implementation — bounded edits, feature slices,
+  component wiring, test writing, plus the bulk/mechanical passes (log
+  reduction, inventory scans, format conversions, migrations).
+- **Never use Haiku.**
+- Anything user-facing (UI, copy, API design) needs taste — keep it on
+  opus-4.8/fable-5. Reviews of plans/implementations: fable-5 or opus-4.8.
+- If a cheaper model's output does not meet the bar, rerun with a smarter
+  model without asking — judge the output, not the price tag. The routing
+  table lives in CLAUDE.md ("Model routing") and is tuned by the user.
 - Split delegated work into **many small self-contained tasks** so no agent
   overflows its context.
 - Subagent models are set via the `CLAUDE_CODE_SUBAGENT_MODEL` env var, or

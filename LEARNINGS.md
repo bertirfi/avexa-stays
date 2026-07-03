@@ -199,6 +199,31 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-07-03 — FIX SWEEP COMPLET F3–F7 (autonom, multi-agent, totul verificat live)
+- **Toate workstream-urile din review-ul P7 sunt închise** (detalii + evidence per fază în
+  `thoughts/research/2026-07-02-p7-review-findings.md`, secțiunea "Ordinea de fix"):
+  F3 member area real · F4 checkout trust · F5 Hostaway hardening · F6 auth+marketing ·
+  F7 igienă+deps. 7 commit-uri, fiecare fază gate-uită (typecheck+lint+build) și
+  verificată live pe preview (my-trips cu bookings reale, /api/quote 600 RON exact,
+  sync 381 zile × 8 proprietăți, newsletter 503 onest, reset gate).
+- **Bug găsit de orchestrator la review (nu de agenți): cursa supersede-pe-sesiune-plătită** —
+  supersede-ul din /api/checkout ar fi anulat rândul unei sesiuni Stripe DEJA plătite în alt
+  tab → webhook-ul o ignora (`already_cancelled`) → bani ținuți fără rezervare și fără refund.
+  Fix: retrieve înainte de expire; `payment_status === 'paid'` → 409 `already_processing`.
+  Regulă: orice supersede/cleanup de rânduri pending trebuie să verifice starea REALĂ a
+  plății la Stripe, nu doar statusul din DB.
+- **Pattern nou pe calea banilor: adopția rezervării orfane** — la eșec ambiguu de create
+  (2xx neparsabil / rețea căzută după POST), NU refundăm orb: căutăm rezervarea pe canal
+  2000 + date exacte + email și o adoptăm (confirmBooking partajat). Refund doar când
+  sigur nu există.
+- **Env-uri noi de pus în Vercel la momentul potrivit:** `BREVO_API_KEY` (+ opțional
+  `BREVO_LIST_ID`) — până atunci newsletter-ul răspunde onest 503 "opening soon";
+  `HOSTAWAY_WEBHOOK_DEBUG=1` doar pentru calibrare loguri webhook.
+- **Deps:** next 15.5.20, tailwind 4.3.2 (range-ul "beta" era doar stale), cva scos.
+  CVE-ul postcss vendorizat de Next = upstream-only; **NU rula `npm audit fix --force`**
+  (downgrade-uiește next la 9). Majors amânate post-lansare: motion 12, lucide 1.x,
+  tailwind-merge 3 — fiecare în PR izolat cu regression pass.
+
 ### 2026-07-02 — P7 review total + F2 SEO sprint (ambele livrate)
 - **P7 (8 agenți paraleli):** raport complet în `thoughts/research/2026-07-02-p7-review-findings.md` —
   fundația (trust boundary, RLS, idempotență, sume) confirmată solidă de 3 agenți independenți;
