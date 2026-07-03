@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getListings, getListingCalendar } from '@/lib/hostaway/client';
+import { timingSafeEqualStrings } from '@/lib/timing-safe';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,9 +14,14 @@ export const dynamic = 'force-dynamic';
  *   curl -H "Authorization: Bearer <SYNC_SECRET>" http://localhost:3000/api/hostaway/diagnostic
  */
 export async function GET(request: Request) {
+  // Introspection helper — preview/dev only. Never expose it in production.
+  if (process.env.VERCEL_ENV === 'production') {
+    return new NextResponse(null, { status: 404 });
+  }
+
   const secret = process.env.SYNC_SECRET;
-  const auth = request.headers.get('authorization');
-  if (!secret || auth !== `Bearer ${secret}`) {
+  const auth = request.headers.get('authorization') ?? '';
+  if (!secret || !timingSafeEqualStrings(auth, `Bearer ${secret}`)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 

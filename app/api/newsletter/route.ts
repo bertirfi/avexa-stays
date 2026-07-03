@@ -18,8 +18,9 @@ export const runtime = 'nodejs';
 const BodySchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   // Honeypot: real users never fill a hidden, off-screen, tab-skipped field.
-  // Bots that auto-fill everything trip it. Must be empty (or absent).
-  website: z.string().max(0).optional().or(z.literal('')),
+  // Accept ANY string — a non-empty value must reach the silent-drop branch
+  // below (rejecting it with a 400 would tell the bot it was detected).
+  website: z.string().max(500).optional(),
 });
 
 /** Log only the email domain — never the local part (no PII in logs). */

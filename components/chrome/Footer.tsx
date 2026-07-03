@@ -59,6 +59,8 @@ export function Footer() {
                   <a
                     href={s.href}
                     aria-label={s.label}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="grid size-9 place-items-center rounded-full border border-cream/15 transition hover:border-gold hover:text-gold"
                   >
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">

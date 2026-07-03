@@ -269,7 +269,25 @@ export async function createReservation(
     `/reservations?forceOverbooking=0&provider=${RESERVATION_PROVIDER}`,
     {
       channelId: DIRECT_CHANNEL_ID,
-      ...input,
+      // Explicit whitelist of the create payload (no `...input` spread) so a
+      // future field added to HostawayCreateReservationInput can't silently
+      // leak into the PMS call — every field sent to Hostaway is listed here.
+      listingMapId: input.listingMapId,
+      arrivalDate: input.arrivalDate,
+      departureDate: input.departureDate,
+      guestName: input.guestName,
+      guestFirstName: input.guestFirstName,
+      guestLastName: input.guestLastName,
+      guestEmail: input.guestEmail,
+      phone: input.phone,
+      adults: input.adults,
+      children: input.children,
+      infants: input.infants,
+      numberOfGuests: input.numberOfGuests,
+      totalPrice: input.totalPrice,
+      currency: input.currency,
+      financeField: input.financeField,
+      comment: input.comment,
       isPaid: 1, // Hostaway convention: booleans as 0/1 integers
       status: 'new',
     },

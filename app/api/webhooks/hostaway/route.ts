@@ -1,8 +1,8 @@
 import { NextResponse, after } from 'next/server';
-import { timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { syncListingAvailability } from '@/lib/hostaway/sync';
+import { timingSafeEqualStrings } from '@/lib/timing-safe';
 
 /**
  * Hostaway unified webhook — near-real-time availability. Hostaway pushes
@@ -40,9 +40,17 @@ function isAuthorized(request: Request): boolean {
   } catch {
     return false;
   }
-  const expected = Buffer.from(`${WEBHOOK_LOGIN}:${secret}`);
-  const received = Buffer.from(decoded);
-  return expected.length === received.length && timingSafeEqual(expected, received);
+  // Split on the first colon only — a secret may itself contain colons.
+  const sep = decoded.indexOf(':');
+  if (sep === -1) return false;
+  const login = decoded.slice(0, sep);
+  const pass = decoded.slice(sep + 1);
+  // Constant-time on both components (shared helper) so neither the login nor
+  // the secret leaks through compare timing. Both compares run before the &&,
+  // so a login mismatch does not skip the secret compare.
+  const loginOk = timingSafeEqualStrings(login, WEBHOOK_LOGIN);
+  const passOk = timingSafeEqualStrings(pass, secret);
+  return loginOk && passOk;
 }
 
 /** Reservation fields we act on — everything else passes through untouched. */

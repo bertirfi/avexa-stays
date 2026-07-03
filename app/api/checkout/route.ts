@@ -26,6 +26,28 @@ const RATE_PLAN: Record<'saver' | 'flex', 'non_refundable' | 'flexible'> = {
   flex: 'flexible',
 };
 
+/**
+ * The origin used to build Stripe's success/cancel URLs, hardened against
+ * Host-header spoofing: a forged Host must not steer Stripe's post-payment
+ * redirect off to an attacker's site. Accept only our own hostnames (prod,
+ * localhost on any port, and Vercel preview `*.vercel.app`); anything else
+ * falls back to the canonical production origin.
+ */
+function trustedOrigin(req: Request): string {
+  const fallback = 'https://avexastays.com';
+  try {
+    const { origin, hostname } = new URL(req.url);
+    const allowed =
+      hostname === 'avexastays.com' ||
+      hostname === 'www.avexastays.com' ||
+      hostname === 'localhost' ||
+      hostname.endsWith('.vercel.app');
+    return allowed ? origin : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export async function POST(req: Request) {
   // 1 — Identity from the validated Supabase session (members only).
   const supabase = await getSupabaseServerClient();
@@ -144,7 +166,7 @@ export async function POST(req: Request) {
   }
 
   // 5 — Stripe Checkout Session, charged in RON (bani = ×100; totals are whole RON).
-  const origin = new URL(req.url).origin;
+  const origin = trustedOrigin(req);
   const lineItems: Array<{
     quantity: number;
     price_data: {

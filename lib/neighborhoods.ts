@@ -1,4 +1,5 @@
 import type { Neighborhood } from '@/types';
+import { properties } from '@/lib/properties';
 
 /**
  * AVEXA serves a single city — Bucharest City Center — divided into 4 zones.
@@ -8,7 +9,16 @@ import type { Neighborhood } from '@/types';
  *   Old City Center  → 101, 201            (2 suites)
  *   Universitate     → 203                 (1 suite)
  *   Piața Romană     → 304                 (1 suite)
+ *
+ * `propertyCount` is derived live from the static catalog so the homepage
+ * carousel can never drift from /locations (which counts the same source).
+ * No import cycle: lib/properties.ts keeps its own local neighborhood map and
+ * does not import this file.
  */
+function countIn(id: Neighborhood['id']): number {
+  return properties.filter((p) => p.neighborhood === id).length;
+}
+
 export const neighborhoods: Neighborhood[] = [
   {
     id: 'calea-victoriei',
@@ -17,7 +27,7 @@ export const neighborhoods: Neighborhood[] = [
     color: '#2E7D32',
     coverImage: '/listings/301/00-cover.jpeg',
     description: 'Bucharest\'s most prestigious boulevard — palaces, boutiques, embassies.',
-    propertyCount: 4,
+    propertyCount: countIn('calea-victoriei'),
   },
   {
     id: 'old-city-center',
@@ -26,7 +36,7 @@ export const neighborhoods: Neighborhood[] = [
     color: '#B08840',
     coverImage: '/listings/101/00-cover.jpeg',
     description: 'Historic core, Old Town energy, nightlife at your doorstep.',
-    propertyCount: 2,
+    propertyCount: countIn('old-city-center'),
   },
   {
     id: 'universitate',
@@ -35,7 +45,7 @@ export const neighborhoods: Neighborhood[] = [
     color: '#1565C0',
     coverImage: '/listings/203/00-cover.jpeg',
     description: 'Central transit hub — Universitate metro, walkable everywhere.',
-    propertyCount: 1,
+    propertyCount: countIn('universitate'),
   },
   {
     id: 'piata-romana',
@@ -44,7 +54,7 @@ export const neighborhoods: Neighborhood[] = [
     color: '#6A1B9A',
     coverImage: '/listings/304/00-cover.jpeg',
     description: 'Quiet residential pocket near Calea Victoriei and Romană metro.',
-    propertyCount: 1,
+    propertyCount: countIn('piata-romana'),
   },
 ];
 

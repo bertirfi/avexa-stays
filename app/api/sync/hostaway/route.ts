@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { getListings } from '@/lib/hostaway/client';
 import { SYNC_WINDOW_DAYS, syncListingAvailability } from '@/lib/hostaway/sync';
+import { timingSafeEqualStrings } from '@/lib/timing-safe';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +11,8 @@ function isAuthed(request: Request): boolean {
   const sync = process.env.SYNC_SECRET;
   const cron = process.env.CRON_SECRET;
   return Boolean(
-    (sync && auth === `Bearer ${sync}`) || (cron && auth === `Bearer ${cron}`),
+    (sync && timingSafeEqualStrings(auth, `Bearer ${sync}`)) ||
+      (cron && timingSafeEqualStrings(auth, `Bearer ${cron}`)),
   );
 }
 

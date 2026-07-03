@@ -5,6 +5,23 @@ import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
 
+/**
+ * Tracks the `prefers-reduced-motion: reduce` media query. Initializes from
+ * matchMedia on mount (false during SSR / before hydration, so the desktop
+ * scroll-story stays the default) and stays in sync with OS-level changes.
+ */
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduced(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return reduced;
+}
+
 const STEPS = [
   {
     title: 'Business or leisure.',
@@ -41,8 +58,12 @@ const RIGHT_IMAGES = [
 export function Editorial() {
   const tunnelRef = useRef<HTMLDivElement>(null);
   const [current, setCurrent] = useState(0);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
+    // The pinned scroll-story is disabled under reduced motion — skip the
+    // scroll listener entirely so nothing drives the (unrendered) tunnel.
+    if (prefersReducedMotion) return;
     function onScroll() {
       const tunnel = tunnelRef.current;
       if (!tunnel) return;
@@ -64,7 +85,7 @@ export function Editorial() {
       window.removeEventListener('scroll', handler);
       window.removeEventListener('resize', handler);
     };
-  }, []);
+  }, [prefersReducedMotion]);
 
   function goToStep(i: number) {
     const tunnel = tunnelRef.current;
@@ -76,7 +97,9 @@ export function Editorial() {
 
   return (
     <section id="editorial" className="bg-gold text-ink">
-      {/* Desktop: pinned scroll-story (hidden on mobile) */}
+      {/* Desktop: pinned scroll-story (hidden on mobile). Skipped entirely under
+          reduced motion — the stacked variant below then covers all breakpoints. */}
+      {!prefersReducedMotion && (
       <div ref={tunnelRef} className="relative hidden sm:block" style={{ height: '400vh' }}>
         <div className="sticky top-0 flex h-screen items-center overflow-hidden">
           <div
@@ -160,9 +183,17 @@ export function Editorial() {
           </div>
         </div>
       </div>
+      )}
 
-      {/* Mobile: plain editorial stack — no scroll-jack, just scroll through. */}
-      <div className="px-6 pb-14 pt-12 sm:hidden">
+      {/* Plain editorial stack — no scroll-jack, just scroll through. Mobile
+          always; also the desktop fallback when reduced motion is preferred
+          (then it drops `sm:hidden` and shows on every breakpoint). */}
+      <div
+        className={cn(
+          'px-6 pb-14 pt-12',
+          prefersReducedMotion ? 'block' : 'sm:hidden',
+        )}
+      >
         <p className="font-mono-label mb-5 text-ink-60">— STAYS THAT FIT THE TRIP</p>
         {STEPS.map((s, i) => {
           const alt = i % 2 === 1;

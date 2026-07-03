@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { fetchBnrEurRate } from '@/lib/fx';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { timingSafeEqualStrings } from '@/lib/timing-safe';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,8 +13,8 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
-  const auth = request.headers.get('authorization');
-  if (!secret || auth !== `Bearer ${secret}`) {
+  const auth = request.headers.get('authorization') ?? '';
+  if (!secret || !timingSafeEqualStrings(auth, `Bearer ${secret}`)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { properties } from '@/lib/properties';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { HOSTAWAY_LISTING_BY_PROPERTY } from '@/lib/hostaway/mapping';
+import { timingSafeEqualStrings } from '@/lib/timing-safe';
 import type { Json } from '@/types/database.types';
 
 export const dynamic = 'force-dynamic';
@@ -17,8 +18,8 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: Request) {
   const secret = process.env.SYNC_SECRET;
-  const auth = request.headers.get('authorization');
-  if (!secret || auth !== `Bearer ${secret}`) {
+  const auth = request.headers.get('authorization') ?? '';
+  if (!secret || !timingSafeEqualStrings(auth, `Bearer ${secret}`)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
