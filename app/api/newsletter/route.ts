@@ -2,15 +2,16 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 /**
- * Newsletter opt-in → Brevo contact.
+ * Newsletter opt-in → Resend Audience contact (the client's existing Resend
+ * account — the same one already sending the refund notice).
  *
  * Trust boundary (api-validation rule): the body is Zod-validated before any
  * work. This endpoint takes an email and nothing that gates money or identity.
  *
- * Honesty: without BREVO_API_KEY the form must NOT pretend to work — it returns
- * 503 { not_configured } so the UI can say "opening soon". Robert flips this on
- * by adding BREVO_API_KEY (+ optional BREVO_LIST_ID) in Vercel once the Brevo
- * account is ready.
+ * Honesty: without RESEND_API_KEY + RESEND_AUDIENCE_ID the form must NOT
+ * pretend to work — it returns 503 { not_configured } so the UI says "opening
+ * soon". Robert flips this on by creating an Audience in the Resend dashboard
+ * (Audiences → Create) and adding its id as RESEND_AUDIENCE_ID in Vercel.
  */
 
 export const runtime = 'nodejs';
@@ -51,51 +52,49 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const key = process.env.BREVO_API_KEY;
-  if (!key) {
+  // Resend Audiences — the client already has the Resend account (it also
+  // sends the refund notice); no second marketing subscription needed.
+  const key = process.env.RESEND_API_KEY;
+  const audienceId = process.env.RESEND_AUDIENCE_ID;
+  if (!key || !audienceId) {
     // Warn once per server instance — the form is honest ("opening soon").
     if (!warnedNotConfigured) {
-      console.warn('newsletter: BREVO_API_KEY not set — subscriptions disabled');
+      console.warn(
+        'newsletter: RESEND_API_KEY / RESEND_AUDIENCE_ID not set — subscriptions disabled',
+      );
       warnedNotConfigured = true;
     }
     return NextResponse.json({ error: 'not_configured' }, { status: 503 });
   }
 
-  const listId = process.env.BREVO_LIST_ID;
-
   try {
-    const res = await fetch('https://api.brevo.com/v3/contacts', {
+    const res = await fetch(`https://api.resend.com/audiences/${audienceId}/contacts`, {
       method: 'POST',
       headers: {
-        'api-key': key,
+        Authorization: `Bearer ${key}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        email,
-        updateEnabled: true,
-        ...(listId ? { listIds: [Number(listId)] } : {}),
-      }),
+      body: JSON.stringify({ email, unsubscribed: false }),
     });
 
     if (res.ok) {
       return NextResponse.json({ ok: true });
     }
 
-    // Brevo returns 400 { code: 'duplicate_parameter' } when the contact already
-    // exists — that's a successful outcome for us (already subscribed).
+    // An already-registered contact is a successful outcome (already subscribed).
     const bodyText = await res.text();
-    if (res.status === 400 && bodyText.includes('duplicate_parameter')) {
+    if (res.status === 409 || bodyText.toLowerCase().includes('already exist')) {
       return NextResponse.json({ ok: true });
     }
 
     // Any other failure — log status + a body slice (domain only, no PII).
     console.error(
-      `newsletter: Brevo error ${res.status} for ${emailDomain(email)} — ${bodyText.slice(0, 200)}`,
+      `newsletter: Resend error ${res.status} for ${emailDomain(email)} — ${bodyText.slice(0, 200)}`,
     );
     return NextResponse.json({ error: 'subscribe_failed' }, { status: 502 });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'unknown error';
-    console.error(`newsletter: Brevo request failed for ${emailDomain(email)} — ${message}`);
+    console.error(`newsletter: Resend request failed for ${emailDomain(email)} — ${message}`);
     return NextResponse.json({ error: 'subscribe_failed' }, { status: 502 });
   }
 }

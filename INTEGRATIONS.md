@@ -51,12 +51,15 @@ GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-...
 
 # ============================================
-# EMAIL — BREVO
+# EMAIL MARKETING — RESEND AUDIENCES (newsletter)
 # ============================================
-BREVO_API_KEY=xkeysib-...             # also enables the newsletter opt-in (/api/newsletter); without it the form says "Subscriptions open soon"
-BREVO_LIST_ID=                        # optional — numeric Brevo list id to add newsletter contacts to
-BREVO_SENDER_EMAIL=bookings@avexastays.com
-BREVO_SENDER_NAME=AVEXA STAYS
+# /api/newsletter adds contacts to a Resend Audience — same RESEND_API_KEY the
+# refund notice already uses (existing account, no second subscription).
+# Setup: Resend dashboard → Audiences → Create → copy the id below. Until the
+# id is set, the form honestly answers 503 "Subscriptions open soon".
+RESEND_AUDIENCE_ID=
+# (Brevo was the earlier plan for campaigns — dropped for now; revisit only if
+# real campaign tooling is ever needed.)
 
 # ============================================
 # ANALYTICS

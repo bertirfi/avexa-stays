@@ -33,7 +33,7 @@ The orchestrator is **the selected advanced model** (Fable 5, Opus 4.8, or whate
 ## Tech stack
 - **Next.js 15** App Router · **TypeScript** strict · **Tailwind v4** · **motion** (import from `'motion/react'`, not framer-motion)
 - **Supabase** (Postgres + Auth + RLS) · **Hostaway** PMS = source of truth for availability/price, cached in Supabase
-- **Stripe** Checkout + webhooks · **Google Maps** (JS + Embed + Places) · **Resend** for auth email (via Supabase SMTP); Brevo for marketing later
+- **Stripe** Checkout + webhooks · **Google Maps** (JS + Embed + Places) · **Resend** for auth email (via Supabase SMTP), the refund notice + newsletter (Audiences, `RESEND_AUDIENCE_ID`)
 - **Vercel** hosting · **PostHog + GA4** analytics (later)
 - Rendering: SSG marketing · ISR property pages · server components by default, client only when interactive
 
