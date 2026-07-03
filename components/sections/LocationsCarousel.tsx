@@ -152,22 +152,12 @@ export function LocationsCarousel() {
                 />
                 <div className="absolute inset-0 hidden bg-gradient-to-t from-ink/75 via-ink/20 to-transparent sm:block" />
 
-                {/* Neighborhood pill (desktop only) */}
-                <span className="font-mono-label absolute left-6 top-6 z-[2] hidden items-center gap-2 rounded-full bg-white/95 px-3.5 py-2 text-[11px] text-ink sm:flex">
-                  <span className="pulse-dot size-[7px] rounded-full" style={{ background: n.color }} />
-                  {n.area}
-                </span>
-
                 {/* Overlaid text (desktop only) */}
                 <div className="absolute bottom-7 left-6 right-6 z-[2] hidden text-white sm:block">
                   <div className="font-display text-[32px] leading-[1.1] tracking-[-0.01em]">{n.label}</div>
                   <div className="mt-1.5 max-w-[280px] text-sm text-white/70">{n.description}</div>
                 </div>
 
-                {/* Count (desktop only) */}
-                <div className="font-display absolute bottom-7 right-7 z-[2] hidden text-[80px] leading-none tracking-[-0.03em] text-white/15 sm:block">
-                  {String(n.propertyCount).padStart(2, '0')}
-                </div>
               </div>
 
               {/* Text below the photo (mobile only) */}
