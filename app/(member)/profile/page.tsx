@@ -28,6 +28,7 @@ export default async function ProfilePage() {
         email: user.email ?? '',
         fullName,
         phone: row?.phone ?? '',
+        marketingConsent: row?.marketing_consent ?? false,
       }}
     />
   );

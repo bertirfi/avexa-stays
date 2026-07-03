@@ -53,7 +53,8 @@ GOOGLE_CLIENT_SECRET=GOCSPX-...
 # ============================================
 # EMAIL — BREVO
 # ============================================
-BREVO_API_KEY=xkeysib-...
+BREVO_API_KEY=xkeysib-...             # also enables the newsletter opt-in (/api/newsletter); without it the form says "Subscriptions open soon"
+BREVO_LIST_ID=                        # optional — numeric Brevo list id to add newsletter contacts to
 BREVO_SENDER_EMAIL=bookings@avexastays.com
 BREVO_SENDER_NAME=AVEXA STAYS
 

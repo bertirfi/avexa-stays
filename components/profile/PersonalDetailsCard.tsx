@@ -8,11 +8,14 @@ interface Props {
   lastName: string;
   email: string;
   phone: string;
-  onSave: (next: { first: string; last: string; phone: string }) => void;
+  /** Returns an { error } to surface inline and keep the form open, or nothing on success. */
+  onSave: (next: { first: string; last: string; phone: string }) => Promise<{ error?: string } | void>;
 }
 
 export function PersonalDetailsCard({ firstName, lastName, email, phone, onSave }: Props) {
   const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [first, setFirst] = useState(firstName);
   const [last, setLast] = useState(lastName);
   const [phoneInput, setPhoneInput] = useState(phone);
@@ -21,17 +24,29 @@ export function PersonalDetailsCard({ firstName, lastName, email, phone, onSave 
     setFirst(firstName);
     setLast(lastName);
     setPhoneInput(phone);
+    setError(null);
     setEditing(true);
   }
 
   function cancel() {
+    setError(null);
     setEditing(false);
   }
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    onSave({ first: first.trim(), last: last.trim(), phone: phoneInput.trim() });
-    setEditing(false);
+    setError(null);
+    setSaving(true);
+    try {
+      const result = await onSave({ first: first.trim(), last: last.trim(), phone: phoneInput.trim() });
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -103,19 +118,26 @@ export function PersonalDetailsCard({ firstName, lastName, email, phone, onSave 
               placeholder="+40 7XX XXX XXX"
             />
           </div>
+          {error && (
+            <p className="mt-4 rounded-lg bg-[#FF4136]/10 px-3.5 py-2.5 text-[13px] font-medium text-[#c0281f]">
+              {error}
+            </p>
+          )}
           <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={cancel}
-              className="ease-[var(--ease-snap)] w-full rounded-[10px] border-[1.5px] border-gray-line bg-white px-[22px] py-3 text-center text-sm font-semibold text-ink transition-colors hover:border-ink sm:w-auto"
+              disabled={saving}
+              className="ease-[var(--ease-snap)] w-full rounded-[10px] border-[1.5px] border-gray-line bg-white px-[22px] py-3 text-center text-sm font-semibold text-ink transition-colors hover:border-ink disabled:opacity-60 sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="ease-[var(--ease-snap)] w-full rounded-[10px] border-[1.5px] border-ink bg-ink px-[22px] py-3 text-center text-sm font-semibold text-white transition-colors hover:border-gold-dark hover:bg-gold-dark sm:w-auto"
+              disabled={saving}
+              className="ease-[var(--ease-snap)] w-full rounded-[10px] border-[1.5px] border-ink bg-ink px-[22px] py-3 text-center text-sm font-semibold text-white transition-colors hover:border-gold-dark hover:bg-gold-dark disabled:opacity-60 sm:w-auto"
             >
-              Save changes
+              {saving ? 'Saving…' : 'Save changes'}
             </button>
           </div>
         </form>

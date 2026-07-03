@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { signOutClient } from '@/lib/auth/client';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { updateProfile } from '@/app/(member)/profile/actions';
 import { PersonalDetailsCard } from '@/components/profile/PersonalDetailsCard';
 import { ToggleRow } from '@/components/profile/ToggleRow';
 
@@ -13,6 +14,7 @@ export interface InitialProfile {
   email: string;
   fullName: string;
   phone: string;
+  marketingConsent: boolean;
 }
 
 /** Split a full name into first / last for the details form. */
@@ -29,33 +31,50 @@ export function ProfileApp({ initialProfile }: { initialProfile: InitialProfile 
   const [last, setLast] = useState(initialLast);
   const [phone, setPhone] = useState(initialProfile.phone);
 
-  // Preferences (local UI state — persistence lands in a later workstream)
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [marketing, setMarketing] = useState(false);
+  // Marketing consent — seeded from the profiles row, persisted via the server action.
+  const [marketing, setMarketing] = useState(initialProfile.marketingConsent);
+  const [marketingError, setMarketingError] = useState<string | null>(null);
 
   const fullName = `${first} ${last}`.trim();
   const displayName = fullName || 'Your Profile';
   const initial = (fullName || initialProfile.email || 'U').charAt(0).toUpperCase();
 
-  async function handleSave(next: { first: string; last: string; phone: string }) {
+  async function handleSave(
+    next: { first: string; last: string; phone: string },
+  ): Promise<{ error?: string } | void> {
     const nextFull = `${next.first} ${next.last}`.trim();
-    // Optimistic local state (instant UI); Nav updates itself via
-    // onAuthStateChange once the metadata write below lands.
+    // full_name guardrails: required, 1–120 chars (trimmed).
+    if (nextFull.length < 1) return { error: 'Please enter your name.' };
+    if (nextFull.length > 120) return { error: 'Name is too long (max 120 characters).' };
+
+    // full_name stays a CLIENT-side auth.updateUser so USER_UPDATED fires and
+    // the Nav's useAuth() context refreshes. phone + consent go through the
+    // validated server action (RLS enforces ownership).
+    try {
+      await getSupabaseBrowserClient().auth.updateUser({ data: { full_name: nextFull } });
+    } catch {
+      return { error: 'Could not update your name. Try again.' };
+    }
+
+    const result = await updateProfile({ phone: next.phone, marketingConsent: marketing });
+    if ('error' in result) return { error: result.error };
+
+    // Commit local state only once everything persisted.
     setFirst(next.first);
     setLast(next.last);
     setPhone(next.phone);
-    // Persist to Supabase so edits survive a reload.
-    try {
-      const supabase = getSupabaseBrowserClient();
-      await supabase.auth.updateUser({ data: { full_name: nextFull } });
-      const { data } = await supabase.auth.getUser();
-      if (data.user) {
-        await supabase
-          .from('profiles')
-          .update({ phone: next.phone || null })
-          .eq('id', data.user.id);
-      }
-    } catch {}
+    return;
+  }
+
+  async function handleMarketingToggle(value: boolean) {
+    // Optimistic flip; roll back with an inline note if the write fails.
+    setMarketing(value);
+    setMarketingError(null);
+    const result = await updateProfile({ phone, marketingConsent: value });
+    if ('error' in result) {
+      setMarketing(!value);
+      setMarketingError(result.error);
+    }
   }
 
   function handleLogout() {
@@ -110,20 +129,19 @@ export function ProfileApp({ initialProfile }: { initialProfile: InitialProfile 
           <div className="mb-6 flex items-center justify-between">
             <h2 className="font-mono-label text-ink-60">Preferences</h2>
           </div>
-          <ToggleRow
-            label="Email notifications"
-            description="Booking confirmations, reminders, and member offers"
-            checked={emailNotifications}
-            onChange={setEmailNotifications}
-            first
-          />
+          {/* "Email notifications" toggle removed — transactional emails (booking
+              confirmations, reminders) are not optional, so an opt-out here would be dishonest. */}
           <ToggleRow
             label="Marketing updates"
             description="New locations, seasonal promotions, partner deals"
             checked={marketing}
-            onChange={setMarketing}
+            onChange={handleMarketingToggle}
+            first
             last
           />
+          {marketingError && (
+            <p className="mt-3 text-[13px] font-medium text-[#c0281f]">{marketingError}</p>
+          )}
         </section>
 
         {/* Account */}
