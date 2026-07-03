@@ -12,6 +12,8 @@ export interface Neighborhood {
   area: string;
   color: string; // hex from --color-nbh-*
   coverImage: string; // path under /public
+  /** CSS object-position for the card crop (e.g. 'center 68%'); default center. */
+  coverPosition?: string;
   description: string;
   propertyCount: number;
 }

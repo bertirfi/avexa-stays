@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { Reveal } from '@/components/Reveal';
 import { neighborhoods } from '@/lib/neighborhoods';
@@ -132,8 +133,24 @@ export function LocationsCarousel() {
             >
               {/* Photo — compact rounded block on mobile, full-bleed on desktop */}
               <div className="relative h-[200px] overflow-hidden rounded-[16px] sm:absolute sm:inset-0 sm:h-auto sm:rounded-none">
+                {/* Color gradient stays underneath as the loading backdrop */}
                 <div className="absolute inset-0" style={{ background: cardBackground(n.color) }} />
-                <div className="absolute inset-0 hidden bg-gradient-to-t from-ink/40 to-transparent sm:block" />
+                <Image
+                  src={n.coverImage}
+                  alt=""
+                  fill
+                  draggable={false}
+                  sizes="(max-width: 640px) 200px, 420px"
+                  className="object-cover transition-transform duration-[600ms] ease-[var(--ease-snap)] sm:group-hover:scale-[1.04]"
+                  style={{ objectPosition: n.coverPosition ?? 'center' }}
+                />
+                {/* Neighborhood-color glaze (identity) + legibility gradient */}
+                <div
+                  aria-hidden
+                  className="absolute inset-0"
+                  style={{ background: `linear-gradient(160deg, ${n.color}59 0%, transparent 45%)` }}
+                />
+                <div className="absolute inset-0 hidden bg-gradient-to-t from-ink/75 via-ink/20 to-transparent sm:block" />
 
                 {/* Neighborhood pill (desktop only) */}
                 <span className="font-mono-label absolute left-6 top-6 z-[2] hidden items-center gap-2 rounded-full bg-white/95 px-3.5 py-2 text-[11px] text-ink sm:flex">
