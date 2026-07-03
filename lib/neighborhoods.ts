@@ -25,10 +25,9 @@ export const neighborhoods: Neighborhood[] = [
     label: 'Calea Victoriei',
     area: 'Sector 1',
     color: '#2E7D32',
-    // Open Streets evening on Calea Victoriei; crop low — the source photo has
-    // marketing lettering baked into the sky.
-    coverImage: '/listing-photos/33-open-streets.jpeg',
-    coverPosition: 'center 72%',
+    // Open Streets evening on Calea Victoriei — pre-cropped copy: the original
+    // has marketing lettering baked into the sky (uncroppable at card aspect).
+    coverImage: '/listing-photos/33-open-streets-card.jpeg',
     description: 'Bucharest\'s most prestigious boulevard — palaces, boutiques, embassies.',
     propertyCount: countIn('calea-victoriei'),
   },
