@@ -23,7 +23,12 @@ export function StayGallery({ photos, name }: StayGalleryProps) {
         setOpenIndex((i) => (i === null ? null : Math.min(photos.length - 1, i + 1)));
     }
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [openIndex, photos.length]);
 
   return (
@@ -86,7 +91,7 @@ export function StayGallery({ photos, name }: StayGalleryProps) {
           <button
             type="button"
             aria-label="Close"
-            className="absolute right-6 top-6 grid size-12 place-items-center rounded-full bg-white/10 text-cream backdrop-blur hover:bg-white/20"
+            className="absolute right-6 top-6 z-10 grid size-12 place-items-center rounded-full bg-white/10 text-cream backdrop-blur hover:bg-white/20"
             onClick={() => setOpenIndex(null)}
           >
             <Icon name="x" size={20} />
@@ -100,25 +105,22 @@ export function StayGallery({ photos, name }: StayGalleryProps) {
                 e.stopPropagation();
                 setOpenIndex((i) => Math.max(0, (i ?? 0) - 1));
               }}
-              className="absolute left-4 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-cream backdrop-blur hover:bg-white/20"
+              className="absolute left-4 top-1/2 z-10 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-cream backdrop-blur hover:bg-white/20"
             >
               <Icon name="chevLeft" size={20} />
             </button>
           )}
 
-          <div
-            className="relative h-full max-h-[80vh] w-full max-w-5xl"
+          <Image
+            src={photos[openIndex].src}
+            alt={`${name} — ${photos[openIndex].label}`}
+            width={1600}
+            height={1067}
+            sizes="92vw"
+            className="h-auto max-h-[85vh] w-auto max-w-[92vw] object-contain"
+            priority
             onClick={(e) => e.stopPropagation()}
-          >
-            <Image
-              src={photos[openIndex].src}
-              alt={`${name} — ${photos[openIndex].label}`}
-              fill
-              sizes="80vw"
-              className="object-contain"
-              priority
-            />
-          </div>
+          />
 
           {openIndex < photos.length - 1 && (
             <button
@@ -128,13 +130,13 @@ export function StayGallery({ photos, name }: StayGalleryProps) {
                 e.stopPropagation();
                 setOpenIndex((i) => Math.min(photos.length - 1, (i ?? 0) + 1));
               }}
-              className="absolute right-4 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-cream backdrop-blur hover:bg-white/20"
+              className="absolute right-4 top-1/2 z-10 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-cream backdrop-blur hover:bg-white/20"
             >
               <Icon name="chevRight" size={20} />
             </button>
           )}
 
-          <span className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 font-mono-label text-cream backdrop-blur">
+          <span className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 font-mono-label text-cream backdrop-blur">
             {openIndex + 1} / {photos.length}
           </span>
         </div>
