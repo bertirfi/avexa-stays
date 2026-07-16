@@ -112,7 +112,7 @@ export function LocationsCarousel() {
           ref={carouselRef}
           onScroll={updateArrows}
           onMouseDown={onMouseDown}
-          className="no-scrollbar flex cursor-grab snap-x snap-mandatory gap-3.5 overflow-x-auto px-6 pb-2 active:cursor-grabbing sm:gap-5 sm:pb-6 md:px-10"
+          className="no-scrollbar flex cursor-grab snap-x snap-mandatory gap-3.5 overflow-x-auto scroll-px-7 px-7 pb-2 active:cursor-grabbing sm:gap-5 sm:pb-6 md:scroll-px-[max(40px,calc((100vw-1360px)/2+40px))] md:px-[max(40px,calc((100vw-1360px)/2+40px))]"
         >
           {neighborhoods.map((n) => (
             <Link

@@ -108,19 +108,15 @@ export function LocationsView({ properties }: { properties: Property[] }) {
 
           {/* Single-city filter + zone anchors */}
           <div className="mb-4 flex flex-wrap gap-2">
-            <span className="rounded-full border border-ink bg-ink px-3.5 py-2 text-[12.5px] font-medium text-cream">
+            <span className="rounded-full border border-ink bg-ink px-4 py-2.5 text-[13.5px] font-medium text-cream">
               Bucharest City Center
             </span>
             {groups.map((g) => (
               <a
                 key={g.neighborhood.id}
                 href={`#zone-${g.neighborhood.id}`}
-                className="flex items-center gap-1.5 rounded-full border border-gray-line bg-white px-3.5 py-2 text-[12.5px] font-medium transition hover:border-ink hover:bg-cream"
+                className="flex items-center gap-1.5 rounded-full border border-gray-line bg-white px-4 py-2.5 text-[13.5px] font-medium transition hover:border-ink hover:bg-cream"
               >
-                <span
-                  className="size-2 rounded-full"
-                  style={{ background: g.neighborhood.color }}
-                />
                 {g.neighborhood.label}
                 <span className="text-ink-60">{g.items.length}</span>
               </a>
@@ -163,7 +159,6 @@ export function LocationsView({ properties }: { properties: Property[] }) {
                   transition={{ duration: 0.5 }}
                   className="mb-5 flex items-center gap-3"
                 >
-                  <span className="size-2.5 rounded-full" style={{ background: g.neighborhood.color }} />
                   <h2 className="font-display text-xl tracking-[-0.01em]">{g.neighborhood.label}</h2>
                   <span className="font-mono-label text-ink-60">
                     {g.items.length} {g.items.length === 1 ? 'stay' : 'stays'}
@@ -238,14 +233,9 @@ export function LocationsView({ properties }: { properties: Property[] }) {
               </div>
               <div className="min-w-0 pr-6">
                 <span
-                  className="font-mono-label flex items-center gap-1.5 text-[11px] tracking-[0.18em]"
+                  className="block text-[12px] font-semibold uppercase tracking-[0.14em]"
                   style={{ color: popupProperty.neighborhoodColor }}
                 >
-                  <span
-                    aria-hidden
-                    className="size-1.5 rounded-full"
-                    style={{ background: popupProperty.neighborhoodColor }}
-                  />
                   {popupProperty.neighborhoodLabel}
                 </span>
                 <h4 className="font-display mt-0.5 truncate text-base">{popupProperty.name}</h4>

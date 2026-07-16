@@ -132,14 +132,9 @@ export function PropertyCard({
       <div className="grid grid-cols-1 items-start gap-4 p-6 sm:grid-cols-[1fr_auto]">
         <div>
           <span
-            className="font-mono-label flex items-center gap-1.5 text-[13px] tracking-[0.2em]"
+            className="block text-[12px] font-semibold uppercase tracking-[0.14em]"
             style={{ color: property.neighborhoodColor }}
           >
-            <span
-              aria-hidden
-              className="size-[7px] rounded-full"
-              style={{ background: property.neighborhoodColor }}
-            />
             {property.neighborhoodLabel}
           </span>
           <h3 className="font-display mt-2 text-2xl leading-tight">{property.name}</h3>
