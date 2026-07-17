@@ -2,12 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/chrome/Logo';
 import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
 import { CurrencySwitcher } from '@/components/currency/CurrencySwitcher';
-import { HeaderSearch } from '@/components/search/HeaderSearch';
+import { MiniSearchPill } from '@/components/search/HeaderSearch';
+import { SearchPill } from '@/components/search/SearchPill';
+import { useSearch, type SearchPanel } from '@/components/search/SearchContext';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { signOutClient } from '@/lib/auth/client';
 import { cn } from '@/lib/cn';
@@ -18,6 +22,14 @@ const links = [
   { href: '/my-trips', label: 'My Trips' },
 ];
 
+/**
+ * Airbnb-style permanent header: always visible (never hides on scroll).
+ * On search pages (/ and /locations, desktop) it has two states —
+ * big at the very top (full Where/When/Guests pill in a second row) and
+ * compact once scrolled (mini pill in the nav centre). Clicking the mini
+ * pill expands the header back to the big state over a dimmed page.
+ * Nav links live in an Airbnb-style hamburger dropdown on the right.
+ */
 export function Nav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -26,12 +38,33 @@ export function Nav() {
   // this nav (≤sm). Desktop and all other pages keep the normal nav.
   const isSearchPage = pathname === '/' || pathname === '/locations';
 
-  const { pinned, navHidden } = useChromeScroll();
+  const { scrollY, pinned } = useChromeScroll();
+  const { openPanel } = useSearch();
   const { user, loading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // Set while the user re-expanded the search from the scrolled mini pill.
   const [searchExpanded, setSearchExpanded] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+
+  useEffect(() => setMounted(true), []);
+
+  const atTop = scrollY < 40;
+  const big = isSearchPage && (atTop || searchExpanded);
+  const transparent = isHome && !pinned;
+
+  const collapse = useCallback(() => setSearchExpanded(false), []);
+
+  const expandTo = useCallback(
+    (section: SearchPanel) => {
+      setSearchExpanded(true);
+      // The big SearchPill is always mounted, so open its popup directly.
+      openPanel(section, 'header');
+    },
+    [openPanel],
+  );
 
   // Close the account menu on outside click / Escape
   useEffect(() => {
@@ -50,10 +83,21 @@ export function Nav() {
     };
   }, [menuOpen]);
 
-  const transparent = isHome && !pinned;
-  // Compact header pill: on /locations always; on / only once the nav is solid
-  // (the hero already carries the big pill while transparent at the top).
-  const showHeaderSearch = isSearchPage && !transparent;
+  // While click-expanded: Escape collapses and background scroll is locked.
+  useEffect(() => {
+    if (!searchExpanded) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') collapse();
+    }
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [searchExpanded, collapse]);
+
   const loggedIn = !!user;
   const fullName =
     typeof user?.user_metadata?.full_name === 'string'
@@ -73,121 +117,164 @@ export function Nav() {
     <>
       <header
         className={cn(
-          'fixed inset-x-0 top-0 z-50 transition-[transform,background,border-color,padding] duration-300 ease-[var(--ease-snap)]',
+          'fixed inset-x-0 top-0 z-50 transition-[background,border-color] duration-300 ease-[var(--ease-snap)]',
           transparent ? 'bg-transparent' : 'border-b border-gray-line bg-cream/95 backdrop-blur',
-          navHidden && !mobileOpen && !searchExpanded ? '-translate-y-full' : 'translate-y-0',
           isSearchPage && 'max-sm:hidden',
         )}
       >
-        <div
-          className={cn(
-            'mx-auto flex max-w-[1400px] items-center justify-between px-6 transition-all duration-300 md:px-7',
-            transparent ? 'py-5' : 'py-2.5',
-          )}
-        >
-          <Link href="/" aria-label="AVEXA home">
-            <Logo
-              size={transparent ? 64 : 48}
-              wordmarkSize={transparent ? 32 : 30}
-              tone={transparent ? 'gold' : 'gold-dark'}
-              className="transition-all"
-            />
-          </Link>
+        <div className="mx-auto max-w-[1400px] px-6 md:px-7">
+          <div
+            className={cn(
+              'flex items-center justify-between transition-all duration-300',
+              transparent ? 'py-5' : 'py-2.5',
+            )}
+          >
+            <Link href="/" aria-label="AVEXA home">
+              <Logo
+                size={transparent ? 64 : 48}
+                wordmarkSize={transparent ? 32 : 30}
+                tone={transparent ? 'gold' : 'gold-dark'}
+                className="transition-all"
+              />
+            </Link>
 
-          {showHeaderSearch && (
-            <div className="hidden min-w-0 flex-1 justify-center px-6 md:flex">
-              <HeaderSearch onExpandedChange={setSearchExpanded} />
-            </div>
-          )}
-
-          <nav className="hidden items-center gap-8 md:flex">
-            {links.map((link) => {
-              const current = pathname.startsWith(link.href);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
+            {/* Centre — mini pill once scrolled (search pages only) */}
+            <div className="hidden min-w-0 flex-1 items-center justify-center px-6 md:flex">
+              {isSearchPage && (
+                <div
                   className={cn(
-                    'text-[13.5px] font-medium transition-colors',
-                    transparent
-                      ? 'text-white/80 hover:text-gold'
-                      : current
-                        ? 'text-gold-dark'
-                        : 'text-ink/80 hover:text-ink',
+                    'min-w-0 transition-all duration-300 ease-[var(--ease-snap)]',
+                    big ? 'pointer-events-none scale-95 opacity-0' : 'scale-100 opacity-100',
                   )}
                 >
-                  {link.label}
-                </Link>
-              );
-            })}
+                  <MiniSearchPill onSelect={expandTo} />
+                </div>
+              )}
+            </div>
 
-            <CurrencySwitcher tone={transparent ? 'dark' : 'light'} />
+            {/* Right — currency + Airbnb-style hamburger menu */}
+            <div className="hidden items-center gap-3 md:flex">
+              <CurrencySwitcher tone={transparent ? 'dark' : 'light'} />
 
-            {loading ? (
-              // Neutral placeholder — same footprint as the avatar button, so
-              // neither "Sign up" nor the avatar flashes before auth resolves.
-              <div
-                aria-hidden
-                className="size-9 animate-pulse rounded-full bg-ink/10"
-              />
-            ) : loggedIn ? (
               <div className="relative" ref={menuRef}>
                 <button
                   type="button"
-                  aria-label="Account menu"
+                  aria-label="Menu"
                   aria-expanded={menuOpen}
                   onClick={() => setMenuOpen((o) => !o)}
-                  className="grid size-9 place-items-center rounded-full bg-gold font-display text-sm text-ink transition hover:bg-gold-dark hover:text-cream"
+                  className={cn(
+                    'flex items-center gap-2.5 rounded-full border py-1.5 pl-3.5 pr-1.5 transition',
+                    transparent
+                      ? 'border-white/30 bg-white/10 text-white backdrop-blur hover:bg-white/20'
+                      : 'border-gray-line bg-white text-ink shadow-[var(--shadow-pill)] hover:shadow-md',
+                  )}
                 >
-                  {initial}
+                  <Icon name="menu" size={16} />
+                  {loading ? (
+                    <span aria-hidden className="size-7 animate-pulse rounded-full bg-ink/10" />
+                  ) : loggedIn ? (
+                    <span className="grid size-7 place-items-center rounded-full bg-gold font-display text-[13px] text-ink">
+                      {initial}
+                    </span>
+                  ) : (
+                    <span className="grid size-7 place-items-center rounded-full bg-ink text-cream">
+                      <Icon name="user" size={14} />
+                    </span>
+                  )}
                 </button>
+
                 {menuOpen && (
-                  <div className="absolute right-0 top-[120%] w-56 overflow-hidden rounded-2xl border border-gray-line bg-white py-2 shadow-[var(--shadow-pill)]">
-                    <div className="border-b border-gray-line px-4 py-2.5">
-                      <p className="text-sm font-semibold text-ink">{displayName}</p>
-                      {user?.email && <p className="truncate text-xs text-ink-60">{user.email}</p>}
-                    </div>
-                    <MenuLink href="/my-trips" icon="calendar" onClick={() => setMenuOpen(false)}>
-                      My Trips
-                    </MenuLink>
-                    <MenuLink href="/profile" icon="user" onClick={() => setMenuOpen(false)}>
-                      My Profile
-                    </MenuLink>
-                    <button
-                      type="button"
-                      onClick={logout}
-                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-ink transition hover:bg-cream"
-                    >
-                      <Icon name="x" size={16} className="text-ink-60" />
-                      Log out
-                    </button>
+                  <div className="absolute right-0 top-[120%] w-60 overflow-hidden rounded-2xl border border-gray-line bg-white py-2 text-ink shadow-[var(--shadow-pill)]">
+                    {loggedIn ? (
+                      <div className="border-b border-gray-line px-4 py-2.5">
+                        <p className="text-sm font-semibold text-ink">{displayName}</p>
+                        {user?.email && (
+                          <p className="truncate text-xs text-ink-60">{user.email}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="border-b border-gray-line pb-2">
+                        <MenuItem href="/login" bold onClick={() => setMenuOpen(false)}>
+                          Sign up
+                        </MenuItem>
+                        <MenuItem href="/login" onClick={() => setMenuOpen(false)}>
+                          Log in
+                        </MenuItem>
+                      </div>
+                    )}
+
+                    {links.map((link) => (
+                      <MenuItem key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
+                        {link.label}
+                      </MenuItem>
+                    ))}
+
+                    {loggedIn && (
+                      <div className="mt-1 border-t border-gray-line pt-1">
+                        <MenuItem href="/profile" onClick={() => setMenuOpen(false)}>
+                          My Profile
+                        </MenuItem>
+                        <button
+                          type="button"
+                          onClick={logout}
+                          className="flex w-full items-center px-4 py-2.5 text-left text-sm text-ink transition hover:bg-cream"
+                        >
+                          Log out
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            ) : (
-              <Link
-                href="/login"
-                className={cn(
-                  'rounded-full px-5 py-2 text-[13.5px] font-semibold transition',
-                  transparent
-                    ? 'bg-white text-ink hover:bg-gold'
-                    : 'bg-ink text-cream hover:bg-gold hover:text-ink',
-                )}
-              >
-                Sign up
-              </Link>
-            )}
-          </nav>
+            </div>
 
-          <button
-            aria-label="Open menu"
-            onClick={() => setMobileOpen(true)}
-            className={cn('rounded-full p-2 md:hidden', transparent ? 'text-white' : 'text-ink')}
-          >
-            <Icon name="menu" size={24} />
-          </button>
+            <button
+              aria-label="Open menu"
+              onClick={() => setMobileOpen(true)}
+              className={cn('rounded-full p-2 md:hidden', transparent ? 'text-white' : 'text-ink')}
+            >
+              <Icon name="menu" size={24} />
+            </button>
+          </div>
+
+          {/* Row 2 — big search pill (top of page, or re-expanded from the mini pill).
+              No overflow-hidden: the pill's popups render below the header. */}
+          {isSearchPage && (
+            <div
+              className={cn(
+                'hidden justify-center transition-all duration-300 ease-[var(--ease-snap)] md:flex',
+                big ? 'h-[86px] opacity-100' : 'pointer-events-none h-0 opacity-0',
+              )}
+            >
+              <SearchPill
+                pillId="header"
+                variant="compact"
+                className="max-w-[820px]"
+                onSearch={collapse}
+              />
+            </div>
+          )}
         </div>
       </header>
+
+      {/* Dim overlay while the search is click-expanded from the mini pill */}
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {searchExpanded && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: reduce ? 0 : 0.2 }}
+                onClick={collapse}
+                className="fixed inset-0 z-40 bg-ink/30"
+                aria-hidden
+              />
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
 
       {/* Mobile overlay */}
       <div
@@ -243,14 +330,14 @@ export function Nav() {
   );
 }
 
-function MenuLink({
+function MenuItem({
   href,
-  icon,
+  bold,
   onClick,
   children,
 }: {
   href: string;
-  icon: 'calendar' | 'user';
+  bold?: boolean;
   onClick: () => void;
   children: React.ReactNode;
 }) {
@@ -258,9 +345,11 @@ function MenuLink({
     <Link
       href={href}
       onClick={onClick}
-      className="flex items-center gap-3 px-4 py-2.5 text-sm text-ink transition hover:bg-cream"
+      className={cn(
+        'flex items-center px-4 py-2.5 text-sm text-ink transition hover:bg-cream',
+        bold && 'font-semibold',
+      )}
     >
-      <Icon name={icon} size={16} className="text-ink-60" />
       {children}
     </Link>
   );

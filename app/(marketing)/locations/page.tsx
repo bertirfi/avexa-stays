@@ -75,7 +75,7 @@ export default async function LocationsPage() {
   const properties = await getAllPropertiesData();
   const fxRateEur = getFxRateEur();
   return (
-    <div className="pt-0 sm:pt-20">
+    <div className="pt-0 sm:pt-20 md:pt-[152px]">
       <JsonLd data={buildItemListSchema(properties, fxRateEur)} />
       <JsonLd data={buildBreadcrumbSchema()} />
       <LocationsView properties={properties} />
