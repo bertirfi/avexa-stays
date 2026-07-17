@@ -213,7 +213,8 @@ export function LocationsMap(props: LocationsMapProps) {
             fullscreenControl: false,
             zoomControl: !mobile,
             clickableIcons: false,
-            gestureHandling: mobile ? 'greedy' : 'cooperative',
+            // Airbnb-style: plain scroll/pinch zooms the map directly (no Ctrl).
+            gestureHandling: 'greedy',
             backgroundColor: '#f0ece2',
             styles: MAP_STYLE,
           });
