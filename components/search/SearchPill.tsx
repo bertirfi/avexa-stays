@@ -18,6 +18,10 @@ interface SearchPillProps {
   pillId: string;
   variant?: 'hero' | 'compact';
   className?: string;
+  /** When set, open this section's popup on mount (used by the header pill). */
+  initialSection?: SearchPanel;
+  /** Fired right before the search navigation (lets the header pill collapse). */
+  onSearch?: () => void;
 }
 
 function formatDate(d: Date | null) {
@@ -25,7 +29,13 @@ function formatDate(d: Date | null) {
   return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
 }
 
-function guestSummary(g: GuestCounts) {
+/** Shared "Add dates" / "Jul 04 – Jul 09" label — reused by the header pill. */
+export function dateRangeLabel(start: Date | null, end: Date | null) {
+  if (!start && !end) return 'Add dates';
+  return `${formatDate(start) ?? 'Add date'} – ${formatDate(end) ?? 'Add date'}`;
+}
+
+export function guestSummary(g: GuestCounts) {
   const occ = g.adults + g.children;
   const parts = [`${occ} guest${occ === 1 ? '' : 's'}`];
   if (g.infants > 0) parts.push(`${g.infants} infant${g.infants === 1 ? '' : 's'}`);
@@ -40,7 +50,13 @@ const GUEST_ROWS = [
   { key: 'infants' as const, label: 'Infants', sub: 'Under 2 years old', min: 0 },
 ];
 
-export function SearchPill({ pillId, variant = 'hero', className }: SearchPillProps) {
+export function SearchPill({
+  pillId,
+  variant = 'hero',
+  className,
+  initialSection,
+  onSearch,
+}: SearchPillProps) {
   const router = useRouter();
   const {
     location,
@@ -62,6 +78,12 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
   // Portal mount guard (SSR-safe)
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  // Header pill expands with a section pre-selected — open it once on mount.
+  useEffect(() => {
+    if (initialSection) openPanel(initialSection, pillId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // "Where" full-screen step search input
   const [query, setQuery] = useState('');
@@ -129,6 +151,7 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
     params.set('children', String(guests.children));
     params.set('infants', String(guests.infants));
     closePanel();
+    onSearch?.();
     router.push(`/locations?${params.toString()}`);
   }
 
@@ -139,10 +162,7 @@ export function SearchPill({ pillId, variant = 'hero', className }: SearchPillPr
       : location
         ? neighborhoods.find((n) => n.id === location)?.label ?? location
         : 'Search';
-  const datesLabel =
-    startDate || endDate
-      ? `${formatDate(startDate) ?? 'Add date'} – ${formatDate(endDate) ?? 'Add date'}`
-      : 'Add dates';
+  const datesLabel = dateRangeLabel(startDate, endDate);
 
   const fieldBase =
     'group flex flex-1 min-w-0 cursor-pointer flex-col items-start gap-0.5 rounded-full px-2.5 py-2.5 md:px-6 md:py-3.5 text-left transition';

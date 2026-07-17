@@ -7,6 +7,7 @@ import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/chrome/Logo';
 import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
 import { CurrencySwitcher } from '@/components/currency/CurrencySwitcher';
+import { HeaderSearch } from '@/components/search/HeaderSearch';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { signOutClient } from '@/lib/auth/client';
 import { cn } from '@/lib/cn';
@@ -29,6 +30,7 @@ export function Nav() {
   const { user, loading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close the account menu on outside click / Escape
@@ -49,6 +51,9 @@ export function Nav() {
   }, [menuOpen]);
 
   const transparent = isHome && !pinned;
+  // Compact header pill: on /locations always; on / only once the nav is solid
+  // (the hero already carries the big pill while transparent at the top).
+  const showHeaderSearch = isSearchPage && !transparent;
   const loggedIn = !!user;
   const fullName =
     typeof user?.user_metadata?.full_name === 'string'
@@ -70,7 +75,7 @@ export function Nav() {
         className={cn(
           'fixed inset-x-0 top-0 z-50 transition-[transform,background,border-color,padding] duration-300 ease-[var(--ease-snap)]',
           transparent ? 'bg-transparent' : 'border-b border-gray-line bg-cream/95 backdrop-blur',
-          navHidden && !mobileOpen ? '-translate-y-full' : 'translate-y-0',
+          navHidden && !mobileOpen && !searchExpanded ? '-translate-y-full' : 'translate-y-0',
           isSearchPage && 'max-sm:hidden',
         )}
       >
@@ -89,7 +94,13 @@ export function Nav() {
             />
           </Link>
 
-          <nav className="ml-auto hidden items-center gap-8 md:flex">
+          {showHeaderSearch && (
+            <div className="hidden min-w-0 flex-1 justify-center px-6 md:flex">
+              <HeaderSearch onExpandedChange={setSearchExpanded} />
+            </div>
+          )}
+
+          <nav className="hidden items-center gap-8 md:flex">
             {links.map((link) => {
               const current = pathname.startsWith(link.href);
               return (

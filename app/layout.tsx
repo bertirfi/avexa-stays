@@ -3,6 +3,7 @@ import { jakarta, manrope, dmMono } from '@/lib/fonts';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { ChromeScrollProvider } from '@/components/chrome/ChromeScrollProvider';
 import { CurrencyProvider } from '@/components/currency/CurrencyProvider';
+import { SearchProvider } from '@/components/search/SearchContext';
 import { getDisplayRates } from '@/lib/pricing';
 import './globals.css';
 
@@ -45,7 +46,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           {/* Display rates come from server env — RON stays the money of record. */}
           <CurrencyProvider rates={getDisplayRates()}>
-            <ChromeScrollProvider>{children}</ChromeScrollProvider>
+            <ChromeScrollProvider>
+              {/* One shared search state for the Nav header pill + all pages. */}
+              <SearchProvider>{children}</SearchProvider>
+            </ChromeScrollProvider>
           </CurrencyProvider>
         </AuthProvider>
       </body>
