@@ -37,6 +37,7 @@ import {
   Pencil,
   Eye,
   EyeOff,
+  SlidersHorizontal,
   type LucideProps,
 } from 'lucide-react';
 
@@ -79,6 +80,7 @@ const map = {
   pencil: Pencil,
   eye: Eye,
   eyeOff: EyeOff,
+  sliders: SlidersHorizontal,
 } as const;
 
 export type IconName = keyof typeof map;

@@ -41,21 +41,23 @@ const CARET = '<span class="absolute -bottom-1 left-1/2 size-2 -translate-x-1/2 
 const COUNT_BADGE = (n: number) =>
   `<span style="display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;margin-left:1px;border-radius:9999px;background:#191919;color:#fff;font-size:10px;line-height:1">${n}</span>`;
 
-// Dark editorial map theme (brand ink + forest greens) to keep white/gold pins legible.
+// Light editorial map theme (brand cream/ivory + soft gray-green) — same custom
+// styling approach as before, palette inverted to match the site. Dark ink labels
+// with light halos keep white/gold pins legible on the pale ground.
 const MAP_STYLE: google.maps.MapTypeStyle[] = [
-  { elementType: 'geometry', stylers: [{ color: '#242824' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#9aa39a' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#1b1f1b' }] },
+  { elementType: 'geometry', stylers: [{ color: '#f0ece2' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#4a4740' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#f7f4ec' }] },
   { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
   { featureType: 'administrative', elementType: 'geometry', stylers: [{ visibility: 'off' }] },
   { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#2f3b2c' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#343a30' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#7d857b' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3f4636' }] },
-  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#4a5240' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#dbe3d0' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#8a867c' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#f6efdd' }] },
+  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#e7dec8' }] },
   { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#1b2630' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#cdd9df' }] },
 ];
 
 type MarkerEntry = { overlay: google.maps.OverlayView; el: HTMLButtonElement } & (
@@ -212,7 +214,7 @@ export function LocationsMap(props: LocationsMapProps) {
             zoomControl: !mobile,
             clickableIcons: false,
             gestureHandling: mobile ? 'greedy' : 'cooperative',
-            backgroundColor: '#242824',
+            backgroundColor: '#f0ece2',
             styles: MAP_STYLE,
           });
           mapRef.current = map;
@@ -407,8 +409,8 @@ export function LocationsMap(props: LocationsMapProps) {
     <div
       className={cn(
         isMobile
-          ? 'relative h-full w-full overflow-hidden bg-[#242824]'
-          : 'relative m-3 ml-0 hidden overflow-hidden rounded-[20px] border-l border-gray-line bg-[#242824] lg:sticky lg:top-20 lg:block lg:h-[calc(100dvh-5rem)]',
+          ? 'relative h-full w-full overflow-hidden bg-cream'
+          : 'relative hidden overflow-hidden rounded-[20px] border border-gray-line bg-cream lg:sticky lg:top-20 lg:mr-4 lg:ml-3 lg:block lg:h-[calc(100dvh-6rem)]',
       )}
     >
       <div ref={containerRef} className="absolute inset-0" role="application" aria-label="Map of AVEXA stays in Bucharest City Center" />

@@ -60,8 +60,8 @@ export function StylizedMap({
     <div
       className={cn(
         isMobile
-          ? 'relative h-full w-full overflow-hidden bg-[#242824]'
-          : 'relative m-3 ml-0 hidden overflow-hidden rounded-[20px] border-l border-gray-line bg-[#242824] lg:sticky lg:top-20 lg:block lg:h-[calc(100dvh-5rem)]',
+          ? 'relative h-full w-full overflow-hidden bg-cream'
+          : 'relative hidden overflow-hidden rounded-[20px] border border-gray-line bg-cream lg:sticky lg:top-20 lg:mr-4 lg:ml-3 lg:block lg:h-[calc(100dvh-6rem)]',
       )}
     >
       {/* Base map gradient (parks + water) */}
@@ -69,17 +69,17 @@ export function StylizedMap({
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 200px 120px at 22% 30%, rgba(60,120,55,.55), transparent 70%),' +
-            'radial-gradient(ellipse 260px 160px at 78% 72%, rgba(60,120,55,.45), transparent 70%),' +
-            'radial-gradient(ellipse 140px 100px at 60% 18%, rgba(60,120,55,.4), transparent 70%),' +
-            'radial-gradient(ellipse 340px 90px at 12% 82%, rgba(60,100,140,.45), transparent 70%),' +
-            'linear-gradient(180deg,#2e332d,#1f231e)',
+            'radial-gradient(ellipse 200px 120px at 22% 30%, rgba(150,180,140,.55), transparent 70%),' +
+            'radial-gradient(ellipse 260px 160px at 78% 72%, rgba(150,180,140,.45), transparent 70%),' +
+            'radial-gradient(ellipse 140px 100px at 60% 18%, rgba(150,180,140,.4), transparent 70%),' +
+            'radial-gradient(ellipse 340px 90px at 12% 82%, rgba(150,185,205,.5), transparent 70%),' +
+            'linear-gradient(180deg,#f2eee4,#e9e4d7)',
         }}
       />
 
       {/* Street grid */}
-      <svg className="absolute inset-0 h-full w-full opacity-55" preserveAspectRatio="none" viewBox="0 0 100 100">
-        <g stroke="rgba(255,255,255,.08)" strokeWidth="0.3">
+      <svg className="absolute inset-0 h-full w-full opacity-70" preserveAspectRatio="none" viewBox="0 0 100 100">
+        <g stroke="rgba(80,74,60,.10)" strokeWidth="0.3">
           {[15, 30, 45, 60, 75, 90].map((y) => (
             <line key={`h${y}`} x1="0" y1={y} x2="100" y2={y} />
           ))}
@@ -87,18 +87,18 @@ export function StylizedMap({
             <line key={`v${x}`} x1={x} y1="0" x2={x} y2="100" />
           ))}
         </g>
-        <g stroke="rgba(255,255,255,.14)" strokeWidth="0.5">
+        <g stroke="rgba(80,74,60,.18)" strokeWidth="0.5">
           <line x1="0" y1="50" x2="100" y2="46" />
           <line x1="48" y1="0" x2="54" y2="100" />
         </g>
-        <path d="M 5 88 Q 35 78 55 84 T 98 74" stroke="rgba(60,100,140,.5)" strokeWidth="1.2" fill="none" />
+        <path d="M 5 88 Q 35 78 55 84 T 98 74" stroke="rgba(120,160,185,.6)" strokeWidth="1.2" fill="none" />
       </svg>
 
       {/* Zone labels */}
       {ZONE_LABELS.map((z) => (
         <span
           key={z.label}
-          className="font-mono-label pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 text-[10px] tracking-[0.24em] text-white/50"
+          className="font-mono-label pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 text-[10px] tracking-[0.24em] text-ink/45"
           style={{ left: `${z.x}%`, top: `${z.y}%` }}
         >
           {z.label}

@@ -2,14 +2,14 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
-import { SearchPill } from '@/components/search/SearchPill';
-import { SearchProvider } from '@/components/search/SearchContext';
 import { PropertyCard } from '@/components/locations/PropertyCard';
 import { StylizedMap } from '@/components/locations/StylizedMap';
 import { LocationsMap } from '@/components/locations/LocationsMap';
+import { FiltersModal } from '@/components/locations/FiltersModal';
+import { QUICK_FILTERS, matchesFilters } from '@/components/locations/filters';
 import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { neighborhoods } from '@/lib/neighborhoods';
@@ -17,13 +17,35 @@ import { cn } from '@/lib/cn';
 import type { Property } from '@/types';
 
 export function LocationsView({ properties }: { properties: Property[] }) {
-  const [mapOpen, setMapOpen] = useState(true);
   const { format } = useCurrency();
   const [activeId, setActiveId] = useState<string | null>(null);
   // Mobile-only List/Map toggle state
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
   const [popupId, setPopupId] = useState<string | null>(null);
   const { scrollingDown } = useChromeScroll();
+
+  // ── Filters ──────────────────────────────────────────────────
+  const [activeAmenities, setActiveAmenities] = useState<Set<string>>(new Set());
+  const [minBedrooms, setMinBedrooms] = useState(0);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const toggleAmenity = (id: string) =>
+    setActiveAmenities((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const clearFilters = () => {
+    setActiveAmenities(new Set());
+    setMinBedrooms(0);
+  };
+  const activeCount = activeAmenities.size + (minBedrooms > 0 ? 1 : 0);
+
+  const filtered = useMemo(
+    () => properties.filter((p) => matchesFilters(p, activeAmenities, minBedrooms)),
+    [properties, activeAmenities, minBedrooms],
+  );
 
   // Lock body scroll while the full-screen mobile map is open
   useEffect(() => {
@@ -41,7 +63,7 @@ export function LocationsView({ properties }: { properties: Property[] }) {
     if (typeof window === 'undefined') return;
     if (!window.matchMedia('(min-width: 1024px)').matches) return;
 
-    const cards = properties
+    const cards = filtered
       .map((p) => document.getElementById(`loc-card-${p.id}`))
       .filter((el): el is HTMLElement => el !== null);
     if (cards.length === 0) return;
@@ -57,7 +79,7 @@ export function LocationsView({ properties }: { properties: Property[] }) {
     );
     cards.forEach((card) => observer.observe(card));
     return () => observer.disconnect();
-  }, [properties]);
+  }, [filtered]);
 
   const popupProperty = popupId
     ? (properties.find((p) => p.id === popupId) ?? null)
@@ -66,7 +88,7 @@ export function LocationsView({ properties }: { properties: Property[] }) {
   const groups = neighborhoods
     .map((n) => ({
       neighborhood: n,
-      items: properties.filter((p) => p.neighborhood === n.id),
+      items: filtered.filter((p) => p.neighborhood === n.id),
     }))
     .filter((g) => g.items.length > 0);
 
@@ -79,25 +101,11 @@ export function LocationsView({ properties }: { properties: Property[] }) {
 
   return (
     <div className="bg-cream">
-      {/* Sticky search bar (desktop — mobile uses the MobileSearchHeader) */}
-      <div className="sticky top-20 z-[54] hidden px-6 pb-1.5 pt-3.5 sm:block md:px-7">
-        <SearchProvider>
-          <SearchPill pillId="locations" variant="compact" className="max-w-[820px]" />
-        </SearchProvider>
-      </div>
-
-      <div
-        className={cn(
-          'grid min-h-[calc(100dvh-104px)]',
-          mapOpen ? 'lg:grid-cols-[1.7fr_1fr]' : 'lg:grid-cols-1',
-        )}
-      >
+      <div className="grid min-h-[calc(100dvh-104px)] lg:grid-cols-[1.7fr_1fr]">
         {/* LEFT — list */}
         <div
           className={cn(
             'px-5 pb-24 pt-6 md:px-10',
-            // Map hidden → list spans the page; cap card width so photos stay sane
-            !mapOpen && 'mx-auto w-full max-w-[920px]',
             mobileView === 'map' && 'max-sm:hidden',
           )}
         >
@@ -130,19 +138,50 @@ export function LocationsView({ properties }: { properties: Property[] }) {
             ))}
           </div>
 
-          {/* Sort row + map toggle */}
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-[13px]">
-            <span className="text-ink-60">
-              Showing all {properties.length} suites · grouped by neighborhood
-            </span>
+          {/* Filters — button + quick amenity pills */}
+          <div className="no-scrollbar mb-4 flex items-center gap-2 overflow-x-auto pb-0.5">
             <button
               type="button"
-              onClick={() => setMapOpen((m) => !m)}
-              className="hidden items-center gap-2 rounded-full border border-gray-line bg-white px-3.5 py-2 font-semibold transition hover:border-ink lg:inline-flex"
+              onClick={() => setFiltersOpen(true)}
+              className="flex shrink-0 items-center gap-2 rounded-full border border-gray-line bg-white px-4 py-2.5 text-[13.5px] font-medium transition hover:border-ink hover:bg-cream"
             >
-              <Icon name="pin" size={15} />
-              {mapOpen ? 'Hide map' : 'Show map'}
+              <Icon name="sliders" size={15} />
+              Filters
+              {activeCount > 0 && (
+                <span className="grid size-5 place-items-center rounded-full bg-ink text-[11px] font-semibold text-cream">
+                  {activeCount}
+                </span>
+              )}
             </button>
+
+            <span className="h-6 w-px shrink-0 bg-gray-line" />
+
+            {QUICK_FILTERS.map((f) => {
+              const active = activeAmenities.has(f.id);
+              return (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => toggleAmenity(f.id)}
+                  className={cn(
+                    'flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2.5 text-[13.5px] font-medium transition',
+                    active
+                      ? 'border-ink bg-ink text-cream'
+                      : 'border-gray-line bg-white hover:border-ink hover:bg-cream',
+                  )}
+                >
+                  {active && <Icon name="check" size={14} />}
+                  {f.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Result count */}
+          <div className="mb-6 text-[13px] text-ink-60">
+            {activeCount > 0
+              ? `Showing ${filtered.length} of ${properties.length} suites`
+              : `Showing all ${properties.length} suites · grouped by neighborhood`}
           </div>
 
           {/* Promo */}
@@ -154,6 +193,23 @@ export function LocationsView({ properties }: { properties: Property[] }) {
               </Link>
             </span>
           </div>
+
+          {/* Empty state */}
+          {filtered.length === 0 && (
+            <div className="rounded-[16px] border border-gray-line bg-white px-6 py-12 text-center">
+              <p className="font-display text-lg">No stays match these filters.</p>
+              <p className="mt-1.5 text-[14px] text-ink-60">
+                Try removing a filter to see more of the city.
+              </p>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-5 rounded-xl bg-ink px-5 py-2.5 text-[14px] font-semibold text-cream transition hover:bg-ink/90"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
 
           {/* Groups */}
           <div className="space-y-12">
@@ -190,15 +246,13 @@ export function LocationsView({ properties }: { properties: Property[] }) {
           </div>
         </div>
 
-        {/* RIGHT — map (desktop split view) */}
-        {mapOpen && (
-          <MapComponent
-            properties={properties}
-            activeId={activeId}
-            onActivate={setActiveId}
-            onClear={() => setActiveId(null)}
-          />
-        )}
+        {/* RIGHT — map (desktop split view, always visible on lg+) */}
+        <MapComponent
+          properties={filtered}
+          activeId={activeId}
+          onActivate={setActiveId}
+          onClear={() => setActiveId(null)}
+        />
       </div>
 
       {/* ── MOBILE full-screen map overlay (≤ sm) ── */}
@@ -210,7 +264,7 @@ export function LocationsView({ properties }: { properties: Property[] }) {
       >
         <MapComponent
           variant="mobile"
-          properties={properties}
+          properties={filtered}
           activeId={activeId}
           onActivate={setActiveId}
           onClear={() => setActiveId(null)}
@@ -294,6 +348,17 @@ export function LocationsView({ properties }: { properties: Property[] }) {
           Map
         </button>
       </div>
+
+      <FiltersModal
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        activeAmenities={activeAmenities}
+        onToggleAmenity={toggleAmenity}
+        minBedrooms={minBedrooms}
+        onSetBedrooms={setMinBedrooms}
+        onClearAll={clearFilters}
+        resultCount={filtered.length}
+      />
     </div>
   );
 }
