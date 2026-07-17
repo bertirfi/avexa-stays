@@ -93,7 +93,14 @@ export function LocationsView({ properties }: { properties: Property[] }) {
         )}
       >
         {/* LEFT — list */}
-        <div className={cn('px-5 pb-24 pt-6 md:px-10', mobileView === 'map' && 'max-sm:hidden')}>
+        <div
+          className={cn(
+            'px-5 pb-24 pt-6 md:px-10',
+            // Map hidden → list spans the page; cap card width so photos stay sane
+            !mapOpen && 'mx-auto w-full max-w-[920px]',
+            mobileView === 'map' && 'max-sm:hidden',
+          )}
+        >
           <header className="mb-6">
             <span className="font-mono-label mb-2 block text-[12px] tracking-[0.16em] text-gold-dark">
               {properties.length} Stays
