@@ -65,10 +65,17 @@ export function PropertyCard({
       id={`loc-card-${property.id}`}
       onMouseEnter={onActivate}
       onMouseLeave={onClear}
-      initial={isMobile ? false : { opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 24 }}
+      // Mobile: jump straight to visible (duration 0) — animate clears the SSR
+      // inline hidden styles, which initial={false} alone leaves behind.
+      animate={isMobile ? { opacity: 1, y: 0 } : undefined}
       whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.7, delay: (index % 3) * 0.06, ease: [0.16, 1, 0.3, 1] }}
+      transition={
+        isMobile
+          ? { duration: 0 }
+          : { duration: 0.7, delay: (index % 3) * 0.06, ease: [0.16, 1, 0.3, 1] }
+      }
       className={cn(
         'group scroll-mt-44 overflow-hidden rounded-[18px] border-[1.5px] bg-white transition-all duration-300 hover:-translate-y-1 hover:border-gold hover:shadow-[0_18px_40px_-20px_rgba(25,25,25,0.22)]',
         active
