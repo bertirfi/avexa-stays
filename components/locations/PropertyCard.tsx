@@ -70,7 +70,7 @@ export function PropertyCard({
               src={p.src}
               alt={`${property.name} — ${p.label}`}
               fill
-              sizes="(min-width: 1024px) 60vw, 100vw"
+              sizes="(min-width: 1536px) 30vw, (min-width: 1024px) 60vw, 100vw"
               className="object-cover"
             />
           </div>

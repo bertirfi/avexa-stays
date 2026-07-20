@@ -109,6 +109,8 @@ export function LocationsView({ properties }: { properties: Property[] }) {
             mobileView === 'map' && 'max-sm:hidden',
           )}
         >
+          {/* Cap single-column card width on mid screens; 2xl+ goes two-up instead */}
+          <div className="mx-auto w-full max-w-[840px] 2xl:max-w-none">
           <header className="mb-6">
             <span className="font-mono-label mb-2 block text-[12px] tracking-[0.16em] text-gold-dark">
               {properties.length} Stays
@@ -229,7 +231,7 @@ export function LocationsView({ properties }: { properties: Property[] }) {
                   <span className="h-px flex-1 bg-gray-line" />
                 </motion.div>
 
-                <div className="flex flex-col gap-5">
+                <div className="grid grid-cols-1 gap-5 2xl:grid-cols-2">
                   {g.items.map((p, i) => (
                     <PropertyCard
                       key={p.id}
@@ -243,6 +245,7 @@ export function LocationsView({ properties }: { properties: Property[] }) {
                 </div>
               </section>
             ))}
+          </div>
           </div>
         </div>
 
