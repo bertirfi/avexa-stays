@@ -2,13 +2,30 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { getLocationCard } from '@/lib/locationCards';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
 import type { Property } from '@/types';
 import { cn } from '@/lib/cn';
+
+const MOBILE_QUERY = '(max-width: 767px)';
+
+function subscribeToMobile(onChange: () => void) {
+  const mq = window.matchMedia(MOBILE_QUERY);
+  mq.addEventListener('change', onChange);
+  return () => mq.removeEventListener('change', onChange);
+}
+
+/** True on <md viewports (client); false during SSR. */
+function useIsMobile() {
+  return useSyncExternalStore(
+    subscribeToMobile,
+    () => window.matchMedia(MOBILE_QUERY).matches,
+    () => false,
+  );
+}
 
 interface PropertyCardProps {
   property: Property;
@@ -33,6 +50,9 @@ export function PropertyCard({
 
   const bedType = property.stats.find((s) => s.icon === 'bed')?.label ?? '';
   const saver = property.rates[0];
+  // Mobile: no entry animation — the fade+rise reads as a flicker while
+  // images stream in on slower devices. Desktop keeps the staggered reveal.
+  const isMobile = useIsMobile();
 
   function go(delta: number, e: React.MouseEvent) {
     e.preventDefault();
@@ -45,8 +65,8 @@ export function PropertyCard({
       id={`loc-card-${property.id}`}
       onMouseEnter={onActivate}
       onMouseLeave={onClear}
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={isMobile ? false : { opacity: 0, y: 24 }}
+      whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.7, delay: (index % 3) * 0.06, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
@@ -70,7 +90,7 @@ export function PropertyCard({
               src={p.src}
               alt={`${property.name} — ${p.label}`}
               fill
-              sizes="(min-width: 1536px) 30vw, (min-width: 1024px) 60vw, 100vw"
+              sizes="(min-width: 1024px) 840px, 100vw"
               className="object-cover"
             />
           </div>
