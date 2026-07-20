@@ -101,11 +101,11 @@ export function LocationsView({ properties }: { properties: Property[] }) {
 
   return (
     <div className="bg-cream">
-      <div className="grid min-h-[calc(100dvh-104px)] lg:grid-cols-[1.7fr_1fr]">
+      <div className="grid min-h-[calc(100dvh-104px)] lg:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]">
         {/* LEFT — list */}
         <div
           className={cn(
-            'px-5 pb-24 pt-6 md:px-10',
+            'min-w-0 px-5 pb-24 pt-6 md:px-10',
             mobileView === 'map' && 'max-sm:hidden',
           )}
         >
