@@ -534,7 +534,6 @@ export function LocationsMap(props: LocationsMapProps) {
   const visibleKey = props.visibleIds?.join(',') ?? '*';
   useEffect(() => {
     syncVisibleMarkers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visibleKey]);
 
   if (failed) return <StylizedMap {...props} />;
