@@ -11,6 +11,14 @@
  */
 const FROM = 'AVEXA Stays <office@avexastays.com>';
 
+/** Escape guest-supplied text before interpolating into email HTML. */
+function escapeHtml(s: string): string {
+  return s.replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
+  );
+}
+
 export async function sendEmail(input: {
   to: string;
   subject: string;
@@ -49,7 +57,7 @@ export function refundNoticeEmail(booking: {
   check_out: string;
   total_ron: number;
 }): { subject: string; html: string } {
-  const first = booking.guest_name.split(' ')[0] || 'there';
+  const first = escapeHtml(booking.guest_name.split(' ')[0] || 'there');
   return {
     subject: 'Your AVEXA booking could not be completed — full refund issued',
     html: `

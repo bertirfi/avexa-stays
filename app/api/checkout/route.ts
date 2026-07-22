@@ -121,7 +121,19 @@ export async function POST(req: Request) {
       try {
         await getStripe().checkout.sessions.expire(stale.stripe_session_id);
       } catch {
-        // Already expired — cancelling the row is enough.
+        // expire() throws if the session completed in the tiny window since the
+        // paid-check above. Re-read: if it is now paid, DON'T cancel the row —
+        // let its webhook confirm/refund. Otherwise it was genuinely expired.
+        try {
+          const recheck = await getStripe().checkout.sessions.retrieve(
+            stale.stripe_session_id,
+          );
+          if (recheck.payment_status === 'paid') {
+            return NextResponse.json({ error: 'already_processing' }, { status: 409 });
+          }
+        } catch {
+          continue; // Can't inspect → never risk superseding a possible payment.
+        }
       }
     }
     await admin.from('bookings').update({ status: 'cancelled' }).eq('id', stale.id);

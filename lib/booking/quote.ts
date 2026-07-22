@@ -85,14 +85,20 @@ export async function quoteBooking(input: QuoteInput): Promise<Quote> {
   if (adults < 1 || children < 0 || infants < 0 || adults + children > 10) {
     return { ok: false, reason: 'invalid' };
   }
-  const today = new Date();
-  const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  // "Today" in Europe/Bucharest — the server runs in UTC, and before 03:00
+  // Bucharest a naive server date is still yesterday, which would let a guest
+  // pay for a night already under way. (en-CA formats as YYYY-MM-DD.)
+  const todayYmd = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Bucharest' });
   if (checkIn < todayYmd) return { ok: false, reason: 'invalid' };
 
   // ── Resolve property + listing ───────────────────────────────────────────
   const listingMapId = HOSTAWAY_LISTING_BY_PROPERTY[propertyId];
   const property = await getPropertyData(propertyId);
   if (!listingMapId || !property) return { ok: false, reason: 'unknown_property' };
+
+  // Capacity enforced server-side — the client guest picker is not trusted, and
+  // Hostaway does not reject an over-capacity reservation on its own.
+  if (adults + children > property.maxGuests) return { ok: false, reason: 'invalid' };
 
   // ── LIVE availability + base price (money-grade, not the cache) ─────────
   let calendar: HostawayCalendarDay[];

@@ -87,13 +87,14 @@ export async function POST(req: Request) {
 
   const admin = getSupabaseAdmin();
 
-  // Fast-path dedupe (best-effort — the booking-row check below is the lock).
-  const dedupe = await admin
+  // Record the event (observability + fast-path idempotency). NOT an early
+  // return on duplicate: a redelivery must fall through to the booking-row
+  // check below — the REAL lock — so a delivery that previously died mid-work
+  // (refund retry after a 500, or a function crash) can resume. The pending
+  // booking row, never this tombstone, decides whether work still remains.
+  await admin
     .from('processed_stripe_events')
     .insert({ event_id: event.id, type: event.type });
-  if (dedupe.error && dedupe.error.code === '23505') {
-    return NextResponse.json({ received: true, duplicate: true });
-  }
 
   const bookingId = session.metadata?.bookingId;
   if (!bookingId) {
@@ -115,8 +116,33 @@ export async function POST(req: Request) {
   if (booking.status === 'confirmed' || booking.hostaway_reservation_id) {
     return NextResponse.json({ received: true, duplicate: true });
   }
+  // Reaching here means the session is PAID (guarded above) but the booking was
+  // cancelled — almost always superseded by a newer tab/session for the same
+  // stay. Money was captured with no reservation, so REFUND it rather than
+  // silently ignore. Idempotency-keyed → safe on Stripe redelivery; a failed
+  // refund returns 500 so Stripe (and the dedupe fall-through) retries it.
   if (booking.status === 'cancelled') {
-    return NextResponse.json({ received: true, ignored: 'already_cancelled' });
+    const pi =
+      typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : session.payment_intent?.id ?? null;
+    if (pi) {
+      try {
+        await getStripe().refunds.create(
+          { payment_intent: pi },
+          { idempotencyKey: `refund_${session.id}` },
+        );
+      } catch (refundErr) {
+        console.error(
+          'webhook: CRITICAL — refund of superseded paid session failed, will retry:',
+          refundErr instanceof Error ? refundErr.message : refundErr,
+        );
+        return NextResponse.json({ error: 'refund_failed' }, { status: 500 });
+      }
+      const notice = refundNoticeEmail(booking);
+      await sendEmail({ to: booking.guest_email, ...notice });
+    }
+    return NextResponse.json({ received: true, refunded: Boolean(pi) });
   }
 
   const paymentIntentId =

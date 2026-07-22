@@ -17,7 +17,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const MAX_NIGHTS = 60;
+const MAX_NIGHTS = 30; // aligned with lib/booking/quote.ts — a longer stay can't be booked
 const MAX_DAYS_OUT = 380; // cache horizon
 
 const QuerySchema = z
