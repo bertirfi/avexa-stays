@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AVEXA STAYS — Brand Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* === AVEXA COLOR SYSTEM === */
+    --onyx: #0A0A0A;
+    --obsidian: #111111;
+    --graphite: #1C1C1E;
+    --smoke: #2A2A2D;
+    --ash: #3D3D40;
+
+    --gold: #C9A84C;
+    --gold-light: #DFC07A;
+    --gold-pale: #F0E0B0;
+    --gold-muted: #8A6E2F;
+    --gold-glow: rgba(201,168,76,0.15);
+
+    --ivory: #F5F0E8;
+    --cream: #FAF7F2;
+    --white: #FFFFFF;
+
+    --steel: #9A9AA4;
+    --mist: #C8C8D0;
+    --ghost: #E8E8EC;
+
+    /* === TYPOGRAPHY === */
+    --font-display: 'Cormorant Garamond', serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-ui: 'Space Grotesk', sans-serif;
+
+    /* === SPACING === */
+    --sp-xs: 4px;
+    --sp-sm: 8px;
+    --sp-md: 16px;
+    --sp-lg: 24px;
+    --sp-xl: 40px;
+    --sp-2xl: 64px;
+    --sp-3xl: 96px;
+    --sp-4xl: 128px;
+
+    /* === BORDER RADIUS === */
+    --r-sm: 4px;
+    --r-md: 8px;
+    --r-lg: 16px;
+    --r-xl: 24px;
+    --r-pill: 999px;
+
+    /* === SHADOWS === */
+    --shadow-sm: 0 1px 4px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.4);
+    --shadow-lg: 0 12px 48px rgba(0,0,0,0.6);
+    --shadow-gold: 0 0 32px rgba(201,168,76,0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    color: var(--onyx);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ========================
+     PAGE HEADER
+  ======================== */
+  .doc-header {
+    background: var(--onyx);
+    padding: 80px 64px;
+    position: relative;
+    overflow: hidden;
+  }
+  .doc-header::before {
+    content: 'X';
+    position: absolute;
+    right: -40px;
+    top: -60px;
+    font-family: var(--font-display);
+    font-size: 480px;
+    font-weight: 300;
+    color: rgba(201,168,76,0.05);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+  .doc-header-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+  }
+  .doc-header h1 {
+    font-family: var(--font-display);
+    font-size: 72px;
+    font-weight: 300;
+    color: var(--white);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .doc-header h1 span {
+    color: var(--gold);
+    font-style: italic;
+  }
+  .doc-header-sub {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--steel);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 20px;
+  }
+
+  /* ========================
+     SECTION SYSTEM
+  ======================== */
+  .section {
+    padding: 80px 64px;
+    border-bottom: 1px solid var(--ghost);
+  }
+  .section:nth-child(even) { background: var(--white); }
+  .section:nth-child(odd) { background: var(--cream); }
+  .section.dark { background: var(--obsidian); border-bottom-color: var(--smoke); }
+
+  .section-label {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 40px;
+    font-weight: 400;
+    color: var(--onyx);
+    margin-bottom: 48px;
+    line-height: 1.1;
+  }
+  .section.dark .section-title { color: var(--ivory); }
+
+  /* ========================
+     LOGO SECTION
+  ======================== */
+  .logo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2px;
+  }
+  .logo-cell {
+    padding: 60px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+  .logo-cell-label {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.5;
+    text-align: center;
+  }
+  .logo-cell.bg-dark { background: var(--onyx); }
+  .logo-cell.bg-gold { background: var(--gold); }
+  .logo-cell.bg-light { background: var(--cream); }
+  .logo-cell.bg-white { background: var(--white); }
+  .logo-cell.bg-graphite { background: var(--graphite); }
+  .logo-cell.bg-ivory { background: var(--ivory); }
+
+  /* === THE AVEXA LOGO SVG === */
+  .avexa-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .avexa-wordmark {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 36px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+  }
+  .avexa-wordmark.on-dark { color: var(--white); }
+  .avexa-wordmark.on-gold { color: var(--onyx); }
+  .avexa-wordmark.on-light { color: var(--onyx); }
+  .avexa-wordmark .x-accent { 
+    color: var(--gold);
+    font-style: italic;
+  }
+  .avexa-wordmark.on-gold .x-accent { color: var(--onyx); font-style: italic; }
+  .avexa-tagline {
+    font-family: var(--font-ui);
+    font-size: 8.5px;
+    font-weight: 400;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--steel);
+  }
+  .avexa-tagline.on-dark { color: rgba(255,255,255,0.45); }
+  .avexa-tagline.on-gold { color: rgba(0,0,0,0.5); }
+  .avexa-divider {
+    width: 40px;
+    height: 1px;
+    background: var(--gold);
+    margin: 0 auto;
+  }
+  .avexa-divider.on-gold { background: var(--onyx); opacity: 0.4; }
+
+  /* Logo Mark — the X nexus symbol */
+  .logo-mark {
+    width: 64px;
+    height: 64px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-mark svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ========================
+     COLOR PALETTE
+  ======================== */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+  }
+  .color-chip {
+    border-radius: var(--r-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .color-swatch {
+    height: 100px;
+  }
+  .color-info {
+    background: var(--white);
+    padding: 12px 14px;
+    border: 1px solid var(--ghost);
+    border-top: none;
+    border-radius: 0 0 var(--r-md) var(--r-md);
+  }
+  .color-name {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--onyx);
+    display: block;
+  }
+  .color-hex {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: var(--steel);
+    display: block;
+    margin-top: 2px;
+  }
+  .color-role {
+    font-family: var(--font-body);
+    font-size: 10px;
+    color: var(--mist);
+    display: block;
+    margin-top: 4px;
+  }
+
+  /* ========================
+     TYPOGRAPHY SYSTEM
+  ======================== */
+  .type-showcase {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .type-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 40px;
+    align-items: baseline;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--ghost);
+  }
+  .type-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .type-meta {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--steel);
+    line-height: 1.8;
+  }
+  .type-meta strong {
+    display: block;
+    color: var(--onyx);
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  .t-display-hero {
+    font-family: var(--font-display);
+    font-size: 80px;
+    font-weight: 300;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    color: var(--onyx);
+  }
+  .t-display-hero em { font-style: italic; color: var(--gold); }
+
+  .t-display-large {
+    font-family: var(--font-display);
+    font-size: 52px;
+    font-weight: 400;
+    line-height: 1.05;
+    color: var(--onyx);
+  }
+  .t-display-medium {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--gold);
+    line-height: 1.2;
+  }
+  .t-heading-1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--onyx);
+    letter-spacing: 0.01em;
+  }
+  .t-heading-2 {
+    font-family: var(--font-ui);
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--onyx);
+    letter-spacing: -0.01em;
+  }
+  .t-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  .t-body {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--ash);
+    max-width: 560px;
+  }
+  .t-caption {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--steel);
+    letter-spacing: 0.04em;
+  }
+
+  /* ========================
+     COMPONENTS
+  ======================== */
+  .components-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+  }
+  .component-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .component-group-title {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--steel);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--ghost);
+  }
+  .component-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  /* Buttons */
+  .btn {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn-primary {
+    background: var(--onyx);
+    color: var(--white);
+  }
+  .btn-primary:hover { background: var(--graphite); }
+
+  .btn-gold {
+    background: var(--gold);
+    color: var(--onyx);
+  }
+  .btn-gold:hover { background: var(--gold-light); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--onyx);
+    border: 1px solid var(--onyx);
+  }
+  .btn-outline:hover { background: var(--onyx); color: var(--white); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--steel);
+    border: 1px solid var(--ghost);
+  }
+  .btn-ghost:hover { border-color: var(--steel); color: var(--onyx); }
+
+  .btn-light {
+    background: var(--white);
+    color: var(--onyx);
+    border: 1px solid var(--ghost);
+  }
+
+  /* on dark bg */
+  .btn-outline-light {
+    background: transparent;
+    color: var(--white);
+    border: 1px solid rgba(255,255,255,0.3);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 14px 32px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn-outline-light:hover { background: rgba(255,255,255,0.08); }
+
+  /* Tags / Badges */
+  .badge {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: var(--r-pill);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .badge-gold { background: var(--gold-glow); color: var(--gold); border: 1px solid rgba(201,168,76,0.2); }
+  .badge-dark { background: var(--onyx); color: var(--steel); }
+  .badge-outline { background: transparent; color: var(--steel); border: 1px solid var(--ghost); }
+  .badge-white { background: var(--white); color: var(--onyx); box-shadow: var(--shadow-sm); }
+
+  .badge-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  /* Input Fields */
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 280px;
+  }
+  .input-label {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--steel);
+  }
+  .input-field {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--onyx);
+    background: var(--white);
+    border: 1px solid var(--ghost);
+    border-radius: 0;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s ease;
+    width: 100%;
+  }
+  .input-field:focus { border-color: var(--gold); }
+  .input-field::placeholder { color: var(--mist); }
+  .input-field.dark-input {
+    background: var(--graphite);
+    border-color: var(--smoke);
+    color: var(--ivory);
+  }
+  .input-field.dark-input::placeholder { color: var(--ash); }
+  .input-field.dark-input:focus { border-color: var(--gold); }
+
+  /* Card Components */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .card {
+    border-radius: 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .card-property {
+    background: var(--white);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  .card-property:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+  .card-img {
+    aspect-ratio: 4/3;
+    background: var(--graphite);
+    position: relative;
+    overflow: hidden;
+  }
+  .card-img-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 48px;
+    font-weight: 300;
+    color: rgba(201,168,76,0.3);
+    letter-spacing: 0.1em;
+  }
+  .card-img-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+  }
+  .card-img-price {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    background: rgba(10,10,10,0.85);
+    backdrop-filter: blur(8px);
+    padding: 8px 14px;
+  }
+  .card-img-price-val {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--white);
+    line-height: 1;
+  }
+  .card-img-price-unit {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--steel);
+    text-transform: uppercase;
+  }
+  .card-body {
+    padding: 20px 22px 24px;
+  }
+  .card-location {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 8px;
+  }
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--onyx);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .card-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--ghost);
+  }
+  .card-meta-item {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    color: var(--steel);
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* Feature Icon Card */
+  .card-feature {
+    padding: 32px;
+    background: var(--white);
+    border: 1px solid var(--ghost);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--onyx);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .feature-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke: var(--gold);
+    fill: none;
+    stroke-width: 1.5;
+  }
+  .feature-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--onyx);
+    line-height: 1.2;
+  }
+  .feature-body {
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--ash);
+  }
+
+  /* ========================
+     ICONOGRAPHY SYSTEM
+  ======================== */
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 16px;
+  }
+  .icon-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 12px;
+    background: var(--white);
+    border: 1px solid var(--ghost);
+    transition: border-color 0.2s ease;
+  }
+  .icon-cell:hover { border-color: var(--gold); }
+  .icon-cell svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--onyx);
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .icon-name {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--steel);
+    text-align: center;
+  }
+
+  /* ========================
+     BRAND IN USE — HERO MOCKUP
+  ======================== */
+  .hero-mockup {
+    background: var(--onyx);
+    min-height: 560px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: hidden;
+    position: relative;
+  }
+  .hero-content {
+    padding: 80px 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+  }
+  .hero-eyebrow {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--gold);
+    flex-shrink: 0;
+  }
+  .hero-h1 {
+    font-family: var(--font-display);
+    font-size: 60px;
+    font-weight: 300;
+    color: var(--white);
+    line-height: 1.0;
+    letter-spacing: -0.01em;
+    margin-bottom: 24px;
+  }
+  .hero-h1 em {
+    font-style: italic;
+    color: var(--gold);
+    display: block;
+  }
+  .hero-body {
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.75;
+    color: rgba(255,255,255,0.5);
+    max-width: 400px;
+    margin-bottom: 40px;
+  }
+  .hero-cta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .hero-visual {
+    background: var(--graphite);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .hero-visual-bg {
+    position: absolute;
+    inset: 0;
+    background: 
+      linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 50%, rgba(201,168,76,0.08) 0%, transparent 70%);
+  }
+  .hero-visual-x {
+    font-family: var(--font-display);
+    font-size: 320px;
+    font-weight: 300;
+    color: rgba(201,168,76,0.08);
+    position: absolute;
+    line-height: 1;
+    font-style: italic;
+    user-select: none;
+  }
+  .hero-visual-card {
+    position: relative;
+    z-index: 2;
+    background: rgba(10,10,10,0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(201,168,76,0.15);
+    padding: 32px;
+    width: 300px;
+  }
+  .hero-apt-label {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .hero-apt-name {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  .hero-apt-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .hero-apt-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .hero-apt-key {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+  }
+  .hero-apt-val {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ivory);
+  }
+  .hero-apt-val.gold { color: var(--gold); }
+
+  /* ========================
+     BOOKING WIDGET MOCKUP
+  ======================== */
+  .booking-widget {
+    background: var(--white);
+    border: 1px solid var(--ghost);
+    box-shadow: var(--shadow-md);
+    padding: 32px;
+    display: flex;
+    gap: 0;
+    align-items: flex-end;
+    max-width: 860px;
+  }
+  .booking-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 20px;
+    border-right: 1px solid var(--ghost);
+  }
+  .booking-field:first-child { padding-left: 0; }
+  .booking-field:last-of-type { border-right: none; }
+  .booking-field-label {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  .booking-field-val {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--onyx);
+    line-height: 1.2;
+  }
+  .booking-field-sub {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    color: var(--steel);
+    letter-spacing: 0.04em;
+  }
+  .booking-btn {
+    background: var(--onyx);
+    color: var(--white);
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 18px 32px;
+    border: none;
+    cursor: pointer;
+    margin-left: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ========================
+     NAVIGATION MOCKUP
+  ======================== */
+  .nav-mockup {
+    background: var(--onyx);
+    padding: 0 64px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .nav-logo-text {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--white);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+  }
+  .nav-logo-text .x-gold { color: var(--gold); font-style: italic; }
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    align-items: center;
+  }
+  .nav-link {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .nav-link:hover, .nav-link.active { color: var(--white); }
+  .nav-right {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  /* ========================
+     LOADING / PIN SCREEN
+  ======================== */
+  .pin-mockup {
+    background: var(--graphite);
+    padding: 60px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    max-width: 360px;
+    border: 1px solid var(--smoke);
+  }
+  .pin-logo {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--white);
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+  }
+  .pin-logo .x-gold { color: var(--gold); font-style: italic; }
+  .pin-label {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--steel);
+    text-align: center;
+  }
+  .pin-display {
+    display: flex;
+    gap: 12px;
+  }
+  .pin-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ash);
+    background: transparent;
+    transition: all 0.2s ease;
+  }
+  .pin-dot.filled {
+    background: var(--gold);
+    border-color: var(--gold);
+    box-shadow: 0 0 8px rgba(201,168,76,0.5);
+  }
+  .pin-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: 100%;
+  }
+  .pin-key {
+    background: var(--smoke);
+    border: 1px solid rgba(255,255,255,0.05);
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .pin-key:hover { background: var(--ash); border-color: var(--gold); }
+  .pin-key-num {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 300;
+    color: var(--white);
+    line-height: 1;
+  }
+  .pin-key-alpha {
+    font-family: var(--font-ui);
+    font-size: 7px;
+    letter-spacing: 0.15em;
+    color: var(--steel);
+    text-transform: uppercase;
+  }
+
+  /* ========================
+     BRAND VOICE / MESSAGING
+  ======================== */
+  .messaging-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+  .message-card {
+    padding: 40px;
+    background: var(--white);
+    border: 1px solid var(--ghost);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .message-card.dark {
+    background: var(--onyx);
+    border-color: var(--smoke);
+  }
+  .message-quote {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 300;
+    line-height: 1.3;
+    color: var(--onyx);
+    font-style: italic;
+  }
+  .message-card.dark .message-quote { color: var(--ivory); }
+  .message-card.dark .message-quote em { color: var(--gold); }
+  .message-quote em { color: var(--gold); font-style: normal; }
+  .message-context {
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--steel);
+    line-height: 1.65;
+  }
+
+  /* ========================
+     SPACING SYSTEM
+  ======================== */
+  .spacing-demo {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .spacing-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .spacing-bar {
+    background: var(--gold);
+    width: 48px;
+    opacity: 0.8;
+  }
+  .spacing-label {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--steel);
+    text-align: center;
+  }
+  .spacing-value {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--onyx);
+    text-align: center;
+  }
+
+  /* ========================
+     FOOTER OF DOC
+  ======================== */
+  .doc-footer {
+    background: var(--onyx);
+    padding: 48px 64px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .doc-footer-brand {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 300;
+    color: var(--white);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+  }
+  .doc-footer-brand span { color: var(--gold); font-style: italic; }
+  .doc-footer-info {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ash);
+    text-align: right;
+    line-height: 1.8;
+    text-transform: uppercase;
+  }
+
+  /* ========================
+     NAV BAR FOR DOC
+  ======================== */
+  .toc {
+    background: var(--obsidian);
+    padding: 0 64px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    border-bottom: 1px solid var(--smoke);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    overflow-x: auto;
+  }
+  .toc a {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+  }
+  .toc a:hover { color: var(--gold); }
+
+  /* pin grad */
+  .gold-line {
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.4;
+  }
+
+  /* 2-col layout for some sections */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div class="doc-header-label">Brand Design System · v1.0 · April 2026</div>
+  <h1>AVE<span>X</span>A<br>STAYS</h1>
+  <div class="doc-header-sub">Seamless Urban Hospitality · București · Identity & Components</div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<nav class="toc">
+  <a href="#logo">Logo</a>
+  <a href="#colors">Colors</a>
+  <a href="#typography">Typography</a>
+  <a href="#components">Components</a>
+  <a href="#icons">Icons</a>
+  <a href="#mockups">Brand in Use</a>
+  <a href="#voice">Brand Voice</a>
+  <a href="#spacing">Spacing</a>
+</nav>
+
+<!-- ===========================
+     01 — LOGO SYSTEM
+=========================== -->
+<div class="section dark" id="logo" style="padding-bottom: 0;">
+  <div class="section-label">01 — Identity</div>
+  <div class="section-title">Logo System</div>
+
+  <div class="logo-grid">
+    <!-- Dark background - primary -->
+    <div class="logo-cell bg-dark">
+      <div class="avexa-logo">
+        <div class="avexa-wordmark on-dark">AVE<span class="x-accent">X</span>A</div>
+        <div class="avexa-divider"></div>
+        <div class="avexa-tagline on-dark">STAYS</div>
+      </div>
+      <div class="logo-cell-label" style="color: rgba(255,255,255,0.2)">Primary · On Black</div>
+    </div>
+
+    <!-- Gold background -->
+    <div class="logo-cell bg-gold">
+      <div class="avexa-logo">
+        <div class="avexa-wordmark on-gold">AVE<span class="x-accent">X</span>A</div>
+        <div class="avexa-divider on-gold"></div>
+        <div class="avexa-tagline on-gold">STAYS</div>
+      </div>
+      <div class="logo-cell-label" style="color: rgba(0,0,0,0.35)">On Gold</div>
+    </div>
+
+    <!-- Light background -->
+    <div class="logo-cell bg-ivory">
+      <div class="avexa-logo">
+        <div class="avexa-wordmark on-light">AVE<span class="x-accent">X</span>A</div>
+        <div class="avexa-divider"></div>
+        <div class="avexa-tagline" style="color:var(--steel)">STAYS</div>
+      </div>
+      <div class="logo-cell-label" style="color: var(--mist)">On Light</div>
+    </div>
+  </div>
+
+  <div class="logo-grid" style="margin-top: 2px;">
+    <!-- Graphite -->
+    <div class="logo-cell bg-graphite">
+      <div class="avexa-logo">
+        <!-- Compact horizontal logo -->
+        <div style="display:flex; align-items:center; gap: 12px;">
+          <!-- Symbol mark -->
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <rect x="1" y="1" width="30" height="30" stroke="rgba(201,168,76,0.4)" stroke-width="0.5"/>
+            <line x1="6" y1="6" x2="26" y2="26" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="26" y1="6" x2="6" y2="26" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="16" cy="16" r="2.5" fill="#C9A84C"/>
+          </svg>
+          <div>
+            <div class="avexa-wordmark on-dark" style="font-size:26px">AVE<span class="x-accent">X</span>A</div>
+          </div>
+        </div>
+        <div class="avexa-tagline on-dark" style="letter-spacing:0.4em;">STAYS · BUCUREȘTI</div>
+      </div>
+      <div class="logo-cell-label" style="color: rgba(255,255,255,0.2)">Horizontal + Citymark</div>
+    </div>
+
+    <!-- White bg, icon mark only -->
+    <div class="logo-cell bg-white">
+      <div>
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+          <rect x="1" y="1" width="70" height="70" stroke="#C9A84C" stroke-width="1"/>
+          <rect x="7" y="7" width="58" height="58" stroke="rgba(0,0,0,0.06)" stroke-width="0.5"/>
+          <line x1="14" y1="14" x2="58" y2="58" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/>
+          <line x1="58" y1="14" x2="14" y2="58" stroke="#0A0A0A" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="36" cy="36" r="5" fill="#C9A84C"/>
+          <circle cx="36" cy="36" r="2" fill="#0A0A0A"/>
+        </svg>
+      </div>
+      <div class="logo-cell-label" style="color: var(--mist)">Symbol Mark / Favicon</div>
+    </div>
+
+    <!-- Monochrome white -->
+    <div class="logo-cell" style="background: #1A1A1A;">
+      <div class="avexa-logo">
+        <div class="avexa-wordmark" style="color:rgba(255,255,255,0.9); letter-spacing:0.32em; font-size:36px;">AVE<span style="color:rgba(255,255,255,0.4); font-style:italic">X</span>A</div>
+        <div class="avexa-divider" style="background: rgba(255,255,255,0.2)"></div>
+        <div class="avexa-tagline on-dark">STAYS</div>
+      </div>
+      <div class="logo-cell-label" style="color: rgba(255,255,255,0.2)">Monochrome White</div>
+    </div>
+  </div>
+  <div class="gold-line" style="margin-top: 2px;"></div>
+</div>
+
+<!-- ===========================
+     02 — COLOR SYSTEM
+=========================== -->
+<div class="section" id="colors">
+  <div class="section-label">02 — Visual Identity</div>
+  <div class="section-title">Color System</div>
+
+  <div style="margin-bottom: 32px;">
+    <div class="t-label" style="margin-bottom: 16px;">Primary Palette</div>
+    <div class="color-grid">
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#0A0A0A;"></div>
+        <div class="color-info">
+          <span class="color-name">Onyx</span>
+          <span class="color-hex">#0A0A0A</span>
+          <span class="color-role">Primary Background · Brand Base</span>
+        </div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#C9A84C;"></div>
+        <div class="color-info">
+          <span class="color-name">Gold</span>
+          <span class="color-hex">#C9A84C</span>
+          <span class="color-role">Accent · Luxury Signal · CTA</span>
+        </div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#F5F0E8;"></div>
+        <div class="color-info">
+          <span class="color-name">Ivory</span>
+          <span class="color-hex">#F5F0E8</span>
+          <span class="color-role">Warm White · Backgrounds</span>
+        </div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#1C1C1E; border: 1px solid #2A2A2D;"></div>
+        <div class="color-info">
+          <span class="color-name">Graphite</span>
+          <span class="color-hex">#1C1C1E</span>
+          <span class="color-role">Elevated Surfaces · Cards</span>
+        </div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#FAF7F2; border: 1px solid #E8E8EC;"></div>
+        <div class="color-info">
+          <span class="color-name">Cream</span>
+          <span class="color-hex">#FAF7F2</span>
+          <span class="color-role">Light Theme Background</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 32px;">
+    <div class="t-label" style="margin-bottom: 16px;">Gold Scale</div>
+    <div class="color-grid" style="grid-template-columns: repeat(4,1fr);">
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#8A6E2F; height:64px;"></div>
+        <div class="color-info"><span class="color-name">Gold Dark</span><span class="color-hex">#8A6E2F</span></div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#C9A84C; height:64px;"></div>
+        <div class="color-info"><span class="color-name">Gold</span><span class="color-hex">#C9A84C</span></div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#DFC07A; height:64px;"></div>
+        <div class="color-info"><span class="color-name">Gold Light</span><span class="color-hex">#DFC07A</span></div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#F0E0B0; height:64px;"></div>
+        <div class="color-info"><span class="color-name">Gold Pale</span><span class="color-hex">#F0E0B0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="t-label" style="margin-bottom: 16px;">Neutral Scale</div>
+    <div class="color-grid">
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#2A2A2D; height:64px;"></div>
+        <div class="color-info"><span class="color-name">Smoke</span><span class="color-hex">#2A2A2D</span></div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#3D3D40; height:64px;"></div>
+        <div class="color-info"><span class="color-name">Ash</span><span class="color-hex">#3D3D40</span></div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#9A9AA4; height:64px;"></div>
+        <div class="color-info"><span class="color-name">Steel</span><span class="color-hex">#9A9AA4</span></div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#C8C8D0; height:64px;"></div>
+        <div class="color-info"><span class="color-name">Mist</span><span class="color-hex">#C8C8D0</span></div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#E8E8EC; height:64px; border:1px solid #ddd;"></div>
+        <div class="color-info"><span class="color-name">Ghost</span><span class="color-hex">#E8E8EC</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===========================
+     03 — TYPOGRAPHY
+=========================== -->
+<div class="section" id="typography">
+  <div class="section-label">03 — Type System</div>
+  <div class="section-title">Typography</div>
+
+  <div style="background: var(--onyx); padding: 24px 32px; margin-bottom: 48px; display: flex; gap: 48px; flex-wrap: wrap;">
+    <div>
+      <div class="t-label" style="margin-bottom: 8px;">Display</div>
+      <div style="font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; color: var(--ivory); letter-spacing: -0.01em;">Cormorant Garamond</div>
+      <div style="font-family: var(--font-ui); font-size: 10px; color: var(--steel); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px;">Headlines · Display · Quotes · Serif Elegance</div>
+    </div>
+    <div>
+      <div class="t-label" style="margin-bottom: 8px;">Body</div>
+      <div style="font-family: 'DM Sans', sans-serif; font-size: 24px; font-weight: 300; color: var(--ivory);">DM Sans</div>
+      <div style="font-family: var(--font-ui); font-size: 10px; color: var(--steel); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px;">Paragraphs · Descriptions · Modern Neutral</div>
+    </div>
+    <div>
+      <div class="t-label" style="margin-bottom: 8px;">UI / Labels</div>
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 500; color: var(--ivory);">Space Grotesk</div>
+      <div style="font-family: var(--font-ui); font-size: 10px; color: var(--steel); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px;">Labels · Navigation · Buttons · Metadata</div>
+    </div>
+  </div>
+
+  <div class="type-showcase">
+    <div class="type-row">
+      <div class="type-meta">
+        <strong>Display Hero</strong>
+        Cormorant Garamond<br>Light 300<br>80px / -2% tracking<br>1.0 line height
+      </div>
+      <div class="t-display-hero">Orasul<br>te <em>asteapta.</em></div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">
+        <strong>Display Large</strong>
+        Cormorant Garamond<br>Regular 400<br>52px / -1% tracking
+      </div>
+      <div class="t-display-large">Seamless Urban Hospitality</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">
+        <strong>Display Italic Gold</strong>
+        Cormorant Garamond<br>Light Italic 300<br>36px · Gold accent
+      </div>
+      <div class="t-display-medium">"Invisible Concierge. Visible Luxury."</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">
+        <strong>Heading 1</strong>
+        Cormorant Garamond<br>Medium 500<br>28px
+      </div>
+      <div class="t-heading-1">Floreasca Premium Residence</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">
+        <strong>Heading 2</strong>
+        Space Grotesk<br>Medium 500<br>20px
+      </div>
+      <div class="t-heading-2">Check-in fara chei. Fara asteptare.</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">
+        <strong>Overline / Label</strong>
+        Space Grotesk<br>SemiBold 600<br>11px / +25% tracking<br>All caps · Gold
+      </div>
+      <div class="t-label">Disponibil Acum · București</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">
+        <strong>Body</strong>
+        DM Sans<br>Regular 400<br>15px / 1.7 line height
+      </div>
+      <div class="t-body">Calatorul modern nu isi doreste o tranzactie. Isi doreste fluiditate — ca orasul sa i se deschida instantaneu, fara frecare, fara asteptare, fara compromisuri.</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">
+        <strong>Caption</strong>
+        Space Grotesk<br>Regular 400<br>12px / +4% tracking
+      </div>
+      <div class="t-caption">2 dormitoare · 78 m² · Floreasca · Disponibil din 1 Mai</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===========================
+     04 — COMPONENTS
+=========================== -->
+<div class="section" id="components">
+  <div class="section-label">04 — UI Components</div>
+  <div class="section-title">Component Library</div>
+
+  <div class="components-grid">
+
+    <!-- BUTTONS -->
+    <div class="component-group">
+      <div class="component-group-title">Buttons</div>
+      <div class="component-row" style="margin-bottom: 16px;">
+        <button class="btn btn-primary">Book Now →</button>
+        <button class="btn btn-gold">Check Availability</button>
+        <button class="btn btn-outline">Learn More</button>
+        <button class="btn btn-ghost">View All</button>
+      </div>
+      <!-- Dark bg buttons -->
+      <div class="component-row" style="background: var(--onyx); padding: 24px 28px;">
+        <button class="btn btn-gold">Book Now →</button>
+        <button class="btn-outline-light">Explore Properties</button>
+        <button class="btn" style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.08);">Sign In</button>
+      </div>
+    </div>
+
+    <!-- BADGES -->
+    <div class="component-group">
+      <div class="component-group-title">Badges & Tags</div>
+      <div class="component-row">
+        <span class="badge badge-gold"><span class="badge-dot"></span>Available</span>
+        <span class="badge badge-gold">Premium</span>
+        <span class="badge badge-dark"><span class="badge-dot" style="background:var(--steel)"></span>Booked</span>
+        <span class="badge badge-outline">Floreasca</span>
+        <span class="badge badge-white">5★ Standard</span>
+      </div>
+    </div>
+
+    <!-- INPUTS -->
+    <div class="component-group">
+      <div class="component-group-title">Form Inputs</div>
+      <div class="component-row" style="align-items: flex-start; flex-wrap: wrap; gap: 24px;">
+        <div class="input-group">
+          <label class="input-label">Destination</label>
+          <input class="input-field" type="text" placeholder="București · Floreasca">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Check-in</label>
+          <input class="input-field" type="text" placeholder="01 Mai, 2026">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Guests</label>
+          <input class="input-field" type="text" placeholder="2 adults">
+        </div>
+      </div>
+    </div>
+
+    <!-- PROPERTY CARDS -->
+    <div class="component-group">
+      <div class="component-group-title">Property Cards</div>
+      <div class="cards-grid">
+
+        <div class="card card-property">
+          <div class="card-img">
+            <div class="card-img-placeholder">A</div>
+            <div class="card-img-badge">
+              <span class="badge badge-gold"><span class="badge-dot"></span>Available</span>
+            </div>
+            <div class="card-img-price">
+              <div class="card-img-price-val">€149</div>
+              <div class="card-img-price-unit">per night</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-location">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="4" r="2"/><path d="M5 9C5 9 1.5 6 1.5 4a3.5 3.5 0 017 0C8.5 6 5 9 5 9z"/></svg>
+              Floreasca
+            </div>
+            <div class="card-title">Penthouse Nord · Apt. 8A</div>
+            <div class="t-caption" style="color: var(--steel);">Dormitor mare, living panoramic</div>
+            <div class="card-meta">
+              <span class="card-meta-item">🛏 2 bed</span>
+              <span class="card-meta-item">🛁 2 bath</span>
+              <span class="card-meta-item">📐 78 m²</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-property">
+          <div class="card-img" style="background: #1A1A1A;">
+            <div class="card-img-placeholder" style="color: rgba(201,168,76,0.2)">X</div>
+            <div class="card-img-badge">
+              <span class="badge badge-dark">Pipera</span>
+            </div>
+            <div class="card-img-price">
+              <div class="card-img-price-val">€189</div>
+              <div class="card-img-price-unit">per night</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-location">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="4" r="2"/><path d="M5 9C5 9 1.5 6 1.5 4a3.5 3.5 0 017 0C8.5 6 5 9 5 9z"/></svg>
+              Pipera
+            </div>
+            <div class="card-title">Executive Suite · Corp B</div>
+            <div class="t-caption" style="color: var(--steel);">Business district, acces direct</div>
+            <div class="card-meta">
+              <span class="card-meta-item">🛏 1 bed</span>
+              <span class="card-meta-item">🛁 1 bath</span>
+              <span class="card-meta-item">📐 52 m²</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-property">
+          <div class="card-img" style="background: linear-gradient(135deg, #1a1a1a, #2a2015);">
+            <div class="card-img-placeholder" style="color: rgba(201,168,76,0.15); font-size: 64px;">★</div>
+            <div class="card-img-badge">
+              <span class="badge badge-gold">Premier</span>
+            </div>
+            <div class="card-img-price">
+              <div class="card-img-price-val">€249</div>
+              <div class="card-img-price-unit">per night</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-location">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="4" r="2"/><path d="M5 9C5 9 1.5 6 1.5 4a3.5 3.5 0 017 0C8.5 6 5 9 5 9z"/></svg>
+              Centru · Unirii
+            </div>
+            <div class="card-title">The AVEXA Signature</div>
+            <div class="t-caption" style="color: var(--steel);">Vedere panoramica, standard 5★</div>
+            <div class="card-meta">
+              <span class="card-meta-item">🛏 3 bed</span>
+              <span class="card-meta-item">🛁 2 bath</span>
+              <span class="card-meta-item">📐 120 m²</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- FEATURE CARDS -->
+    <div class="component-group">
+      <div class="component-group-title">Feature Cards</div>
+      <div class="cards-grid">
+        <div class="card-feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="1"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none"/></svg>
+          </div>
+          <div class="feature-title">Acces PIN Smart</div>
+          <div class="feature-body">Cod unic pentru fiecare sejur. Nuki Smart Locks integrate. Intrare fara chei, fara asteptare.</div>
+        </div>
+        <div class="card-feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          </div>
+          <div class="feature-title">Check-in Instant</div>
+          <div class="feature-body">Online check-in complet prin Charge Automation. De la aeroport direct in apartament, sub 3 minute.</div>
+        </div>
+        <div class="card-feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="feature-title">Concierge 24/7</div>
+          <div class="feature-body">Invizibil cand totul e perfect. Prezent instantaneu cand ai nevoie. La un mesaj distanta.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===========================
+     05 — ICONS
+=========================== -->
+<div class="section" id="icons" style="background: var(--white);">
+  <div class="section-label">05 — Iconography</div>
+  <div class="section-title">Icon System</div>
+  <div class="t-body" style="margin-bottom: 32px; font-size: 13px;">Stroke icons · 1.5px weight · Round caps · 24×24 grid</div>
+
+  <div class="icon-grid">
+    <div class="icon-cell">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="1"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      <span class="icon-name">Smart Lock</span>
+    </div>
+    <div class="icon-cell">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      <span class="icon-name">Property</span>
+    </div>
+    <div class="icon-cell">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      <span class="icon-name">Check-in</span>
+    </div>
+    <div class="icon-cell">
+      <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span class="icon-name">Location</span>
+    </div>
+    <div class="icon-cell">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <span class="icon-name">Concierge</span>
+    </div>
+    <div class="icon-cell">
+      <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+      <span class="icon-name">Payment</span>
+    </div>
+    <div class="icon-cell">
+      <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+      <span class="icon-name">Amenities</span>
+    </div>
+    <div class="icon-cell">
+      <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span class="icon-name">Rating</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===========================
+     06 — BRAND IN USE
+=========================== -->
+<div class="section dark" id="mockups" style="padding: 0; border: none;">
+  <div style="padding: 64px 64px 32px;">
+    <div class="section-label">06 — Brand in Use</div>
+    <div class="section-title">Digital Mockups</div>
+  </div>
+
+  <!-- Nav Mockup -->
+  <div style="padding: 0 64px; margin-bottom: 32px;">
+    <div class="t-caption" style="color: var(--steel); margin-bottom: 12px; letter-spacing: 0.15em; text-transform: uppercase; font-size: 10px;">Navigation Bar</div>
+    <div class="nav-mockup">
+      <div class="nav-logo-text">AVE<span class="x-gold">X</span>A <span style="font-size:14px; letter-spacing:0.2em; opacity:0.4; font-family: var(--font-ui); font-weight: 300;">STAYS</span></div>
+      <div class="nav-links">
+        <a class="nav-link active" href="#">Apartments</a>
+        <a class="nav-link" href="#">Locations</a>
+        <a class="nav-link" href="#">For Owners</a>
+        <a class="nav-link" href="#">About</a>
+      </div>
+      <div class="nav-right">
+        <button class="btn-outline-light" style="padding: 9px 20px; font-size: 10px;">Book Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero Mockup -->
+  <div style="padding: 0 64px; margin-bottom: 48px;">
+    <div class="t-caption" style="color: var(--steel); margin-bottom: 12px; letter-spacing: 0.15em; text-transform: uppercase; font-size: 10px;">Hero Section</div>
+    <div class="hero-mockup">
+      <div class="hero-content">
+        <div class="hero-eyebrow">Seamless Urban Hospitality</div>
+        <div class="hero-h1">Oras.<br>Confort.<br><em>Instant.</em></div>
+        <div class="hero-body">Fara chei. Fara receptie. Fara asteptare. Apartamente premium in inima Bucurestiului, deschise la un cod PIN.</div>
+        <div class="hero-cta">
+          <button class="btn btn-gold">Gaseste Apartamentul →</button>
+          <button class="btn-outline-light" style="padding: 14px 28px;">Afla mai mult</button>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-visual-bg"></div>
+        <div class="hero-visual-x">X</div>
+        <div class="hero-visual-card">
+          <div class="hero-apt-label">← Available Now · Floreasca</div>
+          <div class="hero-apt-name">Penthouse<br>Nordului 8A</div>
+          <div class="hero-apt-meta">
+            <div class="hero-apt-row">
+              <span class="hero-apt-key">Check-in</span>
+              <span class="hero-apt-val">15 Mai · 15:00</span>
+            </div>
+            <div class="hero-apt-row">
+              <span class="hero-apt-key">Check-out</span>
+              <span class="hero-apt-val">18 Mai · 11:00</span>
+            </div>
+            <div class="hero-apt-row">
+              <span class="hero-apt-key">PIN Access</span>
+              <span class="hero-apt-val gold">●●●●●●</span>
+            </div>
+            <div class="hero-apt-row">
+              <span class="hero-apt-key">Total</span>
+              <span class="hero-apt-val gold">€447</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking Widget -->
+  <div style="padding: 0 64px; margin-bottom: 48px;">
+    <div class="t-caption" style="color: var(--steel); margin-bottom: 12px; letter-spacing: 0.15em; text-transform: uppercase; font-size: 10px;">Booking Search Widget</div>
+    <div class="booking-widget">
+      <div class="booking-field">
+        <span class="booking-field-label">Location</span>
+        <span class="booking-field-val">București</span>
+        <span class="booking-field-sub">Toate zonele</span>
+      </div>
+      <div class="booking-field">
+        <span class="booking-field-label">Check-in</span>
+        <span class="booking-field-val">15 Mai</span>
+        <span class="booking-field-sub">2026 · Joi</span>
+      </div>
+      <div class="booking-field">
+        <span class="booking-field-label">Check-out</span>
+        <span class="booking-field-val">18 Mai</span>
+        <span class="booking-field-sub">2026 · Duminică</span>
+      </div>
+      <div class="booking-field" style="border-right:none;">
+        <span class="booking-field-label">Guests</span>
+        <span class="booking-field-val">2 Adults</span>
+        <span class="booking-field-sub">Nicio preferinta</span>
+      </div>
+      <button class="booking-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Search
+      </button>
+    </div>
+  </div>
+
+  <!-- PIN Screen Mockup -->
+  <div style="padding: 0 64px 64px; display: flex; gap: 48px; align-items: flex-start; flex-wrap: wrap;">
+    <div>
+      <div class="t-caption" style="color: var(--steel); margin-bottom: 12px; letter-spacing: 0.15em; text-transform: uppercase; font-size: 10px;">Smart Lock PIN Screen</div>
+      <div class="pin-mockup">
+        <div class="pin-logo">AVE<span class="x-gold">X</span>A</div>
+        <div class="pin-label">Enter your access code</div>
+        <div class="pin-display">
+          <div class="pin-dot filled"></div>
+          <div class="pin-dot filled"></div>
+          <div class="pin-dot filled"></div>
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+        </div>
+        <div class="pin-keypad">
+          <div class="pin-key"><div class="pin-key-num">1</div><div class="pin-key-alpha"> </div></div>
+          <div class="pin-key"><div class="pin-key-num">2</div><div class="pin-key-alpha">ABC</div></div>
+          <div class="pin-key"><div class="pin-key-num">3</div><div class="pin-key-alpha">DEF</div></div>
+          <div class="pin-key"><div class="pin-key-num">4</div><div class="pin-key-alpha">GHI</div></div>
+          <div class="pin-key"><div class="pin-key-num">5</div><div class="pin-key-alpha">JKL</div></div>
+          <div class="pin-key"><div class="pin-key-num">6</div><div class="pin-key-alpha">MNO</div></div>
+          <div class="pin-key"><div class="pin-key-num">7</div><div class="pin-key-alpha">PQRS</div></div>
+          <div class="pin-key"><div class="pin-key-num">8</div><div class="pin-key-alpha">TUV</div></div>
+          <div class="pin-key"><div class="pin-key-num">9</div><div class="pin-key-alpha">WXYZ</div></div>
+          <div class="pin-key" style="grid-column: 2;"><div class="pin-key-num" style="font-size:18px; color: var(--gold);">↵</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input fields dark variant -->
+    <div>
+      <div class="t-caption" style="color: var(--steel); margin-bottom: 12px; letter-spacing: 0.15em; text-transform: uppercase; font-size: 10px;">Dark Form Variant</div>
+      <div style="background: var(--graphite); padding: 40px; border: 1px solid var(--smoke); display: flex; flex-direction: column; gap: 20px; width: 320px;">
+        <div>
+          <div class="avexa-wordmark on-dark" style="font-size:20px; letter-spacing:0.32em; margin-bottom: 4px;">AVE<span class="x-accent">X</span>A</div>
+          <div style="font-family: var(--font-ui); font-size: 9px; letter-spacing:0.2em; color: var(--steel); text-transform: uppercase;">Rezervare Directa</div>
+        </div>
+        <div class="input-group" style="width: 100%;">
+          <label class="input-label">Nume Complet</label>
+          <input class="input-field dark-input" type="text" placeholder="Andrei Ionescu">
+        </div>
+        <div class="input-group" style="width: 100%;">
+          <label class="input-label">Email</label>
+          <input class="input-field dark-input" type="email" placeholder="andrei@email.com">
+        </div>
+        <button class="btn btn-gold" style="width: 100%; justify-content: center;">Continua →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===========================
+     07 — BRAND VOICE
+=========================== -->
+<div class="section" id="voice">
+  <div class="section-label">07 — Messaging</div>
+  <div class="section-title">Brand Voice & Tone</div>
+
+  <div class="messaging-grid" style="margin-bottom: 40px;">
+    <div class="message-card dark">
+      <span class="t-label">Tagline Principal</span>
+      <div class="message-quote">Seamless <em>Urban</em> Hospitality.</div>
+      <div class="message-context" style="color: var(--steel);">Concis, urban, modern. Folosit pe toate materialele principale — nav, hero, business cards.</div>
+    </div>
+    <div class="message-card">
+      <span class="t-label">Hero Headline</span>
+      <div class="message-quote">"Fara chei. Fara asteptare. <em>Fara compromisuri.</em>"</div>
+      <div class="message-context">Tripletul diferentiator. Repeta promisiunea prin negatie — mai memorabil decat o lista de features.</div>
+    </div>
+    <div class="message-card">
+      <span class="t-label">Pentru Calatori</span>
+      <div class="message-quote">"Orasul ti se deschide <em>instantaneu.</em>"</div>
+      <div class="message-context">Evoca libertatea si fluiditatea. Targetat calatorul urban modern, executivul in tranzit.</div>
+    </div>
+    <div class="message-card dark">
+      <span class="t-label">Pentru Proprietari / Developeri</span>
+      <div class="message-quote">"8–10% randament. <em>Zero bataie de cap.</em>"</div>
+      <div class="message-context" style="color: var(--steel);">Direct, cifre concrete. Property management complet — pitch pentru developeri bucuresteni.</div>
+    </div>
+  </div>
+
+  <!-- Voice principles -->
+  <div style="background: var(--onyx); padding: 48px; display: grid; grid-template-columns: repeat(4,1fr); gap: 40px;">
+    <div>
+      <div class="t-label" style="margin-bottom: 12px;">Confident</div>
+      <div style="font-family: var(--font-body); font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.65;">Nu cerem scuze. Nu explicam prea mult. Promitem clar si livram.</div>
+    </div>
+    <div>
+      <div class="t-label" style="margin-bottom: 12px;">Minimal</div>
+      <div style="font-family: var(--font-body); font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.65;">Mai putine cuvinte, mai mult impact. Fiecare fraza trebuie sa castige locul ei.</div>
+    </div>
+    <div>
+      <div class="t-label" style="margin-bottom: 12px;">Warm</div>
+      <div style="font-family: var(--font-body); font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.65;">Luxury nu inseamna rece. Suntem prezenti. Invizibili cand totul e perfect.</div>
+    </div>
+    <div>
+      <div class="t-label" style="margin-bottom: 12px;">Urban</div>
+      <div style="font-family: var(--font-body); font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.65;">Vorbim limba orasului modern. Dynamic, direct, fara formalism inutil.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===========================
+     08 — SPACING
+=========================== -->
+<div class="section" id="spacing" style="background: var(--white);">
+  <div class="section-label">08 — Foundation</div>
+  <div class="section-title">Spacing & Grid</div>
+
+  <div class="spacing-demo">
+    <div class="spacing-unit">
+      <div class="spacing-bar" style="height: 4px;"></div>
+      <div class="spacing-value">4px</div>
+      <div class="spacing-label">xs</div>
+    </div>
+    <div class="spacing-unit">
+      <div class="spacing-bar" style="height: 8px;"></div>
+      <div class="spacing-value">8px</div>
+      <div class="spacing-label">sm</div>
+    </div>
+    <div class="spacing-unit">
+      <div class="spacing-bar" style="height: 16px;"></div>
+      <div class="spacing-value">16px</div>
+      <div class="spacing-label">md</div>
+    </div>
+    <div class="spacing-unit">
+      <div class="spacing-bar" style="height: 24px;"></div>
+      <div class="spacing-value">24px</div>
+      <div class="spacing-label">lg</div>
+    </div>
+    <div class="spacing-unit">
+      <div class="spacing-bar" style="height: 40px;"></div>
+      <div class="spacing-value">40px</div>
+      <div class="spacing-label">xl</div>
+    </div>
+    <div class="spacing-unit">
+      <div class="spacing-bar" style="height: 64px;"></div>
+      <div class="spacing-value">64px</div>
+      <div class="spacing-label">2xl</div>
+    </div>
+    <div class="spacing-unit">
+      <div class="spacing-bar" style="height: 96px;"></div>
+      <div class="spacing-value">96px</div>
+      <div class="spacing-label">3xl</div>
+    </div>
+    <div class="spacing-unit">
+      <div class="spacing-bar" style="height: 128px;"></div>
+      <div class="spacing-value">128px</div>
+      <div class="spacing-label">4xl</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 64px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+    <div style="padding: 24px; background: var(--cream); border: 1px solid var(--ghost);">
+      <div class="t-label" style="margin-bottom: 12px;">Border Radius</div>
+      <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+        <div style="width: 40px; height: 40px; background: var(--onyx); border-radius: 0;"></div>
+        <div style="width: 40px; height: 40px; background: var(--onyx); border-radius: 4px;"></div>
+        <div style="width: 40px; height: 40px; background: var(--onyx); border-radius: 8px;"></div>
+        <div style="width: 40px; height: 40px; background: var(--onyx); border-radius: 16px;"></div>
+        <div style="width: 40px; height: 40px; background: var(--onyx); border-radius: 50%;"></div>
+      </div>
+      <div class="t-caption" style="margin-top: 12px; color: var(--steel);">0 · 4 · 8 · 16 · circle — Sharp-first approach</div>
+    </div>
+    <div style="padding: 24px; background: var(--cream); border: 1px solid var(--ghost);">
+      <div class="t-label" style="margin-bottom: 12px;">Shadows</div>
+      <div style="display: flex; gap: 20px; align-items: flex-end;">
+        <div style="width: 50px; height: 50px; background: var(--white); box-shadow: 0 1px 4px rgba(0,0,0,0.12);"></div>
+        <div style="width: 50px; height: 50px; background: var(--white); box-shadow: 0 4px 20px rgba(0,0,0,0.18);"></div>
+        <div style="width: 50px; height: 50px; background: var(--white); box-shadow: 0 12px 48px rgba(0,0,0,0.25);"></div>
+        <div style="width: 50px; height: 50px; background: var(--white); box-shadow: 0 0 32px rgba(201,168,76,0.35);"></div>
+      </div>
+      <div class="t-caption" style="margin-top: 12px; color: var(--steel);">sm · md · lg · gold glow</div>
+    </div>
+    <div style="padding: 24px; background: var(--cream); border: 1px solid var(--ghost);">
+      <div class="t-label" style="margin-bottom: 12px;">Grid System</div>
+      <div class="t-body" style="font-size: 13px; color: var(--steel);">
+        12-column · 64px gutters · Max width 1440px · Breakpoints: 375 / 768 / 1024 / 1440
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <div>
+    <div class="doc-footer-brand">AVE<span>X</span>A STAYS</div>
+    <div style="font-family: var(--font-ui); font-size: 9px; letter-spacing: 0.15em; color: var(--ash); text-transform: uppercase; margin-top: 4px;">Seamless Urban Hospitality · București</div>
+  </div>
+  <div class="doc-footer-info">
+    Brand Design System v1.0<br>
+    April 2026<br>
+    Confidential — Internal Use
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push:*)",
+      "Bash(git merge:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git fetch:*)",
+      "PowerShell(Get-Command pnpm, npm, node, corepack -ErrorAction SilentlyContinue)"
+    ]
+  }
+}

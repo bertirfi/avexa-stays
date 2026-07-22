@@ -1,5 +1,13 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/coming-soon.html" }
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/sync/hostaway",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/fx",
+      "schedule": "30 6 * * *"
+    }
   ]
 }

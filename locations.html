@@ -6,7 +6,7 @@
 <title>AVEXA STAYS — Locations in Bucharest</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Manrope:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Manrope:wght@300;400;500;600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#191919;
@@ -38,7 +38,7 @@
   /* ── Announcement bar ── */
   .ann{
     background:var(--ink);color:#fff;height:40px;display:flex;align-items:center;justify-content:center;gap:16px;
-    font-size:13px;padding:0 56px 0 24px;position:relative;z-index:70;
+    font-size:13px;padding:0 56px 0 40px;position:relative;z-index:70;
   }
   .ann a{color:var(--gold);text-decoration:underline;text-underline-offset:3px;font-weight:600}
   .ann .x{position:absolute;right:18px;top:50%;transform:translateY(-50%);opacity:.7;cursor:pointer;font-size:16px}
@@ -46,50 +46,106 @@
 
   /* ── NAV ── */
   .nav{
-    position:sticky;top:0;left:0;right:0;height:64px;z-index:60;
+    position:sticky;top:0;left:0;right:0;height:80px;z-index:60;
     background:#fff;border-bottom:1px solid var(--gray-line);
-    display:flex;align-items:center;justify-content:space-between;
+    display:flex;align-items:center;justify-content:space-between;gap:32px;
     padding:0 28px;transition:transform .34s cubic-bezier(.16,1,.3,1);
     will-change:transform;
   }
   .nav.hide{transform:translateY(-100%)}
   .logo{display:flex;align-items:center;gap:10px}
-  .logo-mark{width:32px;height:32px;border-radius:10px;background:var(--ink);display:grid;place-items:center;position:relative;flex:none}
-  .logo-mark svg{width:18px;height:18px}
-  .logo-mark .dot{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--gold);animation:pulse 2.4s ease-in-out infinite}
+  .logo-mark{width:68px;height:68px;border-radius:18px;background:rgb(71,71,71);display:grid;place-items:center;position:relative;flex:none;border:1px solid rgba(255,255,255,.12)}
+  .logo-mark svg{width:36px;height:36px}
+  .logo-mark .dot{position:absolute;inset:0;margin:auto;width:8px;height:8px;border-radius:50%;background:var(--gold);animation:pulse 2.4s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.35)}}
-  .wordmark{font-family:'Plus Jakarta Sans';font-weight:800;letter-spacing:.02em;font-size:17px;color:var(--gold-dark)}
-  .nav-links{display:flex;gap:32px}
+  .wordmark{font-family:'Plus Jakarta Sans';font-weight:800;letter-spacing:-0.005em;font-size:44px;line-height:.9;color:var(--gold) !important}
+  .nav-links{display:flex;gap:32px;margin-left:auto}
   .nav-links a{font-size:13.5px;font-weight:500;opacity:.8}
   .nav-links a.current{color:var(--gold-dark);opacity:1}
   .nav-links a:hover{opacity:1}
   .nav-right{display:flex;align-items:center;gap:16px;font-size:13.5px}
   .globe{width:18px;height:18px;stroke:var(--ink);stroke-width:1.6;fill:none}
 
-  /* ── SEARCH BAR (not sticky — scrolls with the page) ── */
+  /* ── SEARCH BAR — only the pill is visually sticky ── */
   .search-bar{
-    position:relative;z-index:54;background:var(--cream);
-    padding:14px 28px;border-bottom:1px solid var(--gray-line);
-    display:flex;justify-content:center;
+    position:sticky;top:80px;z-index:54;
+    padding:14px 28px 6px;
+    display:flex;justify-content:flex-start;
+    pointer-events:none;
+    width:calc(100% * 1.7 / 2.7);
   }
+  .search-bar > *{pointer-events:auto}
   .search-pill{
-    background:#fff;border-radius:9999px;padding:6px 6px 6px 18px;
+    background:#fff;border-radius:9999px;padding:8px 8px 8px 18px;
     display:grid;grid-template-columns:1fr 1px 1.3fr 1px 1fr auto;align-items:center;gap:4px;
     box-shadow:0 8px 24px -12px rgba(25,25,25,.22),0 1px 4px rgba(25,25,25,.05);
     border:1px solid rgba(25,25,25,.06);
     width:min(820px,100%);
   }
-  .search-pill .sep{width:1px;height:26px;background:var(--gray-line)}
-  .search-pill .field{padding:7px 16px;cursor:pointer;border-radius:9999px;transition:background .2s;text-align:left}
+  .search-pill .sep{width:1px;height:28px;background:var(--gray-line)}
+  .search-pill .field{padding:8px 18px;cursor:pointer;border-radius:9999px;transition:background .2s;text-align:left;border-bottom:2px solid var(--gray-line)}
   .search-pill .field:hover{background:var(--cream)}
-  .search-pill .field .k{font-family:'DM Mono';font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-60);display:block}
-  .search-pill .field .v{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .search-pill .go{width:38px;height:38px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center}
-  .search-pill .go:hover{background:var(--gold-dark)}
-  .search-pill .go svg{width:14px;height:14px;stroke:#fff;stroke-width:2;fill:none}
+  .search-pill .field .k{font-family:'Figtree',system-ui,sans-serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);display:block;margin-bottom:2px;font-weight:600}
+  .search-pill .field .v{font-size:13.5px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .search-pill .field.active{background:var(--cream);border-bottom:2px solid var(--ink)}
+  .search-pill .go{width:44px;height:44px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;transition:background .2s,transform .2s}
+  .search-pill .go:hover{background:var(--gold-dark);transform:scale(1.05)}
+  .search-pill .go svg{width:16px;height:16px;stroke:#fff;stroke-width:2;fill:none}
+
+  /* ── SEARCH DROPDOWNS (shared with homepage) ── */
+  .sp-dropdown{
+    position:absolute;top:calc(100% + 8px);
+    background:#fff;border-radius:16px;
+    box-shadow:0 16px 48px -12px rgba(25,25,25,.25),0 2px 8px rgba(25,25,25,.06);
+    border:1px solid rgba(25,25,25,.06);
+    z-index:200;opacity:0;pointer-events:none;
+    transform:translateY(-4px);
+    transition:opacity .15s ease-out,transform .15s ease-out;
+    overflow:hidden;color:var(--ink);
+  }
+  .sp-dropdown.open{opacity:1;pointer-events:auto;transform:translateY(0)}
+  .sp-loc{width:320px;max-height:360px;overflow-y:auto;padding:8px 0}
+  .sp-loc-group{padding:14px 20px 6px;font-family:'Figtree',system-ui,sans-serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-60);font-weight:500}
+  .sp-loc-item{display:flex;align-items:center;gap:12px;padding:12px 20px;cursor:pointer;font-size:14px;font-weight:500;transition:background .15s}
+  .sp-loc-item:hover{background:var(--cream)}
+  .sp-loc-item.selected{background:var(--gold-pale);color:var(--gold-dark);font-weight:600}
+  .sp-loc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .sp-loc-icon{width:18px;height:18px;color:var(--ink-60);flex-shrink:0;display:grid;place-items:center}
+  .sp-loc-icon svg{width:16px;height:16px;stroke:currentColor;stroke-width:1.6;fill:none}
+  .sp-dates{width:620px;padding:24px 28px}
+  .sp-cal-wrap{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+  .sp-cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .sp-cal-title{font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;letter-spacing:-0.01em}
+  .sp-cal-nav{width:28px;height:28px;border-radius:50%;border:1px solid var(--gray-line);display:grid;place-items:center;cursor:pointer;transition:background .15s;background:#fff}
+  .sp-cal-nav:hover{background:var(--cream)}
+  .sp-cal-nav svg{width:14px;height:14px;stroke:var(--ink);stroke-width:2;fill:none}
+  .sp-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+  .sp-cal-dow{font-family:'Figtree',system-ui,sans-serif;font-size:10px;letter-spacing:.1em;color:var(--ink-60);padding:6px 0;text-transform:uppercase}
+  .sp-cal-day{padding:8px 0;font-size:13px;font-weight:500;border-radius:50%;cursor:pointer;transition:background .15s,color .15s;aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+  .sp-cal-day:hover{background:var(--cream)}
+  .sp-cal-day.past{color:var(--ink-60);opacity:.4;pointer-events:none}
+  .sp-cal-day.empty{pointer-events:none}
+  .sp-cal-day.selected{background:var(--ink);color:#fff;border-radius:50%}
+  .sp-cal-day.in-range{background:var(--gold-pale);border-radius:0}
+  .sp-cal-day.range-start{border-radius:50% 0 0 50%}
+  .sp-cal-day.range-end{border-radius:0 50% 50% 0}
+  .sp-cal-foot{margin-top:16px;font-family:'Figtree',system-ui,sans-serif;font-size:12px;color:var(--ink-60);letter-spacing:.1em}
+  .sp-guests{width:320px;padding:20px 24px}
+  .sp-guest-row{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--gray-line)}
+  .sp-guest-row:last-child{border-bottom:none}
+  .sp-guest-info .sp-guest-type{font-size:15px;font-weight:600}
+  .sp-guest-info .sp-guest-age{font-size:12px;color:var(--ink-60)}
+  .sp-guest-ctrl{display:flex;align-items:center;gap:14px}
+  .sp-guest-btn{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;cursor:pointer;font-size:18px;font-weight:500;transition:background .15s,color .15s}
+  .sp-guest-btn.minus{background:var(--gray-light);color:var(--ink-60)}
+  .sp-guest-btn.minus:hover{background:var(--gray-line);color:var(--ink)}
+  .sp-guest-btn.minus.disabled{opacity:.3;pointer-events:none}
+  .sp-guest-btn.plus{background:var(--ink);color:#fff}
+  .sp-guest-btn.plus:hover{background:var(--gold-dark)}
+  .sp-guest-count{font-family:'Plus Jakarta Sans';font-weight:700;font-size:16px;min-width:20px;text-align:center}
 
   /* ── PAGE SHELL ── */
-  .page{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 104px);transition:grid-template-columns .45s cubic-bezier(.16,1,.3,1)}
+  .page{display:grid;grid-template-columns:1.7fr 1fr;min-height:calc(100vh - 104px)}
   .page.hidemap{grid-template-columns:320px 1fr}
   .page.hidemap .map-panel{display:none}
 
@@ -133,7 +189,7 @@
     box-shadow:0 1px 2px rgba(25,25,25,.04);
   }
   .card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 18px 40px -20px rgba(25,25,25,.22)}
-  .card-media{position:relative;aspect-ratio:16/9;overflow:hidden;background:var(--gray-light)}
+  .card-media{position:relative;aspect-ratio:2.4/1;overflow:hidden;background:var(--gray-light);border-radius:14px}
   .card-slide{position:absolute;inset:0;display:flex;transition:transform .45s cubic-bezier(.16,1,.3,1)}
   .card-slide > div{flex:0 0 100%;height:100%;position:relative}
   .card-slide .ph-a{background:
@@ -157,7 +213,7 @@
   .dots span.on{background:#fff;width:20px;border-radius:9999px}
 
   .card-body{padding:22px 24px 24px;display:grid;grid-template-columns:1fr auto;gap:14px 20px;align-items:start}
-  .nbh{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono';font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:500}
+  .nbh{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono';font-size:13px;letter-spacing:.2em;text-transform:uppercase;font-weight:500}
   .nbh .dot{width:7px;height:7px;border-radius:50%}
   .p-name{font-family:'Plus Jakarta Sans';font-weight:800;font-size:24px;letter-spacing:-0.01em;line-height:1.1;margin-top:8px}
   .p-tag{font-size:14px;color:var(--ink-60);margin-top:6px;max-width:460px}
@@ -173,7 +229,7 @@
   .cta a:hover{background:var(--gold-dark)}
 
   /* ── RIGHT: MAP ── */
-  .map-panel{position:sticky;top:64px;height:calc(100vh - 64px);background:#242824;overflow:hidden;border-left:1px solid var(--gray-line)}
+  .map-panel{position:sticky;top:80px;height:calc(100vh - 80px);background:#242824;overflow:hidden;border-left:1px solid var(--gray-line);border-radius:20px;margin:12px 12px 12px 0}
   .map-inner{
     position:absolute;inset:0;
     background:
@@ -329,6 +385,7 @@
     .nav-burger{display:flex}
     .page{grid-template-columns:1fr}
     .map-panel{display:none}
+    .search-bar{width:100%}
     .search-pill{grid-template-columns:1fr auto}
     .search-pill .sep,.search-pill .field:nth-of-type(2),.search-pill .field:nth-of-type(3){display:none}
     .list-panel{padding:28px 24px 80px}
@@ -353,7 +410,7 @@
     .ann{font-size:12px;height:36px}
 
     /* Search bar tighter */
-    .search-bar{padding:8px 12px}
+    .search-bar{padding:8px 12px;width:100%}
 
     /* List panel */
     .list-panel{padding:16px 14px calc(60px + env(safe-area-inset-bottom,0px) + 80px)}
@@ -477,27 +534,28 @@
   .mob-price-toggle input:not(:checked){background:var(--gray-light)}
   .mob-price-toggle input:not(:checked)::before{left:2px}
 
-  /* ─── Filter bottom-sheet modal ─── */
+  /* ─── Filter centered modal ─── */
   .filter-backdrop{
-    position:fixed;inset:0;z-index:119;background:rgba(25,25,25,.45);
-    opacity:0;pointer-events:none;transition:opacity .35s;
+    position:fixed;inset:0;z-index:119;background:rgba(25,25,25,.4);
+    opacity:0;pointer-events:none;transition:opacity .3s;
   }
   .filter-backdrop.open{opacity:1;pointer-events:auto}
 
   .filter-modal{
-    position:fixed;bottom:0;left:0;right:0;z-index:120;
-    background:#fff;border-radius:22px 22px 0 0;
-    max-height:92vh;display:flex;flex-direction:column;
-    transform:translateY(100%);
-    transition:transform .4s cubic-bezier(.16,1,.3,1);
-    padding-bottom:env(safe-area-inset-bottom,0px);
+    position:fixed;z-index:120;
+    top:50%;left:50%;transform:translate(-50%,-50%) scale(.96);
+    width:min(400px,calc(100% - 40px));
+    max-height:min(520px,80vh);
+    background:#fff;border-radius:16px;
+    display:flex;flex-direction:column;
+    opacity:0;pointer-events:none;
+    transition:opacity .25s cubic-bezier(.16,1,.3,1),transform .25s cubic-bezier(.16,1,.3,1);
+    box-shadow:0 24px 64px -16px rgba(25,25,25,.28),0 2px 8px rgba(25,25,25,.06);
   }
-  .filter-modal.open{transform:translateY(0)}
+  .filter-modal.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
 
-  .filter-handle{
-    width:36px;height:4px;border-radius:9999px;background:var(--gray-line);
-    margin:12px auto 0;flex-shrink:0;
-  }
+  .filter-handle{display:none}
+
   .filter-modal-head{
     display:flex;align-items:center;justify-content:space-between;
     padding:16px 20px 14px;border-bottom:1px solid var(--gray-line);flex-shrink:0;
@@ -522,7 +580,7 @@
   .fcheck{
     display:flex;align-items:center;gap:12px;
     padding:13px 0;border-bottom:1px solid var(--gray-line);
-    font-size:14px;cursor:pointer;line-height:1.3;
+    font-size:13px;cursor:pointer;line-height:1.3;
   }
   .fcheck:last-of-type{border-bottom:none}
   .fcheck input[type=checkbox]{
@@ -583,19 +641,17 @@
 
 <!-- NAV -->
 <nav class="nav" id="nav">
-  <a href="app.html" class="logo">
-    <span class="logo-mark"><svg viewBox="0 0 20 20"><line x1="3" y1="3" x2="17" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="3" x2="3" y2="17" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round"/></svg><span class="dot"></span></span>
+  <a href="app-v2.html" class="logo">
+    <span class="logo-mark" style="color: rgb(24, 24, 24); background-color: rgb(0, 0, 0)"><svg viewBox="0 0 20 20"><line x1="3" y1="3" x2="17" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="3" x2="3" y2="17" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round"/></svg><span class="dot" data-comment-anchor="8222a1a0fd-span"></span></span>
     <span class="wordmark">AVEXA</span>
   </a>
   <div class="nav-links">
-    <a href="locations.html" class="current">Locations</a>
-    <a href="app.html#benefits">Member Benefits</a>
-    <a href="#">Business Travel</a>
-    <a href="#">My Trips</a>
+    <a href="locations.html" class="current" style="font-size: 16px">Locations</a>
+    <a href="member-benefits.html" style="font-size: 16px">Member Benefits</a>
+    <a href="my-trips.html" style="font-size: 16px">My Trips</a>
   </div>
   <div class="nav-right">
-    <svg class="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg>
-    <a href="#">Sign up</a>
+    <a href="login.html" style="font-size: 16px">Sign up</a>
   </div>
   <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
     <span></span><span></span><span></span>
@@ -605,7 +661,7 @@
 <!-- MOBILE NAV OVERLAY -->
 <div class="mobile-nav" id="mobileNav" aria-hidden="true">
   <div class="mob-head">
-    <a href="app.html" class="logo" style="color:#fff">
+    <a href="app-v2.html" class="logo" style="color:#fff">
       <span class="logo-mark" style="width:36px;height:36px;border-radius:10px;background:var(--ink)"><svg viewBox="0 0 20 20"><line x1="3" y1="3" x2="17" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="3" x2="3" y2="17" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round"/></svg><span class="dot"></span></span>
       <span style="font-family:'Plus Jakarta Sans';font-weight:800;font-size:20px;color:var(--gold)">AVEXA</span>
     </a>
@@ -613,9 +669,8 @@
   </div>
   <div class="mob-links">
     <a href="locations.html" class="current">Locations</a>
-    <a href="app.html#benefits">Member Benefits</a>
-    <a href="#">Business Travel</a>
-    <a href="#">My Trips</a>
+    <a href="member-benefits.html">Member Benefits</a>
+    <a href="my-trips.html">My Trips</a>
   </div>
   <div class="mob-foot">
     <a href="#" class="mob-signup">Join free →</a>
@@ -623,14 +678,14 @@
   </div>
 </div>
 
-<!-- STICKY SEARCH -->
+<!-- STICKY SEARCH (functional — shared with homepage via search-pill.js) -->
 <div class="search-bar">
-  <div class="search-pill">
-    <button class="field"><span class="k">Location</span><span class="v">Bucharest · All</span></button>
+  <div class="search-pill" id="stickyPill" style="font-size: 17px; width: 1076px">
+    <button class="field" data-panel="location" id="sLocField"><span class="k">WHERE</span><span class="v" id="sLocVal">Search Bucharest Stays</span></button>
     <span class="sep"></span>
-    <button class="field"><span class="k">Check in — Check out</span><span class="v">Apr 28 — May 03</span></button>
+    <button class="field" data-panel="dates" id="sDateField"><span class="k">WHEN</span><span class="v" id="sDateVal">Add dates</span></button>
     <span class="sep"></span>
-    <button class="field"><span class="k">Guests</span><span class="v">2 adults</span></button>
+    <button class="field" data-panel="guests" id="sGuestField"><span class="k">WHO</span><span class="v" id="sGuestVal">1 guest</span></button>
     <button class="go" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
   </div>
 </div>
@@ -638,17 +693,17 @@
 <div class="page" id="page">
 
   <!-- FILTERS sidebar (visible only when map hidden) -->
-  <aside class="filters">
-    <div class="filters-head">
+  <aside class="filters" style="font-size: 15px">
+    <div class="filters-head" style="font-size: 14px">
       <h3>Filter by</h3>
       <a href="#">Clear all</a>
     </div>
     <h4>Popular neighborhoods</h4>
-    <label class="check"><input type="checkbox"> Floreasca <span class="n">4</span></label>
-    <label class="check"><input type="checkbox"> Pipera <span class="n">3</span></label>
+    <label class="check" style="font-size: 14px"><input type="checkbox"> Floreasca <span class="n">4</span></label>
+    <label class="check" style="font-size: 14px"><input type="checkbox"> Pipera <span class="n">3</span></label>
     <label class="check"><input type="checkbox"> City Centre <span class="n">2</span></label>
     <label class="check"><input type="checkbox"> Dorobanti <span class="n">1</span></label>
-    <a class="showall">Show all</a>
+    <a class="showall" style="font-size: 14px">Show all</a>
 
     <h4>Amenities</h4>
     <label class="check"><input type="checkbox"> Kitchen / Kitchenette</label>
@@ -674,14 +729,13 @@
   <main class="list-panel">
     <div class="list-head">
       <div>
-        <span class="count">— 10 available properties</span>
-        <h1>Stays in Bucharest</h1>
-        <p class="sub">Member rates and fully digital check-in at every AVEXA address across the city.</p>
+        <h1>Stays in Bucharest City Center</h1>
+        <p class="sub" style="font-size: 15px; font-weight: 600">Member rates and fully digital check-in at every AVEXA address across the city.</p>
       </div>
     </div>
 
     <!-- Desktop chips -->
-    <div class="chips">
+    <div class="chips" style="font-size: 15px">
       <button class="chip on">All</button>
       <button class="chip">Kitchen</button>
       <button class="chip">Balcony</button>
@@ -689,7 +743,7 @@
       <button class="chip">Breakfast</button>
       <button class="chip">Lift</button>
       <button class="chip">Pets OK</button>
-      <button class="chip more" id="openFilterModal">+ More filters</button>
+      <button class="chip more" id="openFilterModal" style="font-size: 14px">+ More filters</button>
     </div>
 
     <!-- Mobile controls bar (phone only) -->
@@ -711,8 +765,8 @@
 
     <div class="sort-row">
       <div class="left">
-        <label>Sort by:
-          <select>
+        <label style="font-size: 17px">Sort by:
+          <select style="font-size: 14px">
             <option>Price — low to high</option>
             <option>Price — high to low</option>
             <option>Newest</option>
@@ -720,12 +774,12 @@
           </select>
         </label>
       </div>
-      <label class="toggle"><input type="checkbox" checked> Show total prices</label>
+      <label class="toggle" style="font-size: 16px"><input type="checkbox" checked> Show total prices</label>
     </div>
 
     <div class="promo">
-      <span><strong>Members save 15%</strong> · As an AVEXA member, get the lowest rate — for free.</span>
-      <a href="#">Join →</a>
+      <span style="font-size: 17px"><strong style="font-size:16px">Stay a little longer, save even more.</strong> · Up to 25% off when you stay for 7+ nights.</span>
+      <a href="#" style="font-size:16px">Join →</a>
     </div>
 
     <div class="cards" id="cards">
@@ -774,7 +828,6 @@
       <div id="pins"></div>
     </div>
 
-    <button class="map-toggle" id="hideMapBtn">← Hide map</button>
     <div class="zoom">
       <button aria-label="Zoom in">＋</button>
       <button aria-label="Zoom out">−</button>
@@ -796,7 +849,7 @@
   <div class="filter-handle"></div>
   <div class="filter-modal-head">
     <span class="fhead-side"></span>
-    <h2>Filters</h2>
+    <h2 style="font-size: 18px">Filters</h2>
     <button class="filter-close" id="filterClose" aria-label="Close">✕</button>
   </div>
   <div class="filter-modal-body" id="filterBody">
@@ -804,7 +857,7 @@
     <label class="fcheck"><input type="checkbox" name="f" value="kitchen"> Kitchen / Kitchenette</label>
     <label class="fcheck"><input type="checkbox" name="f" value="balcony"> Balcony / Terrace</label>
     <label class="fcheck"><input type="checkbox" name="f" value="ac"> Air Conditioning</label>
-    <label class="fcheck"><input type="checkbox" name="f" value="breakfast"> Breakfast available <span class="fpaid">Paid service</span></label>
+    <label class="fcheck" style="font-size: 14px"><input type="checkbox" name="f" value="breakfast"> Breakfast available <span class="fpaid">Paid service</span></label>
     <label class="fcheck"><input type="checkbox" name="f" value="lift"> Lift</label>
 
     <h4>Property Amenities</h4>
@@ -815,20 +868,17 @@
     <label class="fcheck"><input type="checkbox" name="f" value="parking"> Parking <span class="finfo">i</span></label>
     <label class="fcheck"><input type="checkbox" name="f" value="pets"> Pets allowed <span class="fpaid">Paid</span></label>
 
-    <h4>Room amenities</h4>
+    <h4 style="font-size: 16px">Room amenities</h4>
     <label class="fcheck"><input type="checkbox" name="f" value="workstation"> Work station</label>
     <label class="fcheck"><input type="checkbox" name="f" value="washer"> Washing machine in unit</label>
     <label class="fcheck"><input type="checkbox" name="f" value="dishwasher"> Dishwasher</label>
     <label class="fcheck"><input type="checkbox" name="f" value="microwave"> Microwave</label>
   </div>
   <div class="filter-modal-foot">
-    <button class="fsf-clear" id="filterClear">Clear all</button>
-    <button class="fsf-apply" id="filterApply">Apply</button>
+    <button class="fsf-clear" id="filterClear" style="font-size: 16px">Clear all</button>
+    <button class="fsf-apply" id="filterApply" style="font-size: 16px">Apply</button>
   </div>
 </div>
-
-<!-- Tablet: show map float button -->
-<button class="show-map-float" id="showMapBtn">🗺 Show map</button>
 
 <!-- Phone: List / Map pill toggle -->
 <div class="list-map-toggle" id="listMapToggle">
@@ -844,7 +894,7 @@
 
 <!-- Bottom tab bar (phone only) -->
 <nav class="tab-bar" aria-label="Main navigation">
-  <a href="app.html" aria-label="Search">
+  <a href="app-v2.html" aria-label="Search">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
     <span>Search</span>
   </a>
@@ -887,16 +937,14 @@
 
   // ─── Properties data
   const PROPS = [
-    {id:'p1', name:'The Floreasca Loft', nbh:'Floreasca', color:'var(--c-floreasca)', tag:'Park-side one-bedroom with terrace', amens:['Kitchen','Balcony','A/C','Lift'], price:149, x:22, y:28},
-    {id:'p2', name:'Dorobanti 74', nbh:'Dorobanti', color:'var(--c-dorobanti)', tag:'Calm street, 8 min from Piata Victoriei', amens:['Kitchen','Work station','A/C'], price:128, x:33, y:48},
-    {id:'p3', name:'Centre Studio — Lipscani', nbh:'City Centre', color:'var(--c-centre)', tag:'Old town studio for nights out', amens:['A/C','Lift','Luggage'], price:109, x:48, y:60},
-    {id:'p4', name:'Pipera Skyline 18', nbh:'Pipera', color:'var(--c-pipera)', tag:'Glass-fronted flat near office park', amens:['Kitchen','Parking','Gym'], price:138, x:70, y:20},
-    {id:'p5', name:'Herastrau Green One', nbh:'Herastrau', color:'var(--c-herastrau)', tag:'Overlooks the lake, quiet at night', amens:['Balcony','Kitchen','A/C'], price:172, x:56, y:32},
-    {id:'p6', name:'Baneasa Garden Flat', nbh:'Baneasa', color:'var(--c-baneasa)', tag:'Green-belt apartment near the airport', amens:['Parking','Pets','Kitchen'], price:119, x:82, y:48},
-    {id:'p7', name:'Floreasca Park Suite', nbh:'Floreasca', color:'var(--c-floreasca)', tag:'Two-bedroom with lake views', amens:['Balcony','Lift','Work station'], price:189, x:26, y:38},
-    {id:'p8', name:'Centre · Palace Court', nbh:'City Centre', color:'var(--c-centre)', tag:'Walk to every landmark', amens:['A/C','Breakfast','Lift'], price:132, x:52, y:64},
-    {id:'p9', name:'Dorobanti Quiet Studio', nbh:'Dorobanti', color:'var(--c-dorobanti)', tag:'Embassy district pied-à-terre', amens:['Kitchen','A/C'], price:98, x:38, y:44},
-    {id:'p10', name:'Pipera Atrium', nbh:'Pipera', color:'var(--c-pipera)', tag:'Open-plan with home office', amens:['Work station','Kitchen','Parking'], price:155, x:74, y:26},
+    {id:'p1', name:'The Ultracentral Gem Calea Victoriei & Palace View', nbh:'Bucharest City Centre', color:'var(--c-centre)', tag:'The city, effortlessly yours.', amens:['Kitchen','Free Wi-Fi','A/C','Elevator'], price:149, x:46, y:56, imgs:['listing-photos/00-cover.jpeg','listing-photos/30-living-room.jpeg','listing-photos/15-bedroom1.jpg','listing-photos/19-bathroom.jpeg','listing-photos/20-palace-view.jpeg'], page:'stay.html'},
+    {id:'p1b', name:'Central Quiet Luxury', nbh:'Bucharest City Centre', color:'var(--c-centre)', tag:'Smart city living with the AVEXA touch of luxury, peace, and seamless technology.', amens:['Free Wi-Fi','A/C','Kitchen','Washer','Smart TV'], price:119, x:44, y:50, imgs:['listing-304/00-cover.jpeg','listing-304/01-living-room.jpeg','listing-304/02-bedroom1.jpeg','listing-304/04-bedroom2.jpeg','listing-304/07-bathroom.jpeg'], page:'stay-304.html'},
+    {id:'p1c', name:'The Modern Quartz Gem', nbh:'Bucharest City Centre', color:'var(--c-centre)', tag:'A sophisticated central sanctuary, 2 min from Old Town.', amens:['Free Wi-Fi','A/C','Kitchen','Dishwasher','2 Bathrooms'], price:129, x:48, y:58, imgs:['listing-203/00-cover.jpeg','listing-203/01a-living-room.jpeg','listing-203/02-bedroom.jpeg','listing-203/04-kitchen.jpeg','listing-203/05b-bathroom1.jpeg'], page:'stay-203.html'},
+    {id:'p1d', name:'The Little Gem', nbh:'Bucharest City Centre', color:'var(--c-centre)', tag:'A botanical retreat in the iconic Adriatica Palace, steps from Old Town.', amens:['Free Wi-Fi','A/C','Kitchenette','Netflix','Elevator'], price:79, x:47, y:57, imgs:['listing-101/00-cover.jpeg','listing-101/04-bedroom.jpeg','listing-101/11-bathroom-shower.jpeg','listing-101/14-kitchenette.jpeg','listing-101/25-building-entrance.jpeg'], page:'stay-101.html'},
+    {id:'p1e', name:'The Golden Forest', nbh:'Bucharest City Centre', color:'var(--c-centre)', tag:'Botanical sanctuary overlooking the Dâmbovița River, gateway to Old Town.', amens:['Free Wi-Fi','A/C','Kitchen','Dishwasher','Washer'], price:109, x:47, y:57, imgs:['listing-201/00-cover.jpeg','listing-201/32-apartment-view.jpeg','listing-201/06-bathroom-green.jpeg','listing-201/10-bathroom-full.jpeg','listing-201/29-exterior-view.jpeg'], page:'stay-201.html'},
+    {id:'p1f', name:'The Modern Oak Gem', nbh:'Bucharest City Centre', color:'var(--c-centre)', tag:'Prestigious Calea Victoriei address, freshly renovated luxury for families or groups.', amens:['Free Wi-Fi','A/C','Kitchen','Dishwasher','Dryer'], price:149, x:46, y:55, imgs:['listing-303/00-cover.jpeg','listing-303/02a-bedroom1.jpeg','listing-303/04b-bedroom2.jpeg','listing-303/07-kitchen.jpeg','listing-303/08-bathroom.jpeg'], page:'stay-303.html'},
+    {id:'p1g', name:'The Modern Green Gem', nbh:'Bucharest City Centre', color:'var(--c-centre)', tag:'Stirbey Palace views from two private balconies on Calea Victoriei.', amens:['Free Wi-Fi','A/C','Kitchen','Dishwasher','Balcony'], price:139, x:46, y:54, imgs:['listing-202/00-cover.jpeg','listing-202/04-bedroom.jpeg','listing-202/07-bathroom.jpeg','listing-202/09-kitchen.jpeg','listing-202/33-open-streets.jpeg'], page:'stay-202.html'},
+    {id:'p1h', name:'The Modern Sapphire Gem', nbh:'Bucharest City Centre', color:'var(--c-centre)', tag:'Sapphire-toned sanctuary on Calea Victoriei with Știrbei Palace views.', amens:['Free Wi-Fi','A/C','Kitchen','75\" TV','Washer'], price:139, x:46, y:53, imgs:['listing-302/00-cover.jpeg','listing-302/04-bedroom1.jpeg','listing-302/08-bedroom2.jpeg','listing-302/10-kitchen.jpeg','listing-302/12-bathroom.jpeg'], page:'stay-302.html'},
   ];
 
   // ─── Render cards
@@ -905,26 +953,24 @@
     <article class="card" data-id="${p.id}">
       <div class="card-media">
         <div class="card-slide" data-idx="0">
-          <div class="ph-a"><span class="tag">${String(i+1).padStart(2,'0')} / 10</span><span class="tag fav">♡</span></div>
-          <div class="ph-b"></div>
-          <div class="ph-c"></div>
+          ${p.imgs ? p.imgs.map((img,j) => `<div${j===0?' style="position:relative"':''}><img src="${img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></div>`).join('') : `<div class="ph-a"></div><div class="ph-b"></div><div class="ph-c"></div>`}
         </div>
         <button class="arr prev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
         <button class="arr next" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
-        <div class="dots"><span class="on"></span><span></span><span></span></div>
+        <div class="dots">${(p.imgs ? p.imgs : [1,2,3]).map((_,j) => `<span${j===0?' class="on"':''}></span>`).join('')}</div>
       </div>
       <div class="card-body">
         <div>
           <span class="nbh" style="color:${p.color}"><span class="dot" style="background:${p.color}"></span>${p.nbh}</span>
           <h3 class="p-name">${p.name}</h3>
-          <p class="p-tag">${p.tag}</p>
-          <div class="amens">${p.amens.map(a=>`<span>${a}</span>`).join('')}</div>
+          <p class="p-tag" style="font-size:16px">${p.tag}</p>
+          <div class="amens" style="font-size:14px">${p.amens.map(a=>`<span>${a}</span>`).join('')}</div>
         </div>
         <div class="price">
-          <div class="badge"><span class="n">€${p.price}</span><span class="u">/ night</span></div>
-          <span class="ppn">Member rate · incl. taxes</span>
+          <div class="badge"><span class="n">€${p.price}</span><span class="u" style="font-size:16px">/ night</span></div>
+          <span class="ppn" style="font-size:12px;font-weight:500">Member rate · incl. taxes</span>
         </div>
-        <div class="cta"><a href="#">Explore &amp; Book →</a></div>
+        <div class="cta"><a href="${p.page || 'stay.html'}" style="font-size:16px">Explore &amp; Book →</a></div>
       </div>
     </article>
   `).join('');
@@ -941,7 +987,7 @@
   document.querySelectorAll('.card').forEach(card => {
     const slide = card.querySelector('.card-slide');
     const dots = card.querySelectorAll('.dots span');
-    const total = 3;
+    const total = card.querySelectorAll('.dots span').length;
     let idx = 0;
     const set = (i) => {
       idx = (i + total) % total;
@@ -977,7 +1023,7 @@
         </div>
         <div class="map-card-popup-footer">
           <span class="map-card-popup-price">€${prop.price} / night</span>
-          <span class="map-card-popup-cta">View details →</span>
+          <a href="stay.html" class="map-card-popup-cta">View details →</a>
         </div>
       </div>`;
     popup.classList.add('open');
@@ -1032,8 +1078,7 @@
 
   // ─── Map toggle (tablet)
   const page = document.getElementById('page');
-  document.getElementById('hideMapBtn').addEventListener('click', () => page.classList.add('hidemap'));
-  document.getElementById('showMapBtn').addEventListener('click', () => page.classList.remove('hidemap'));
+  // hide/show map functionality removed — map is always visible
 
   // ─── Filter modal
   (function(){
@@ -1165,5 +1210,18 @@
     });
   });
 </script>
+<script src="search-pill.js"></script>
 </body>
 </html>
+
+<style id="__om-edit-overrides">
+#cards >article:nth-child(1) .nbh { font-size: 14px !important }
+#cards >article:nth-child(1) .p-tag { font-weight: 500 !important }
+#cards >article:nth-child(1) .p-tag { font-size: 15px !important }
+#cards >article:nth-child(1) :is(h1,h2,h3,h4,h5,h6) { font-size: 24px !important }
+#cards >article:nth-child(2) .p-tag { font-weight: 500 !important }
+#cards >article:nth-child(2) .ppn { font-weight: 700 !important }
+#cards >article:nth-child(1) .ppn { font-weight: 700 !important }
+#cards >article:nth-child(1) .ppn { font-size: 13px !important }
+#cards >article:nth-child(2) .nbh { font-size: 14px !important }
+</style>

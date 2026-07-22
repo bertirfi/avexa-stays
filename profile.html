@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AVEXA STAYS — My Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Manrope:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="profile.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <a href="app-v2.html" class="logo" aria-label="AVEXA STAYS home">
+    <span class="logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 20 20"><line x1="3" y1="3" x2="17" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="3" x2="3" y2="17" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round"/></svg>
+      <span class="dot"></span>
+    </span>
+    <span class="wordmark">AVEXA</span>
+  </a>
+  <div class="nav-links">
+    <a href="locations.html">Locations</a>
+    <a href="member-benefits.html">Member Benefits</a>
+    <a href="my-trips.html">My Trips</a>
+  </div>
+  <div class="nav-right" id="navRight">
+    <a href="login.html">Sign up</a>
+  </div>
+</nav>
+
+<!-- PAGE -->
+<main class="profile-page">
+  <div class="profile-wrap">
+
+    <!-- Header -->
+    <div class="profile-header">
+      <div class="profile-avatar" id="profileAvatar">U</div>
+      <div>
+        <h1 class="profile-name" id="profileName">Your Profile</h1>
+        <p class="profile-member">AVEXA Member</p>
+      </div>
+    </div>
+
+    <!-- Personal details -->
+    <section class="profile-card">
+      <div class="pc-head">
+        <h2 class="pc-title">Personal details</h2>
+        <button class="pc-edit" id="editInfoBtn">Edit</button>
+      </div>
+      <div class="pc-grid" id="infoDisplay">
+        <div class="pc-field">
+          <span class="pc-label">First name</span>
+          <span class="pc-value" id="valFirstName">—</span>
+        </div>
+        <div class="pc-field">
+          <span class="pc-label">Last name</span>
+          <span class="pc-value" id="valLastName">—</span>
+        </div>
+        <div class="pc-field">
+          <span class="pc-label">Email</span>
+          <span class="pc-value" id="valEmail">—</span>
+        </div>
+        <div class="pc-field">
+          <span class="pc-label">Phone</span>
+          <span class="pc-value pc-placeholder" id="valPhone">Not provided</span>
+        </div>
+      </div>
+      <!-- Edit form (hidden by default) -->
+      <form class="pc-form" id="infoForm" style="display:none">
+        <div class="pc-grid">
+          <div class="pc-field">
+            <label class="pc-label" for="inputFirst">First name</label>
+            <input class="pc-input" id="inputFirst" type="text" placeholder="First name">
+          </div>
+          <div class="pc-field">
+            <label class="pc-label" for="inputLast">Last name</label>
+            <input class="pc-input" id="inputLast" type="text" placeholder="Last name">
+          </div>
+          <div class="pc-field">
+            <label class="pc-label" for="inputEmail">Email</label>
+            <input class="pc-input" id="inputEmail" type="email" placeholder="Email" disabled>
+          </div>
+          <div class="pc-field">
+            <label class="pc-label" for="inputPhone">Phone</label>
+            <input class="pc-input" id="inputPhone" type="tel" placeholder="+40 7XX XXX XXX">
+          </div>
+        </div>
+        <div class="pc-form-actions">
+          <button type="button" class="pc-btn-cancel" id="cancelEditBtn">Cancel</button>
+          <button type="submit" class="pc-btn-save">Save changes</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Manage stays -->
+    <section class="profile-card">
+      <div class="pc-head">
+        <h2 class="pc-title">Manage stays</h2>
+      </div>
+      <p class="pc-desc">Booked through Airbnb, Booking.com, or another platform? Link the reservation to your AVEXA profile to manage everything in one place.</p>
+      <a href="my-trips.html" class="pc-btn-outline">Add a reservation →</a>
+    </section>
+
+    <!-- Preferences -->
+    <section class="profile-card">
+      <div class="pc-head">
+        <h2 class="pc-title">Preferences</h2>
+      </div>
+      <div class="pc-toggle-row">
+        <div>
+          <span class="pc-toggle-label">Email notifications</span>
+          <span class="pc-toggle-desc">Booking confirmations, reminders, and member offers</span>
+        </div>
+        <label class="pc-switch"><input type="checkbox" checked id="toggleEmail"><span class="pc-slider"></span></label>
+      </div>
+      <div class="pc-toggle-row">
+        <div>
+          <span class="pc-toggle-label">Marketing updates</span>
+          <span class="pc-toggle-desc">New locations, seasonal promotions, partner deals</span>
+        </div>
+        <label class="pc-switch"><input type="checkbox" id="toggleMarketing"><span class="pc-slider"></span></label>
+      </div>
+    </section>
+
+    <!-- Account -->
+    <section class="profile-card profile-card-last">
+      <div class="pc-head">
+        <h2 class="pc-title">Account</h2>
+      </div>
+      <div class="pc-account-actions">
+        <button class="pc-btn-outline" id="logoutBtn">Log out</button>
+      </div>
+      <p class="pc-danger">Need to close your account? <a href="#" class="pc-danger-link">Delete account</a></p>
+    </section>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-wrap">
+    <div class="foot-top">
+      <div class="foot-col"><h4>Contact &amp; Help</h4><a href="#">Help centre</a><a href="mailto:hello@avexastays.com">Contact us</a><a href="#">Cancellation policy</a><a href="#">Report accessibility</a></div>
+      <div class="foot-col"><h4>Discover</h4><a href="locations.html">All locations</a><a href="#">Bucharest guide</a><a href="#">Long stays</a></div>
+      <div class="foot-col"><h4>AVEXA</h4><a href="#">About us</a><a href="#">Careers</a><a href="#">Press</a><a href="#">Partners</a></div>
+      <div class="foot-col foot-col-right">
+        <h4>Stay social</h4>
+        <div class="foot-social">
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 3.3.15 4.8 1.7 5 5 .06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.2 3.3-1.7 4.8-5 5-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-3.3-.2-4.8-1.7-5-5C2.07 15.6 2 15.2 2 12s0-3.6.07-4.9c.2-3.3 1.7-4.8 5-5C8.4 2.07 8.8 2.07 12 2.07zm0 3.3a6.5 6.5 0 100 13 6.5 6.5 0 000-13zm0 10.7a4.2 4.2 0 110-8.4 4.2 4.2 0 010 8.4zm6.7-10.9a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg></a>
+          <a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M19.3 6.2a4.8 4.8 0 01-3-1.1 4.8 4.8 0 01-1.5-2.6h-3.2v12.6a2.7 2.7 0 11-2-2.6V9.2a5.9 5.9 0 105.3 5.9V9.5a8 8 0 004.4 1.3V7.6a4.8 4.8 0 01-0-1.4z"/></svg></a>
+          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+          <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M4.98 3.5a2.5 2.5 0 11.02 5 2.5 2.5 0 01-.02-5zM3 9h4v12H3V9zm7 0h3.8v1.7h.05c.53-1 1.83-2.05 3.76-2.05 4 0 4.75 2.64 4.75 6.07V21h-4v-5.37c0-1.28-.02-2.92-1.78-2.92-1.79 0-2.07 1.4-2.07 2.83V21h-4V9z"/></svg></a>
+        </div>
+        <h4 style="margin-top:28px">Pay with</h4>
+        <div class="foot-pay">
+          <span class="pay-badge">PayPal</span>
+          <span class="pay-badge">Apple Pay</span>
+          <span class="pay-badge">G Pay</span>
+          <span class="pay-badge"><svg width="32" height="20" viewBox="0 0 32 20" style="display:block"><circle cx="11" cy="10" r="8" fill="#EB001B"/><circle cx="21" cy="10" r="8" fill="#F79E1B"/><path d="M16 3.9a8 8 0 010 12.2 8 8 0 000-12.2z" fill="#FF5F00"/></svg></span>
+          <span class="pay-badge">VISA</span>
+        </div>
+      </div>
+    </div>
+    <div class="foot-newsletter">
+      <div class="fn-left">
+        <div class="fn-brand">
+          <div class="logo" style="margin-bottom:16px">
+            <span class="logo-mark"><svg viewBox="0 0 20 20"><line x1="3" y1="3" x2="17" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="3" x2="3" y2="17" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round"/></svg><span class="dot"></span></span>
+            <span class="wordmark">AVEXA</span>
+          </div>
+          <div class="tag">No front desk.<br>No friction.<br>No compromise.</div>
+        </div>
+      </div>
+      <div class="fn-right">
+        <h3 class="fn-title">Stay close, <em>travel often.</em></h3>
+        <form class="fn-form" onsubmit="this.querySelector('.fn-input').value='';this.querySelector('.fn-btn').textContent='Subscribed ✓';return false">
+          <input type="email" class="fn-input" placeholder="Your email" required>
+          <button type="submit" class="fn-btn">Sign me up</button>
+        </form>
+        <p class="fn-legal">By subscribing, you agree to receive promotional emails from AVEXA. We'll use your data in accordance with our <a href="#">Privacy Policy</a> and <a href="#">Terms &amp; Conditions</a>.</p>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 AVEXA Stays · Bucharest</span>
+      <div class="foot-legal-links"><a href="#">Terms &amp; Conditions</a><a href="#">Privacy Policy</a><a href="#">Imprint</a></div>
+    </div>
+  </div>
+  <div class="foot-giant" id="footGiant">AVEXA</div>
+</footer>
+
+<!-- TAB BAR -->
+<nav class="tab-bar" aria-label="Main navigation">
+  <a href="app-v2.html"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Search</span></a>
+  <a href="locations.html"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg><span>Locations</span></a>
+  <a href="my-trips.html"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a4 4 0 018 0v2"/></svg><span>My Trips</span></a>
+  <a href="profile.html" class="active"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></a>
+  <a href="#"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg><span>More</span></a>
+</nav>
+
+<script>
+(function(){
+  var user = null;
+  try { user = JSON.parse(localStorage.getItem('avexa_user')); } catch(e){}
+
+  // Redirect if not logged in
+  if (!user || !user.loggedIn) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  // Populate nav
+  var navRight = document.getElementById('navRight');
+  var initial = user.name ? user.name.charAt(0).toUpperCase() : 'U';
+  navRight.innerHTML = '<div class="nav-user-wrap"><button class="nav-avatar" id="avatarBtn">' + initial + '</button></div>';
+
+  // Populate profile header
+  var avatar = document.getElementById('profileAvatar');
+  var nameEl = document.getElementById('profileName');
+  avatar.textContent = initial;
+  nameEl.textContent = user.name || 'Your Profile';
+
+  // Populate fields
+  var parts = (user.name || '').split(/\s+/);
+  var firstName = parts[0] || '';
+  var lastName = parts.slice(1).join(' ') || '';
+  document.getElementById('valFirstName').textContent = firstName || '—';
+  document.getElementById('valLastName').textContent = lastName || '—';
+  document.getElementById('valEmail').textContent = user.email || '—';
+
+  // Load saved phone
+  var phone = localStorage.getItem('avexa_phone') || '';
+  var phoneEl = document.getElementById('valPhone');
+  if (phone) { phoneEl.textContent = phone; phoneEl.classList.remove('pc-placeholder'); }
+
+  // Edit toggle
+  var editBtn = document.getElementById('editInfoBtn');
+  var display = document.getElementById('infoDisplay');
+  var form = document.getElementById('infoForm');
+  var cancelBtn = document.getElementById('cancelEditBtn');
+
+  editBtn.addEventListener('click', function(){
+    display.style.display = 'none';
+    form.style.display = 'block';
+    editBtn.style.display = 'none';
+    document.getElementById('inputFirst').value = firstName;
+    document.getElementById('inputLast').value = lastName;
+    document.getElementById('inputEmail').value = user.email || '';
+    document.getElementById('inputPhone').value = phone;
+  });
+
+  cancelBtn.addEventListener('click', function(){
+    display.style.display = '';
+    form.style.display = 'none';
+    editBtn.style.display = '';
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var newFirst = document.getElementById('inputFirst').value.trim();
+    var newLast = document.getElementById('inputLast').value.trim();
+    var newPhone = document.getElementById('inputPhone').value.trim();
+    var newName = (newFirst + ' ' + newLast).trim();
+
+    user.name = newName || user.name;
+    localStorage.setItem('avexa_user', JSON.stringify(user));
+    if (newPhone) localStorage.setItem('avexa_phone', newPhone);
+
+    // Update display
+    document.getElementById('valFirstName').textContent = newFirst || '—';
+    document.getElementById('valLastName').textContent = newLast || '—';
+    if (newPhone) { phoneEl.textContent = newPhone; phoneEl.classList.remove('pc-placeholder'); }
+
+    nameEl.textContent = user.name;
+    avatar.textContent = user.name.charAt(0).toUpperCase();
+
+    display.style.display = '';
+    form.style.display = 'none';
+    editBtn.style.display = '';
+  });
+
+  // Logout
+  document.getElementById('logoutBtn').addEventListener('click', function(){
+    localStorage.removeItem('avexa_user');
+    localStorage.removeItem('avexa_has_trips');
+    window.location.href = 'login.html';
+  });
+})();
+</script>
+</body>
+</html>

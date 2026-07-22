@@ -1,0 +1,144 @@
+@import 'tailwindcss';
+
+/* ── AVEXA design tokens (Tailwind v4 @theme) ─────────────────── */
+@theme {
+  /* Brand palette */
+  --color-ink: #191919;
+  --color-ink-80: rgba(25, 25, 25, 0.82);
+  --color-ink-60: rgba(25, 25, 25, 0.6);
+  --color-gold: #DDB97A;
+  --color-gold-dark: #B08840;
+  --color-gold-pale: #F7EDDB;
+  --color-cream: #FAF9F5;
+  --color-gray-light: #F1F1F1;
+  --color-gray-line: #E6E4DD;
+
+  /* Neighborhood accents */
+  --color-nbh-floreasca: #FF4136;
+  --color-nbh-pipera: #D4531A;
+  --color-nbh-centre: #2E7D32;
+  --color-nbh-dorobanti: #1565C0;
+  --color-nbh-herastrau: #6A1B9A;
+  --color-nbh-baneasa: #00695C;
+
+  /* Type families (wired to next/font CSS vars in layout.tsx) */
+  --font-display: var(--font-jakarta), 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body: var(--font-manrope), 'Manrope', system-ui, sans-serif;
+  --font-mono: var(--font-dm-mono), 'DM Mono', ui-monospace, monospace;
+
+  /* Radii */
+  --radius-pill: 9999px;
+  --radius-card: 22px;
+  --radius-card-sm: 14px;
+
+  /* Shadows */
+  --shadow-pill: 0 16px 42px -18px rgba(25, 25, 25, 0.28), 0 2px 8px rgba(25, 25, 25, 0.06);
+  --shadow-card-hover: 0 28px 56px -20px rgba(25, 25, 25, 0.35);
+
+  /* Easing */
+  --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Base ─────────────────────────────────────────────────────── */
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.72;
+}
+
+::selection {
+  background: var(--color-gold);
+  color: var(--color-ink);
+}
+
+/* ── Display typography utility ───────────────────────────────── */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 0.96;
+}
+
+.font-mono-label {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* ── Brand keyframes (ported from v2-sections.css) ────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.35); }
+}
+
+@keyframes drift {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-5%, 5%) scale(1.05); }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ctaPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(221, 185, 122, 0.6); }
+  50% { box-shadow: 0 0 0 8px rgba(221, 185, 122, 0); }
+}
+
+@keyframes heroWord {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Brand utility classes ────────────────────────────────────── */
+.pulse-dot {
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+.cta-pulse {
+  animation: ctaPulse 2.4s ease-in-out infinite;
+}
+
+/* Locations carousel: hide native scrollbar but keep functionality */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Snap utilities reuse Tailwind v4 built-ins */
+
+/* ── Mobile: prevent iOS Safari auto-zoom on input focus ──────── */
+/* Safari zooms whenever a focused control has font-size < 16px and
+   never zooms back out. Force every text control to 16px on mobile. */
+@media (max-width: 640px) {
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Avoid the 300ms double-tap-zoom delay on interactive elements. */
+button,
+a,
+label,
+summary,
+input,
+select,
+textarea,
+[role='button'] {
+  touch-action: manipulation;
+}

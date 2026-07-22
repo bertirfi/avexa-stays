@@ -1,0 +1,130 @@
+
+  // ─── Editorial: sticky scroll text reveal ───
+  (function(){
+    const tunnel = document.querySelector('.edit-scroll-tunnel');
+    const lines = document.querySelectorAll('#editLines .edit-line');
+    const photo = document.getElementById('editPhoto');
+    const progressFill = document.getElementById('editProgressFill');
+    if(!tunnel || !lines.length) return;
+
+    const update = () => {
+      const rect = tunnel.getBoundingClientRect();
+      const tunnelH = tunnel.offsetHeight;
+      const progress = Math.max(0, Math.min(1, -rect.top / (tunnelH - window.innerHeight)));
+
+      // Progress bar
+      if(progressFill) progressFill.style.height = (progress * 100) + '%';
+
+      // Activate lines based on scroll progress
+      const step = 1 / (lines.length + 1);
+      lines.forEach((line, i) => {
+        const threshold = step * (i + 1);
+        line.classList.toggle('active', progress >= threshold - 0.05);
+      });
+
+      // Parallax photo
+      if(photo){
+        const scale = 0.85 + progress * 0.15;
+        const rotY = (1 - progress) * 4;
+        photo.style.transform = 'scale(' + scale + ') rotate(' + (-2 + progress * 2) + 'deg)';
+      }
+    };
+
+    window.addEventListener('scroll', () => requestAnimationFrame(update), {passive:true});
+    update();
+  })();
+
+  // ─── Locations: horizontal scroll ───
+  (function(){
+    const tunnel = document.getElementById('locTunnel');
+    const track = document.getElementById('locTrack');
+    const progressFill = document.getElementById('locProgressFill');
+    const counter = document.getElementById('locCounter');
+    if(!tunnel || !track) return;
+
+    const update = () => {
+      const rect = tunnel.getBoundingClientRect();
+      const tunnelH = tunnel.offsetHeight;
+      const progress = Math.max(0, Math.min(1, -rect.top / (tunnelH - window.innerHeight)));
+
+      // Calculate how far to scroll the track
+      const trackW = track.scrollWidth;
+      const viewW = window.innerWidth;
+      const maxShift = trackW - viewW + 80;
+      const shift = progress * maxShift;
+      track.style.transform = 'translateX(' + (-shift) + 'px)';
+
+      // Progress bar
+      if(progressFill) progressFill.style.width = (progress * 100) + '%';
+
+      // Counter
+      if(counter){
+        const cards = track.children.length;
+        const idx = Math.min(cards, Math.floor(progress * cards) + 1);
+        counter.textContent = String(idx).padStart(2,'0') + ' / ' + String(cards).padStart(2,'0');
+      }
+    };
+
+    window.addEventListener('scroll', () => requestAnimationFrame(update), {passive:true});
+    update();
+  })();
+
+  // ─── How It Works: stacking cards ───
+  (function(){
+    const tunnel = document.getElementById('howTunnel');
+    const cards = document.querySelectorAll('.how-stack-card');
+    if(!tunnel || !cards.length) return;
+
+    const update = () => {
+      const rect = tunnel.getBoundingClientRect();
+      const tunnelH = tunnel.offsetHeight;
+      const progress = Math.max(0, Math.min(1, -rect.top / (tunnelH - window.innerHeight)));
+
+      const step = 1 / cards.length;
+      cards.forEach((card, i) => {
+        const cardProgress = Math.max(0, Math.min(1, (progress - step * i) / step));
+        const isActive = progress >= step * i;
+        const isPast = i < Math.floor(progress / step);
+
+        if(isPast){
+          // Stack up and shrink slightly
+          const stackOffset = (Math.floor(progress / step) - i) * 12;
+          const stackScale = 1 - (Math.floor(progress / step) - i) * 0.03;
+          card.style.transform = 'translateY(-' + stackOffset + 'px) scale(' + stackScale + ')';
+          card.style.opacity = '1';
+          card.style.zIndex = i;
+        } else if(isActive){
+          // Sliding up from below
+          const slideUp = (1 - cardProgress) * 120;
+          card.style.transform = 'translateY(' + slideUp + '%)';
+          card.style.opacity = Math.min(1, cardProgress * 2);
+          card.style.zIndex = i + 1;
+        } else {
+          card.style.transform = 'translateY(120%)';
+          card.style.opacity = '0';
+          card.style.zIndex = i;
+        }
+      });
+    };
+
+    window.addEventListener('scroll', () => requestAnimationFrame(update), {passive:true});
+    update();
+  })();
+
+  // ─── Benefits: fold-in reveal ───
+  (function(){
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if(e.isIntersecting){
+          // Stagger the animation
+          const cards = e.target.querySelectorAll('.ben-fold');
+          cards.forEach((c, i) => {
+            setTimeout(() => c.classList.add('in'), i * 100);
+          });
+          io.unobserve(e.target);
+        }
+      });
+    }, {threshold: 0.15});
+    const bento = document.getElementById('benBento');
+    if(bento) io.observe(bento);
+  })();

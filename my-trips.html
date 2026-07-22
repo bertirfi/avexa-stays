@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AVEXA STAYS — My Trips</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Manrope:wght@300;400;500;600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="my-trips.css">
+<link rel="stylesheet" href="my-trips-app.css">
+</head>
+<body>
+
+<!-- NAV — logged out -->
+<nav class="nav nav-light" id="nav">
+  <a href="app-v2.html" class="logo" aria-label="AVEXA STAYS home">
+    <span class="logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 20 20"><line x1="3" y1="3" x2="17" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="3" x2="3" y2="17" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round"/></svg>
+      <span class="dot"></span>
+    </span>
+    <span class="wordmark">AVEXA</span>
+  </a>
+  <div class="nav-links">
+    <a href="locations.html">Locations</a>
+    <a href="member-benefits.html">Member Benefits</a>
+    <a href="my-trips.html" class="current">My Trips</a>
+  </div>
+  <div class="nav-right" id="navRight">
+    <a href="login.html" id="navSignup">Sign up</a>
+  </div>
+  <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav" id="mobileNav" aria-hidden="true">
+  <div class="mob-head">
+    <a href="app-v2.html" class="logo" style="color:#fff">
+      <span class="logo-mark"><svg viewBox="0 0 20 20"><line x1="3" y1="3" x2="17" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="3" x2="3" y2="17" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round"/></svg><span class="dot"></span></span>
+      <span class="wordmark" style="font-size:20px">AVEXA</span>
+    </a>
+    <button class="mob-close" id="mobClose" aria-label="Close menu">✕</button>
+  </div>
+  <div class="mob-links">
+    <a href="locations.html">Locations</a>
+    <a href="member-benefits.html">Member Benefits</a>
+    <a href="my-trips.html" class="current">My Trips</a>
+  </div>
+  <div class="mob-foot">
+    <a href="login.html" class="mob-signup">Join free →</a>
+    <span class="mob-note">Bucharest · 2026</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- STATE: LOGGED OUT                                       -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="stateLoggedOut">
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="hero-content">
+      <h1 class="display hero-title" style="font-size: 110px">
+        <span class="w">Your</span> <span class="w">next</span> <span class="w gold">stay<span class="hero-dot">.</span></span>
+      </h1>
+      <p class="hero-sub" style="font-size: 20px; width: 780px">Your upcoming check-ins, past adventures, booking details and member perks — everything lives here. Sign in and pick up right where you left off.</p>
+      <div class="hero-actions">
+        <a href="login.html" class="btn-primary" style="font-size: 16px">Log in</a>
+        <a href="login.html" class="btn-outline" style="font-size: 16px">Create an account</a>
+      </div>
+      <p class="hero-note">Free to join · No credit card required</p>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- STATE: LOGGED IN — EMPTY                                -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="stateEmpty" style="display:none">
+  <section class="empty-state">
+    <div class="empty-wrap">
+      <div class="empty-icon" aria-hidden="true">
+        <svg width="128" height="128" viewBox="0 0 64 64" fill="none" style="width: 128px">>
+          <circle cx="32" cy="32" r="30" fill="var(--gold-pale)" stroke="var(--gold)" stroke-width="1.5"/>
+          <!-- Stylized building / cityscape -->
+          <rect x="18" y="28" width="8" height="18" rx="1" fill="var(--ink)" opacity=".85"/>
+          <rect x="28" y="20" width="8" height="26" rx="1" fill="var(--ink)"/>
+          <rect x="38" y="24" width="8" height="22" rx="1" fill="var(--ink)" opacity=".65"/>
+          <!-- Windows -->
+          <rect x="20" y="31" width="2" height="2.5" rx=".5" fill="var(--gold)"/>
+          <rect x="24" y="31" width="2" height="2.5" rx=".5" fill="var(--gold)"/>
+          <rect x="20" y="36" width="2" height="2.5" rx=".5" fill="var(--gold)"/>
+          <rect x="24" y="36" width="2" height="2.5" rx=".5" fill="var(--gold)"/>
+          <rect x="20" y="41" width="2" height="2.5" rx=".5" fill="var(--gold)" opacity=".5"/>
+          <rect x="30" y="23" width="2" height="2.5" rx=".5" fill="var(--gold)"/>
+          <rect x="34" y="23" width="2" height="2.5" rx=".5" fill="var(--gold)"/>
+          <rect x="30" y="28" width="2" height="2.5" rx=".5" fill="var(--gold)"/>
+          <rect x="34" y="28" width="2" height="2.5" rx=".5" fill="var(--gold)"/>
+          <rect x="30" y="33" width="2" height="2.5" rx=".5" fill="var(--gold)"/>
+          <rect x="34" y="33" width="2" height="2.5" rx=".5" fill="var(--gold)" opacity=".5"/>
+          <rect x="30" y="38" width="2" height="2.5" rx=".5" fill="var(--gold)" opacity=".4"/>
+          <rect x="40" y="27" width="2" height="2.5" rx=".5" fill="var(--gold)"/>
+          <rect x="44" y="27" width="2" height="2.5" rx=".5" fill="var(--gold)"/>
+          <rect x="40" y="32" width="2" height="2.5" rx=".5" fill="var(--gold)"/>
+          <rect x="44" y="32" width="2" height="2.5" rx=".5" fill="var(--gold)" opacity=".5"/>
+          <rect x="40" y="37" width="2" height="2.5" rx=".5" fill="var(--gold)" opacity=".4"/>
+          <!-- Pulsating dot -->
+          <circle cx="32" cy="50" r="3" fill="var(--gold)">
+            <animate attributeName="opacity" values=".55;1;.55" dur="2.4s" repeatCount="indefinite"/>
+            <animate attributeName="r" values="3;4;3" dur="2.4s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+      <h1 class="empty-title" id="emptyTitle">No trips yet — let's fix that.</h1>
+      <p class="empty-sub">Browse our Bucharest apartments and book your first stay. Your booking details, check-in codes, and trip history will all appear here.</p>
+      <a href="app-v2.html" class="empty-btn">Start exploring →</a>
+
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- STATE: LOGGED IN — WITH TRIPS                           -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="stateTrips" style="display:none">
+  <section class="trips-section">
+    <div class="trips-wrap">
+      <div class="trips-head">
+        <div>
+          <div class="label" style="color:var(--gold-dark)">— My Trips</div>
+          <h1 class="trips-title" id="tripsTitle">Your stays</h1>
+        </div>
+        <div class="trips-actions-top">
+          <a href="app-v2.html" class="trips-explore-btn">Browse locations →</a>
+        </div>
+      </div>
+
+      <!-- Upcoming -->
+      <div class="trips-group">
+        <h2 class="trips-group-label">Upcoming</h2>
+        <div class="trip-card trip-card-upcoming">
+          <div class="tc-media">
+            <div class="tc-ph" style="background:repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 2px, transparent 2px 16px),linear-gradient(160deg, #a98d5d 0%, #4a3d25 100%)"></div>
+            <span class="tc-status tc-status-confirmed">Confirmed</span>
+          </div>
+          <div class="tc-body">
+            <div class="tc-top">
+              <span class="tc-nbh"><span class="tc-dot" style="background:var(--c-floreasca,#FF4136)"></span>Floreasca</span>
+              <span class="tc-dates">Jun 12 — Jun 16, 2026</span>
+            </div>
+            <h3 class="tc-name">The Floreasca Loft</h3>
+            <p class="tc-detail">1 bedroom · 2 guests · 4 nights</p>
+            <div class="tc-info-row">
+              <div class="tc-info"><span class="tc-info-label">Check-in</span><span class="tc-info-val">Jun 12, 3:00 PM</span></div>
+              <div class="tc-info"><span class="tc-info-label">Check-out</span><span class="tc-info-val">Jun 16, 1:00 PM</span></div>
+              <div class="tc-info"><span class="tc-info-label">Door code</span><span class="tc-info-val tc-info-code">Sent 24h before</span></div>
+            </div>
+            <div class="tc-price">
+              <span class="tc-total">€ 506</span>
+              <span class="tc-ppn">€ 126.50 / night · Member rate</span>
+            </div>
+            <div class="tc-actions">
+              <a href="stay.html" class="tc-btn tc-btn-primary">View details</a>
+              <a href="#" class="tc-btn tc-btn-outline">Modify booking</a>
+              <button class="tc-btn tc-btn-text">Cancel booking</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Past -->
+      <div class="trips-group">
+        <h2 class="trips-group-label">Past stays</h2>
+        <div class="trip-card trip-card-past">
+          <div class="tc-media">
+            <div class="tc-ph" style="background:repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 2px, transparent 2px 18px),linear-gradient(160deg, #8c8372 0%, #3d3628 100%)"></div>
+            <span class="tc-status tc-status-completed">Completed</span>
+          </div>
+          <div class="tc-body">
+            <div class="tc-top">
+              <span class="tc-nbh"><span class="tc-dot" style="background:var(--c-centre,#2E7D32)"></span>City Centre</span>
+              <span class="tc-dates">Apr 28 — May 01, 2026</span>
+            </div>
+            <h3 class="tc-name">Centre Studio — Lipscani</h3>
+            <p class="tc-detail">Studio · 2 guests · 3 nights</p>
+            <div class="tc-price">
+              <span class="tc-total">€ 327</span>
+              <span class="tc-ppn">€ 109 / night · Member rate</span>
+            </div>
+            <div class="tc-actions">
+              <a href="#" class="tc-btn tc-btn-primary">Book again</a>
+              <a href="#" class="tc-btn tc-btn-outline">View receipt</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="trip-card trip-card-past">
+          <div class="tc-media">
+            <div class="tc-ph" style="background:repeating-linear-gradient(45deg, rgba(255,255,255,.05) 0 2px, transparent 2px 20px),linear-gradient(160deg, #d4a76a 0%, #7a5a2a 100%)"></div>
+            <span class="tc-status tc-status-completed">Completed</span>
+          </div>
+          <div class="tc-body">
+            <div class="tc-top">
+              <span class="tc-nbh"><span class="tc-dot" style="background:var(--c-dorobanti,#1565C0)"></span>Dorobanți</span>
+              <span class="tc-dates">Mar 10 — Mar 14, 2026</span>
+            </div>
+            <h3 class="tc-name">Dorobanti 74</h3>
+            <p class="tc-detail">1 bedroom · 1 guest · 4 nights</p>
+            <div class="tc-price">
+              <span class="tc-total">€ 512</span>
+              <span class="tc-ppn">€ 128 / night · Member rate</span>
+            </div>
+            <div class="tc-actions">
+              <a href="#" class="tc-btn tc-btn-primary">Book again</a>
+              <a href="#" class="tc-btn tc-btn-outline">View receipt</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SHARED: Mosaic + Contact (visible in all states)        -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section class="mosaic">
+  <div class="mosaic-wrap">
+    <div class="mosaic-head rv rv-up">
+      <h2 class="h2">A taste of what's waiting<span class="section-dot">.</span></h2>
+    </div>
+    <div class="mosaic-grid">
+      <div class="m-img m-img-1 rv rv-up d1"><div class="m-ph" style="background:repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 2px, transparent 2px 16px),linear-gradient(160deg, #a98d5d 0%, #4a3d25 100%)"></div><span class="m-label">Floreasca Loft</span></div>
+      <div class="m-img m-img-2 rv rv-up d2"><div class="m-ph" style="background:repeating-linear-gradient(45deg, rgba(255,255,255,.05) 0 2px, transparent 2px 20px),linear-gradient(160deg, #d4a76a 0%, #7a5a2a 100%)"></div><span class="m-label">Dorobanți Suite</span></div>
+      <div class="m-img m-img-3 rv rv-up d3"><div class="m-ph" style="background:repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 2px, transparent 2px 18px),linear-gradient(160deg, #8c8372 0%, #3d3628 100%)"></div><span class="m-label">City Centre Studio</span></div>
+      <div class="m-img m-img-4 rv rv-up d4"><div class="m-ph" style="background:repeating-linear-gradient(120deg, rgba(255,255,255,.06) 0 2px, transparent 2px 14px),linear-gradient(160deg, #3a2f22 0%, #1e1a14 100%)"></div><span class="m-label">Herăstrău Green</span></div>
+      <div class="m-img m-img-5 rv rv-up d5"><div class="m-ph" style="background:repeating-linear-gradient(60deg, rgba(255,255,255,.05) 0 2px, transparent 2px 22px),linear-gradient(160deg, #b89a6c 0%, #544330 100%)"></div><span class="m-label">Pipera Skyline</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="contact">
+  <div class="contact-wrap">
+    <div class="contact-head rv rv-up">
+      <div class="label" style="color:var(--gold-dark); font-size: 16px">— Get in touch</div>
+      <h2 class="h2" style="margin-top:14px">We're here to help<span class="section-dot">.</span></h2>
+      <p class="contact-sub" style="font-size: 20px">Whether you need help with a booking, have a question about membership, or just want to say hello — reach out anytime.</p>
+    </div>
+    <div class="contact-cards">
+      <a href="mailto:office@avexastays.com" class="contact-card rv rv-up d1">
+        <div class="cc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M22 4L12 13L2 4"></path></svg></div>
+        <div class="cc-label" style="font-size: 16px">Email us</div>
+        <div class="cc-value" style="font-size: 24px">office@avexastays.com</div>
+        <span class="cc-action" style="font-size: 16px">Send email →</span>
+      </a>
+      <a href="https://wa.me/40712345678" target="_blank" rel="noopener" class="contact-card rv rv-up d2">
+        <div class="cc-icon cc-icon-wa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div>
+        <div class="cc-label" style="font-size: 16px">WhatsApp</div>
+        <div class="cc-value" style="font-size: 24px">+40 712 345 678</div>
+        <span class="cc-action" style="font-size: 16px">Open chat →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-wrap">
+    <div class="foot-top" style="font-size: 16px">
+      <div class="foot-col"><h4>Contact &amp; Help</h4><a href="#">Help centre</a><a href="mailto:hello@avexastays.com">Contact us</a><a href="#">Cancellation policy</a><a href="#">Report accessibility</a></div>
+      <div class="foot-col"><h4>Discover</h4><a href="locations.html">All locations</a><a href="#">Bucharest guide</a><a href="#">Long stays</a></div>
+      <div class="foot-col"><h4>AVEXA</h4><a href="#">About us</a><a href="#">Careers</a><a href="#">Press</a><a href="#">Partners</a></div>
+      <div class="foot-col foot-col-right">
+        <h4>Stay social</h4>
+        <div class="foot-social">
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 3.3.15 4.8 1.7 5 5 .06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.2 3.3-1.7 4.8-5 5-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-3.3-.2-4.8-1.7-5-5C2.07 15.6 2 15.2 2 12s0-3.6.07-4.9c.2-3.3 1.7-4.8 5-5C8.4 2.07 8.8 2.07 12 2.07zm0 3.3a6.5 6.5 0 100 13 6.5 6.5 0 000-13zm0 10.7a4.2 4.2 0 110-8.4 4.2 4.2 0 010 8.4zm6.7-10.9a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg></a>
+          <a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M19.3 6.2a4.8 4.8 0 01-3-1.1 4.8 4.8 0 01-1.5-2.6h-3.2v12.6a2.7 2.7 0 11-2-2.6V9.2a5.9 5.9 0 105.3 5.9V9.5a8 8 0 004.4 1.3V7.6a4.8 4.8 0 01-0-1.4z"/></svg></a>
+          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+          <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M4.98 3.5a2.5 2.5 0 11.02 5 2.5 2.5 0 01-.02-5zM3 9h4v12H3V9zm7 0h3.8v1.7h.05c.53-1 1.83-2.05 3.76-2.05 4 0 4.75 2.64 4.75 6.07V21h-4v-5.37c0-1.28-.02-2.92-1.78-2.92-1.79 0-2.07 1.4-2.07 2.83V21h-4V9z"/></svg></a>
+        </div>
+        <h4 style="margin-top:28px">Pay with</h4>
+        <div class="foot-pay">
+          <span class="pay-badge">PayPal</span>
+          <span class="pay-badge">Apple Pay</span>
+          <span class="pay-badge">G Pay</span>
+          <span class="pay-badge"><svg width="32" height="20" viewBox="0 0 32 20" style="display:block"><circle cx="11" cy="10" r="8" fill="#EB001B"/><circle cx="21" cy="10" r="8" fill="#F79E1B"/><path d="M16 3.9a8 8 0 010 12.2 8 8 0 000-12.2z" fill="#FF5F00"/></svg></span>
+          <span class="pay-badge">VISA</span>
+        </div>
+      </div>
+    </div>
+    <div class="foot-newsletter">
+      <div class="fn-left">
+        <div class="fn-brand">
+          <div class="logo" style="margin-bottom:16px">
+            <span class="logo-mark"><svg viewBox="0 0 20 20"><line x1="3" y1="3" x2="17" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="3" x2="3" y2="17" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round"/></svg><span class="dot"></span></span>
+            <span class="wordmark">AVEXA</span>
+          </div>
+          <div class="tag">No front desk.<br>No friction.<br>No compromise.</div>
+        </div>
+      </div>
+      <div class="fn-right">
+        <h3 class="fn-title">Stay close, <em>travel often.</em></h3>
+        <form class="fn-form" onsubmit="this.querySelector('.fn-input').value='';this.querySelector('.fn-btn').textContent='Subscribed ✓';return false">
+          <input type="email" class="fn-input" placeholder="Your email" required>
+          <button type="submit" class="fn-btn" style="font-size: 16px">Sign me up</button>
+        </form>
+        <p class="fn-legal">By subscribing, you agree to receive promotional emails from AVEXA. We'll use your data in accordance with our <a href="#">Privacy Policy</a> and <a href="#">Terms &amp; Conditions</a>.</p>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 AVEXA Stays · Bucharest</span>
+      <div class="foot-legal-links"><a href="#">Terms &amp; Conditions</a><a href="#">Privacy Policy</a><a href="#">Imprint</a></div>
+    </div>
+  </div>
+  <div class="foot-giant" id="footGiant">AVEXA</div>
+</footer>
+
+<!-- BOTTOM TAB BAR (phone only) -->
+<nav class="tab-bar" aria-label="Main navigation">
+  <a href="app-v2.html" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Search</span></a>
+  <a href="locations.html" aria-label="Locations"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg><span>Locations</span></a>
+  <a href="my-trips.html" class="active" aria-label="My Trips"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a4 4 0 018 0v2"/></svg><span>My Trips</span></a>
+  <a href="#" aria-label="Profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></a>
+  <a href="#" aria-label="More"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg><span>More</span></a>
+</nav>
+
+<script src="my-trips.js"></script>
+<script src="my-trips-app.js"></script>
+</body>
+</html>
