@@ -10,6 +10,12 @@ import type { Property } from '@/types';
 
 interface LocationsMapProps {
   properties: Property[];
+  /**
+   * When set, only these property ids show pins (dated-search filtering).
+   * Markers are built once from `properties`; this just toggles visibility,
+   * so clearing the search restores every pin without a map rebuild.
+   */
+  visibleIds?: string[];
   activeId: string | null;
   onActivate: (id: string) => void;
   onClear: () => void;
@@ -86,7 +92,7 @@ const MAP_STYLE: google.maps.MapTypeStyle[] = [
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#cdd9df' }] },
 ];
 
-type MarkerEntry = { overlay: google.maps.OverlayView; el: HTMLButtonElement } & (
+type MarkerEntry = { overlay: google.maps.OverlayView; el: HTMLButtonElement; hidden: boolean } & (
   | { kind: 'individual'; propertyId: string; name: string; grouped: boolean; priceRon: number; color: string }
   | { kind: 'cluster'; groupIds: string[]; minPriceRon: number; count: number; color: string }
 );
@@ -227,6 +233,42 @@ export function LocationsMap(props: LocationsMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef(new Map<string, MarkerEntry>());
+  // Latest zoom-visibility applier — set inside build(), called by the
+  // visibleIds sync below so hidden flags take effect immediately.
+  const applyVisibilityRef = useRef<() => void>(() => {});
+
+  /**
+   * Sync marker `hidden` flags with props.visibleIds (search filtering).
+   * Clusters shrink honestly: count badge + "from" price are recomputed from
+   * the visible members only (groupIds/count/minPriceRon stay the full-set
+   * originals so clearing the search restores them).
+   */
+  const syncVisibleMarkers = () => {
+    const markers = markersRef.current;
+    if (markers.size === 0) return;
+    const ids = propsRef.current.visibleIds;
+    const visibleSet = ids == null ? null : new Set(ids);
+    const activeId = propsRef.current.activeId;
+
+    markers.forEach((entry) => {
+      if (entry.kind === 'individual') entry.hidden = visibleSet ? !visibleSet.has(entry.propertyId) : false;
+    });
+    markers.forEach((entry) => {
+      if (entry.kind !== 'cluster') return;
+      const visible = visibleSet ? entry.groupIds.filter((id) => visibleSet.has(id)) : entry.groupIds;
+      entry.hidden = visible.length === 0;
+      if (visible.length === 0) return;
+      const prices = visible
+        .map((id) => markers.get(`i:${id}`))
+        .filter((e): e is Extract<MarkerEntry, { kind: 'individual' }> => !!e && e.kind === 'individual')
+        .map((e) => e.priceRon);
+      const label = formatRef.current(Math.min(...prices));
+      entry.el.innerHTML = pinInnerHTML(entry.color, label, visible.length);
+      entry.el.setAttribute('aria-label', pinAriaLabel(label, undefined, visible.length));
+      styleMarker(entry.el, entry.groupIds.includes(activeId ?? ''));
+    });
+    applyVisibilityRef.current();
+  };
   const landmarksRef = useRef<{ overlay: google.maps.OverlayView; el: HTMLDivElement; minZoom?: number }[]>([]);
 
   useEffect(() => {
@@ -310,6 +352,7 @@ export function LocationsMap(props: LocationsMapProps) {
             markers.set(`i:${p.id}`, {
               overlay,
               el,
+              hidden: false,
               kind: 'individual',
               propertyId: p.id,
               name: p.name,
@@ -355,6 +398,7 @@ export function LocationsMap(props: LocationsMapProps) {
             markers.set(`c:${lat0.toFixed(5)},${lng0.toFixed(5)}`, {
               overlay: cluster.overlay,
               el: cluster.el,
+              hidden: false,
               kind: 'cluster',
               groupIds,
               minPriceRon,
@@ -384,8 +428,9 @@ export function LocationsMap(props: LocationsMapProps) {
             const zoom = map.getZoom() ?? 14;
             const expanded = zoom >= SPREAD_ZOOM;
             markers.forEach((entry) => {
-              if (entry.kind === 'cluster') entry.el.style.display = expanded ? 'none' : '';
-              else if (entry.grouped) entry.el.style.display = expanded ? '' : 'none';
+              if (entry.kind === 'cluster') entry.el.style.display = !entry.hidden && !expanded ? '' : 'none';
+              else if (entry.grouped) entry.el.style.display = !entry.hidden && expanded ? '' : 'none';
+              else entry.el.style.display = entry.hidden ? 'none' : '';
             });
             // Hide minZoom landmarks when too far out; drop all labels below 13
             // to keep the map calm (badges stay).
@@ -407,17 +452,19 @@ export function LocationsMap(props: LocationsMapProps) {
           };
 
           maps.event.addListener(map, 'zoom_changed', applyZoomVisibility);
+          applyVisibilityRef.current = applyZoomVisibility;
 
           if (!bounds.isEmpty()) {
             map.fitBounds(bounds, mobile ? 56 : 76);
             maps.event.addListenerOnce(map, 'idle', () => {
               const zoom = map.getZoom();
               if (typeof zoom === 'number' && zoom > 16) map.setZoom(16);
-              applyZoomVisibility();
+              // Sync applies the current search filter, then zoom visibility.
+              syncVisibleMarkers();
               applyActive();
             });
           } else {
-            applyZoomVisibility();
+            syncVisibleMarkers();
             applyActive();
           }
         };
@@ -478,8 +525,17 @@ export function LocationsMap(props: LocationsMapProps) {
         entry.kind === 'cluster' ? entry.groupIds.includes(activeId ?? '') : entry.propertyId === activeId;
       styleMarker(entry.el, active);
     });
+    // Re-apply search filtering — the rewrite above restored full-set cluster labels.
+    syncVisibleMarkers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currency]);
+
+  // Search filtering: toggle pin visibility whenever the visible id set changes.
+  const visibleKey = props.visibleIds?.join(',') ?? '*';
+  useEffect(() => {
+    syncVisibleMarkers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleKey]);
 
   if (failed) return <StylizedMap {...props} />;
 

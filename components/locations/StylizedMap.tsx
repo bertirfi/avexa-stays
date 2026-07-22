@@ -25,6 +25,8 @@ const ZONE_LABELS: Array<{ label: string; x: number; y: number }> = [
 
 interface StylizedMapProps {
   properties: Property[];
+  /** When set, only these property ids render pins (search filtering). */
+  visibleIds?: string[];
   activeId: string | null;
   onActivate: (id: string) => void;
   onClear: () => void;
@@ -35,7 +37,8 @@ interface StylizedMapProps {
 }
 
 export function StylizedMap({
-  properties,
+  properties: allProperties,
+  visibleIds,
   activeId,
   onActivate,
   onClear,
@@ -44,6 +47,9 @@ export function StylizedMap({
 }: StylizedMapProps) {
   const isMobile = variant === 'mobile';
   const { format } = useCurrency();
+  const properties = visibleIds
+    ? allProperties.filter((p) => visibleIds.includes(p.id))
+    : allProperties;
 
   function onPinClick(id: string) {
     onActivate(id);

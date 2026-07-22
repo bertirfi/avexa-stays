@@ -454,7 +454,8 @@ export function LocationsView({ properties }: { properties: Property[] }) {
 
         {/* RIGHT — map (desktop split view, always visible on lg+) */}
         <MapComponent
-          properties={filtered}
+          properties={properties}
+          visibleIds={filtered.map((p) => p.id)}
           activeId={activeId}
           onActivate={setActiveId}
           onClear={() => setActiveId(null)}
@@ -470,7 +471,8 @@ export function LocationsView({ properties }: { properties: Property[] }) {
       >
         <MapComponent
           variant="mobile"
-          properties={filtered}
+          properties={properties}
+          visibleIds={filtered.map((p) => p.id)}
           activeId={activeId}
           onActivate={setActiveId}
           onClear={() => setActiveId(null)}
