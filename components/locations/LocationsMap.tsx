@@ -5,6 +5,7 @@ import { StylizedMap } from '@/components/locations/StylizedMap';
 import { loadGoogleMaps, subscribeMapsAuthFailure, isMapsAuthFailed } from '@/lib/maps/loadGoogleMaps';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { cn } from '@/lib/cn';
+import { BUCHAREST_LANDMARKS, type Landmark } from '@/lib/maps/landmarks';
 import type { Property } from '@/types';
 
 interface LocationsMapProps {
@@ -40,6 +41,31 @@ const DOT = (color: string) =>
 const CARET = '<span class="absolute -bottom-1 left-1/2 size-2 -translate-x-1/2 rotate-45 bg-inherit"></span>';
 const COUNT_BADGE = (n: number) =>
   `<span style="display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;margin-left:1px;border-radius:9999px;background:#191919;color:#fff;font-size:10px;line-height:1">${n}</span>`;
+
+// Quiet landmark badges (Airbnb-style POIs). Inline-styled like the pin helpers
+// above; muted ink glyph (#57544d) so they read as context, never as a CTA.
+const GLYPHS: Record<Landmark['kind'], string> = {
+  monument:
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#57544d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5"/><path d="M5 9v8M12 9v8M19 9v8"/><path d="M3 20h18"/></svg>',
+  museum:
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#57544d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 15l4-4 3 3 4-5 5 6"/></svg>',
+  park:
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#57544d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5"/><path d="M12 14v6"/></svg>',
+  square:
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="#57544d"><circle cx="7" cy="7" r="2.3"/><circle cx="17" cy="7" r="2.3"/><circle cx="7" cy="17" r="2.3"/><circle cx="17" cy="17" r="2.3"/></svg>',
+  station:
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#57544d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="13" rx="2"/><path d="M6 10h12M8.5 20l-1.5 2M15.5 20l1.5 2"/></svg>',
+};
+
+// Badge (white circle + glyph) plus a haloed label. `data-label` lets the zoom
+// handler drop labels below zoom 13 without rebuilding the node.
+function landmarkInnerHTML(l: Landmark): string {
+  const badge =
+    'display:grid;place-items:center;width:25px;height:25px;border-radius:9999px;background:#fff;border:1px solid #E6E4DD;box-shadow:0 1px 3px rgba(0,0,0,.14);flex:none';
+  const label =
+    'font-size:11px;font-weight:500;line-height:1;color:#6b6b66;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff;white-space:nowrap';
+  return `<span style="${badge}">${GLYPHS[l.kind]}</span><span data-label style="${label}">${l.name}</span>`;
+}
 
 // Light editorial map theme (brand cream/ivory + soft gray-green) — same custom
 // styling approach as before, palette inverted to match the site. Dark ink labels
@@ -149,6 +175,39 @@ function makeMarker(
   return { overlay, el };
 }
 
+/**
+ * Landmark overlay — same OverlayView mechanism as makeMarker, but a plain,
+ * never-clickable div (pointer-events:none) pinned below the price pins so it
+ * can never steal a tap meant for a listing.
+ */
+function makeLandmark(
+  maps: typeof google.maps,
+  map: google.maps.Map,
+  l: Landmark,
+): { overlay: google.maps.OverlayView; el: HTMLDivElement } {
+  const el = document.createElement('div');
+  el.style.cssText =
+    'position:absolute;display:flex;align-items:center;gap:5px;transform:translate(-50%,-50%);pointer-events:none;z-index:0';
+  el.innerHTML = landmarkInnerHTML(l);
+
+  const overlay = new maps.OverlayView();
+  overlay.onAdd = function onAdd() {
+    // overlayLayer sits under overlayMouseTarget (where the price pins live).
+    this.getPanes()?.overlayLayer.appendChild(el);
+  };
+  overlay.draw = function draw() {
+    const point = this.getProjection()?.fromLatLngToDivPixel(new maps.LatLng(l.lat, l.lng));
+    if (!point) return;
+    el.style.left = `${point.x}px`;
+    el.style.top = `${point.y}px`;
+  };
+  overlay.onRemove = function onRemove() {
+    el.remove();
+  };
+  overlay.setMap(map);
+  return { overlay, el };
+}
+
 export function LocationsMap(props: LocationsMapProps) {
   const { variant = 'desktop' } = props;
   const isMobile = variant === 'mobile';
@@ -168,11 +227,13 @@ export function LocationsMap(props: LocationsMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef(new Map<string, MarkerEntry>());
+  const landmarksRef = useRef<{ overlay: google.maps.OverlayView; el: HTMLDivElement; minZoom?: number }[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     let observer: ResizeObserver | null = null;
     const markers = markersRef.current;
+    const landmarks = landmarksRef.current;
 
     const pending = loadGoogleMaps();
     if (!pending) {
@@ -313,12 +374,26 @@ export function LocationsMap(props: LocationsMapProps) {
             });
           }
 
+          // Landmarks render once; zoom only toggles their visibility (below).
+          for (const l of BUCHAREST_LANDMARKS) {
+            const { overlay, el } = makeLandmark(maps, map, l);
+            landmarks.push({ overlay, el, minZoom: l.minZoom });
+          }
+
           const applyZoomVisibility = () => {
             const zoom = map.getZoom() ?? 14;
             const expanded = zoom >= SPREAD_ZOOM;
             markers.forEach((entry) => {
               if (entry.kind === 'cluster') entry.el.style.display = expanded ? 'none' : '';
               else if (entry.grouped) entry.el.style.display = expanded ? '' : 'none';
+            });
+            // Hide minZoom landmarks when too far out; drop all labels below 13
+            // to keep the map calm (badges stay).
+            const showLabels = zoom >= 13;
+            landmarks.forEach(({ el, minZoom }) => {
+              el.style.display = minZoom && zoom < minZoom ? 'none' : '';
+              const labelEl = el.querySelector<HTMLElement>('[data-label]');
+              if (labelEl) labelEl.style.display = showLabels ? '' : 'none';
             });
           };
 
@@ -364,6 +439,8 @@ export function LocationsMap(props: LocationsMapProps) {
       }
       markers.forEach(({ overlay }) => overlay.setMap(null));
       markers.clear();
+      landmarks.forEach(({ overlay }) => overlay.setMap(null));
+      landmarks.length = 0;
       mapRef.current = null;
     };
     // Mount-once: properties are stable server data; latest handlers come from propsRef.
