@@ -96,12 +96,15 @@ export async function getRangeAvailability(
     // One window covering the request ± the 7-day alternative scan.
     const { data, error } = await getSupabaseAdmin()
       .from('availability')
-      .select('property_id, date, available, price_ron')
+      .select('property_id, date, available, price_ron, min_stay')
       .gte('date', ymd(addDays(start, -7)))
       .lt('date', ymd(addDays(end, 7)));
     if (error || !data) return {};
 
-    const byProp = new Map<string, Map<string, { available: boolean; ron: number }>>();
+    const byProp = new Map<
+      string,
+      Map<string, { available: boolean; ron: number; minStay: number }>
+    >();
     for (const row of data) {
       let days = byProp.get(row.property_id);
       if (!days) {
@@ -111,6 +114,7 @@ export async function getRangeAvailability(
       days.set(row.date, {
         available: Boolean(row.available),
         ron: accommodationRonPerNight(Number(row.price_ron)),
+        minStay: row.min_stay ?? 1,
       });
     }
 
@@ -124,6 +128,9 @@ export async function getRangeAvailability(
         for (let i = 0; i < nights; i += 1) {
           const day = days.get(ymd(addDays(from, i)));
           if (!day?.available) return null; // missing row = NOT available
+          // First night gates min-stay — otherwise we'd show a suite as free
+          // that /api/quote will then reject, dead-ending the guest.
+          if (i === 0 && day.minStay > nights) return null;
           total += day.ron;
         }
         return total;
