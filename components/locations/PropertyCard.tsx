@@ -33,6 +33,8 @@ interface PropertyCardProps {
   active?: boolean;
   onActivate?: () => void;
   onClear?: () => void;
+  /** Prebuilt query string (checkIn/checkOut/guests) carried into the detail link. */
+  query?: string;
 }
 
 export function PropertyCard({
@@ -41,6 +43,7 @@ export function PropertyCard({
   active = false,
   onActivate,
   onClear,
+  query,
 }: PropertyCardProps) {
   const card = getLocationCard(property.id);
   const photos = property.photos.slice(0, 5);
@@ -190,7 +193,7 @@ export function PropertyCard({
 
         <div className="sm:col-span-2">
           <Link
-            href={`/locations/${property.slug}`}
+            href={`/locations/${property.slug}${query ? `?${query}` : ''}`}
             className="block w-full rounded-xl bg-ink px-4 py-3.5 text-center text-sm font-semibold text-cream transition hover:bg-gold-dark"
           >
             View details

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { LocationsView } from '@/components/locations/LocationsView';
+import { SearchParamsSync } from '@/components/search/SearchParamsSync';
 import { getAllPropertiesData } from '@/lib/data/properties';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getFxRateEur } from '@/lib/pricing';
@@ -78,6 +80,11 @@ export default async function LocationsPage() {
     <div className="pt-0 sm:pt-20 md:pt-[152px]">
       <JsonLd data={buildItemListSchema(properties, fxRateEur)} />
       <JsonLd data={buildBreadcrumbSchema()} />
+      {/* useSearchParams lives in its own Suspense island so the SEO-critical
+          listing below stays in the static (ISR) HTML. */}
+      <Suspense fallback={null}>
+        <SearchParamsSync />
+      </Suspense>
       <LocationsView properties={properties} />
     </div>
   );

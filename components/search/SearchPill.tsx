@@ -158,7 +158,7 @@ export function SearchPill({
   const open = (panel: SearchPanel) => isThisPillOpen && activePanel === panel;
   const locationLabel =
     location === 'all'
-      ? 'All locations'
+      ? 'All Bucharest locations'
       : location
         ? neighborhoods.find((n) => n.id === location)?.label ?? location
         : 'Search';
@@ -225,7 +225,7 @@ export function SearchPill({
                       <span className="grid size-9 shrink-0 place-items-center rounded-full bg-cream">
                         <Icon name="building" size={16} className="text-ink-60" />
                       </span>
-                      <span className="font-semibold">All locations</span>
+                      <span className="font-semibold">All Bucharest locations</span>
                       <span className="ml-auto text-xs text-ink-60">Everything</span>
                     </button>
                   </li>
@@ -444,7 +444,7 @@ export function SearchPill({
                 )}
               >
                 <span className="size-2 rounded-full bg-ink/40" />
-                All locations
+                All Bucharest locations
               </button>
             </li>
             {neighborhoods.map((n) => (

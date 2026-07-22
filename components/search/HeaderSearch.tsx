@@ -16,7 +16,7 @@ export function MiniSearchPill({ onSelect }: { onSelect: (section: SearchPanel) 
 
   const locationLabel =
     location === 'all'
-      ? 'All locations'
+      ? 'All Bucharest locations'
       : location
         ? neighborhoods.find((n) => n.id === location)?.label ?? location
         : 'Search';

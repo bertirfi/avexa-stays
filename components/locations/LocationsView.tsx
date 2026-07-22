@@ -3,9 +3,14 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { PropertyCard } from '@/components/locations/PropertyCard';
+import { dateRangeLabel } from '@/components/search/SearchPill';
+import { useSearch } from '@/components/search/SearchContext';
+import { ymd, parseYmd } from '@/lib/date';
+import type { PropertyRangeAvailability } from '@/lib/data/availability';
 import { StylizedMap } from '@/components/locations/StylizedMap';
 import { LocationsMap } from '@/components/locations/LocationsMap';
 import { FiltersModal } from '@/components/locations/FiltersModal';
@@ -18,6 +23,8 @@ import type { Property } from '@/types';
 
 export function LocationsView({ properties }: { properties: Property[] }) {
   const { format } = useCurrency();
+  const router = useRouter();
+  const { location, startDate, endDate, guests, setLocation, setDates } = useSearch();
   const [activeId, setActiveId] = useState<string | null>(null);
   // Mobile-only List/Map toggle state
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
@@ -42,10 +49,113 @@ export function LocationsView({ properties }: { properties: Property[] }) {
   };
   const activeCount = activeAmenities.size + (minBedrooms > 0 ? 1 : 0);
 
-  const filtered = useMemo(
-    () => properties.filter((p) => matchesFilters(p, activeAmenities, minBedrooms)),
-    [properties, activeAmenities, minBedrooms],
+  // ── Search (dates / guests / zone from SearchContext) ──
+  // Zone scope = context location (SearchParamsSync hydrates it from ?where=),
+  // so the chips and the header pill are one source of truth.
+  const zoneFilter = location && location !== 'all' ? location : null;
+  const setZoneFilter = (id: string | null) => setLocation(id ?? 'all');
+
+  const checkIn = startDate ? ymd(startDate) : null;
+  const checkOut = endDate ? ymd(endDate) : null;
+  const datesActive = Boolean(checkIn && checkOut);
+
+  // Range availability from /api/availability (Supabase cache only).
+  const [rangeAvail, setRangeAvail] = useState<Record<
+    string,
+    PropertyRangeAvailability
+  > | null>(null);
+  const [availLoading, setAvailLoading] = useState(false);
+  useEffect(() => {
+    if (!checkIn || !checkOut) {
+      setRangeAvail(null);
+      return;
+    }
+    const ctrl = new AbortController();
+    setAvailLoading(true);
+    fetch(`/api/availability?checkIn=${checkIn}&checkOut=${checkOut}`, { signal: ctrl.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { data?: Record<string, PropertyRangeAvailability> } | null) => {
+        setRangeAvail(j?.data ?? {});
+        setAvailLoading(false);
+      })
+      .catch((err: unknown) => {
+        if ((err as Error)?.name === 'AbortError') return;
+        setRangeAvail({}); // degrade: no filtering
+        setAvailLoading(false);
+      });
+    return () => ctrl.abort();
+  }, [checkIn, checkOut]);
+
+  // Empty data (backend failure / no rows) → don't filter by availability.
+  const availData =
+    datesActive && rangeAvail && Object.keys(rangeAvail).length > 0 ? rangeAvail : null;
+
+  const occupants = guests.adults + guests.children;
+
+  // Amenity/bedroom + guest-capacity filters (zone applied after, so the zone
+  // chips can keep showing counts for every zone).
+  const prefiltered = useMemo(
+    () =>
+      properties.filter(
+        (p) => matchesFilters(p, activeAmenities, minBedrooms) && p.maxGuests >= occupants,
+      ),
+    [properties, activeAmenities, minBedrooms, occupants],
   );
+
+  // Zone-scoped denominator for "N of M suites free".
+  const searchBase = useMemo(
+    () => (zoneFilter ? prefiltered.filter((p) => p.neighborhood === zoneFilter) : prefiltered),
+    [prefiltered, zoneFilter],
+  );
+
+  // Available-for-the-searched-dates list — drives the grouped list, the map
+  // and the zone counts. Without dates (or without data) it's just searchBase.
+  const filtered = useMemo(
+    () => (availData ? searchBase.filter((p) => availData[p.id]?.available) : searchBase),
+    [searchBase, availData],
+  );
+
+  // Unavailable for the searched dates, but with a nearby free window.
+  const unavailableWithAlt = useMemo(
+    () =>
+      availData
+        ? searchBase.filter((p) => !availData[p.id]?.available && availData[p.id]?.alternative)
+        : [],
+    [searchBase, availData],
+  );
+
+  // Zone chip counts ignore the zone scope itself (so other zones stay visible)
+  // but respect dates + amenity + guest filters.
+  const zoneCounts = useMemo(() => {
+    const source = availData
+      ? prefiltered.filter((p) => availData[p.id]?.available)
+      : prefiltered;
+    return neighborhoods
+      .map((n) => ({ neighborhood: n, count: source.filter((p) => p.neighborhood === n.id).length }))
+      .filter((z) => z.count > 0);
+  }, [prefiltered, availData]);
+
+  // Detail links carry the active search; alternative cards carry THEIR dates.
+  const guestsQuery = useMemo(
+    () => ({
+      adults: String(guests.adults),
+      children: String(guests.children),
+      infants: String(guests.infants),
+    }),
+    [guests],
+  );
+  const searchQuery = useMemo(() => {
+    if (!checkIn || !checkOut) return undefined;
+    return new URLSearchParams({ checkIn, checkOut, ...guestsQuery }).toString();
+  }, [checkIn, checkOut, guestsQuery]);
+  const altQueryFor = (alt: { checkIn: string; checkOut: string }) =>
+    new URLSearchParams({ checkIn: alt.checkIn, checkOut: alt.checkOut, ...guestsQuery }).toString();
+
+  const searchDatesLabel = dateRangeLabel(startDate, endDate);
+  const clearDates = () => {
+    setDates(null, null);
+    router.replace('/locations');
+  };
 
   // Lock body scroll while the full-screen mobile map is open
   useEffect(() => {
@@ -123,20 +233,39 @@ export function LocationsView({ properties }: { properties: Property[] }) {
             </p>
           </header>
 
-          {/* Single-city filter + zone anchors */}
+          {/* Single-city scope + zone filter chips */}
           <div className="mb-4 flex flex-wrap gap-2">
-            <span className="rounded-full border border-ink bg-ink px-4 py-2.5 text-[13.5px] font-medium text-cream">
+            <button
+              type="button"
+              onClick={() => setZoneFilter(null)}
+              className={cn(
+                'rounded-full border px-4 py-2.5 text-[13.5px] font-medium transition',
+                zoneFilter === null
+                  ? 'border-ink bg-ink text-cream'
+                  : 'border-gray-line bg-white hover:border-ink hover:bg-cream',
+              )}
+            >
               Bucharest City Center
-            </span>
-            {groups.map((g) => (
-              <a
-                key={g.neighborhood.id}
-                href={`#zone-${g.neighborhood.id}`}
-                className="flex items-center gap-1.5 rounded-full border border-gray-line bg-white px-4 py-2.5 text-[13.5px] font-medium transition hover:border-ink hover:bg-cream"
+            </button>
+            {zoneCounts.map((z) => (
+              <button
+                key={z.neighborhood.id}
+                type="button"
+                onClick={() =>
+                  setZoneFilter(zoneFilter === z.neighborhood.id ? null : z.neighborhood.id)
+                }
+                className={cn(
+                  'flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-[13.5px] font-medium transition',
+                  zoneFilter === z.neighborhood.id
+                    ? 'border-ink bg-ink text-cream'
+                    : 'border-gray-line bg-white hover:border-ink hover:bg-cream',
+                )}
               >
-                {g.neighborhood.label}
-                <span className="text-ink-60">{g.items.length}</span>
-              </a>
+                {z.neighborhood.label}
+                <span className={zoneFilter === z.neighborhood.id ? 'text-cream/60' : 'text-ink-60'}>
+                  {z.count}
+                </span>
+              </button>
             ))}
           </div>
 
@@ -180,11 +309,30 @@ export function LocationsView({ properties }: { properties: Property[] }) {
           </div>
 
           {/* Result count */}
-          <div className="mb-6 text-[13px] text-ink-60">
-            {activeCount > 0
-              ? `Showing ${filtered.length} of ${properties.length} suites`
-              : `Showing all ${properties.length} suites · grouped by neighborhood`}
-          </div>
+          {datesActive ? (
+            <div className="mb-6 flex flex-wrap items-center gap-3 text-[13px] text-ink-60">
+              <span>
+                {availData
+                  ? `${filtered.length} of ${searchBase.length} suites free for ${searchDatesLabel}`
+                  : `Showing ${filtered.length} suites for ${searchDatesLabel}`}
+              </span>
+              <button
+                type="button"
+                onClick={clearDates}
+                aria-label="Clear dates"
+                className="flex items-center gap-1.5 rounded-full border border-gray-line bg-white px-3 py-1.5 font-medium text-ink transition hover:border-ink hover:bg-cream"
+              >
+                {searchDatesLabel}
+                <Icon name="x" size={12} />
+              </button>
+            </div>
+          ) : (
+            <div className="mb-6 text-[13px] text-ink-60">
+              {activeCount > 0 || occupants > 1 || zoneFilter
+                ? `Showing ${filtered.length} of ${properties.length} suites`
+                : `Showing all ${properties.length} suites · grouped by neighborhood`}
+            </div>
+          )}
 
           {/* Promo */}
           <div className="mb-6 flex items-center justify-between gap-4 rounded-[14px] bg-gold px-5 py-3.5 text-[13.5px] text-ink">
@@ -197,24 +345,46 @@ export function LocationsView({ properties }: { properties: Property[] }) {
           </div>
 
           {/* Empty state */}
-          {filtered.length === 0 && (
-            <div className="rounded-[16px] border border-gray-line bg-white px-6 py-12 text-center">
-              <p className="font-display text-lg">No stays match these filters.</p>
-              <p className="mt-1.5 text-[14px] text-ink-60">
-                Try removing a filter to see more of the city.
-              </p>
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="mt-5 rounded-xl bg-ink px-5 py-2.5 text-[14px] font-semibold text-cream transition hover:bg-ink/90"
-              >
-                Clear all filters
-              </button>
-            </div>
-          )}
+          {filtered.length === 0 &&
+            (availData && searchBase.length > 0 ? (
+              <div className="mb-12 rounded-[16px] border border-gray-line bg-white px-6 py-12 text-center">
+                <p className="font-display text-lg">
+                  No suites are free for {searchDatesLabel}.
+                </p>
+                <p className="mt-1.5 text-[14px] text-ink-60">
+                  Try nearby dates below, or clear the search to see every suite.
+                </p>
+                <button
+                  type="button"
+                  onClick={clearDates}
+                  className="mt-5 rounded-xl bg-ink px-5 py-2.5 text-[14px] font-semibold text-cream transition hover:bg-ink/90"
+                >
+                  Clear dates
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-[16px] border border-gray-line bg-white px-6 py-12 text-center">
+                <p className="font-display text-lg">No stays match these filters.</p>
+                <p className="mt-1.5 text-[14px] text-ink-60">
+                  Try removing a filter to see more of the city.
+                </p>
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="mt-5 rounded-xl bg-ink px-5 py-2.5 text-[14px] font-semibold text-cream transition hover:bg-ink/90"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            ))}
 
-          {/* Groups */}
-          <div className="space-y-12">
+          {/* Groups — dimmed (no layout shift) while availability loads */}
+          <div
+            className={cn(
+              'space-y-12 transition-opacity duration-300',
+              availLoading && 'pointer-events-none opacity-50',
+            )}
+          >
             {groups.map((g) => (
               <section key={g.neighborhood.id} id={`zone-${g.neighborhood.id}`} className="scroll-mt-40">
                 <motion.div
@@ -240,11 +410,44 @@ export function LocationsView({ properties }: { properties: Property[] }) {
                       active={activeId === p.id}
                       onActivate={() => setActiveId(p.id)}
                       onClear={() => setActiveId(null)}
+                      query={searchQuery}
                     />
                   ))}
                 </div>
               </section>
             ))}
+
+            {/* Nearby free windows for suites unavailable on the searched dates */}
+            {unavailableWithAlt.length > 0 && (
+              <section>
+                <div className="mb-5 flex items-center gap-3">
+                  <h2 className="font-display text-xl tracking-[-0.01em]">Close dates available</h2>
+                  <span className="h-px flex-1 bg-gray-line" />
+                </div>
+                <div className="flex flex-col gap-5">
+                  {unavailableWithAlt.map((p, i) => {
+                    const alt = availData?.[p.id]?.alternative;
+                    if (!alt) return null;
+                    return (
+                      <div key={p.id}>
+                        <span className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1.5 text-[12px] font-semibold text-ink">
+                          Free {dateRangeLabel(parseYmd(alt.checkIn), parseYmd(alt.checkOut))}
+                        </span>
+                        <PropertyCard
+                          key={p.id}
+                          property={p}
+                          index={i}
+                          active={activeId === p.id}
+                          onActivate={() => setActiveId(p.id)}
+                          onClear={() => setActiveId(null)}
+                          query={altQueryFor(alt)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
           </div>
           </div>
         </div>
@@ -285,7 +488,10 @@ export function LocationsView({ properties }: { properties: Property[] }) {
             >
               <Icon name="x" size={14} />
             </button>
-            <Link href={`/locations/${popupProperty.slug}`} className="flex gap-3">
+            <Link
+              href={`/locations/${popupProperty.slug}${searchQuery ? `?${searchQuery}` : ''}`}
+              className="flex gap-3"
+            >
               <div className="relative size-[84px] shrink-0 overflow-hidden rounded-[12px] bg-gray-light">
                 <Image
                   src={popupProperty.cover}

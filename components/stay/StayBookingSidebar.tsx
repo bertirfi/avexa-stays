@@ -13,7 +13,7 @@ import type { Booking, GuestCounts, Property } from '@/types';
 import type { AvailabilityMap } from '@/lib/data/availability';
 import { ymd, parseYmd } from '@/lib/date';
 import { CITY_TAX_RON_PER_PERSON_NIGHT } from '@/lib/currency';
-import { readSearchPrefs } from '@/lib/searchPrefs';
+import { readSearchPrefs, writeSearchPrefs } from '@/lib/searchPrefs';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { cn } from '@/lib/cn';
 
@@ -71,16 +71,68 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
-    // Carry the search selection (dates + guests) into the sidebar so the user
-    // doesn't have to re-pick dates after searching on the homepage / locations.
+    // Seed dates + guests: URL search params FIRST (deep links from the
+    // /locations result cards), then localStorage prefs as before. Reading
+    // window.location instead of useSearchParams keeps the sidebar in the
+    // static (ISR) HTML — no Suspense/CSR bailout needed for a mount-only read.
+    const q = new URLSearchParams(window.location.search);
+    const urlIn = q.get('checkIn');
+    const urlOut = q.get('checkOut');
+    const urlAdults = q.get('adults');
+    const urlGuests: GuestCounts | null =
+      urlAdults !== null
+        ? {
+            adults: Math.min(10, Math.max(1, Number(urlAdults) || 1)),
+            children: Math.min(10, Math.max(0, Number(q.get('children')) || 0)),
+            infants: Math.min(10, Math.max(0, Number(q.get('infants')) || 0)),
+          }
+        : null;
+
+    const hasAvailData = availability && Object.keys(availability).length > 0;
+    const everyNightFree = (s: Date, e: Date) => {
+      if (!hasAvailData) return true; // cache offline → can't validate, seed anyway
+      const cur = new Date(s);
+      while (cur < e) {
+        // Missing row = NOT available (conservative, matches the results page).
+        if (!availability?.[ymd(cur)]?.available) return false;
+        cur.setDate(cur.getDate() + 1);
+      }
+      return true;
+    };
+
     const p = readSearchPrefs();
-    if (p) {
+    let seededFromUrl = false;
+    if (urlIn || urlOut) {
+      const s = parseYmd(urlIn);
+      const e = parseYmd(urlOut);
+      // Seed only a fully-free range — otherwise leave dates empty so the user
+      // picks from the calendar (unavailable days are already disabled there).
+      if (s && e && s < e && everyNightFree(s, e)) {
+        setStart(s);
+        setEnd(e);
+        seededFromUrl = true;
+      }
+    } else if (p) {
       const s = parseYmd(p.checkIn);
       const e = parseYmd(p.checkOut);
       if (s) setStart(s);
       if (e) setEnd(e);
-      if (p.guests) setGuests(p.guests);
     }
+    if (urlGuests) setGuests(urlGuests);
+    else if (p?.guests) setGuests(p.guests);
+
+    // Persist URL-seeded values so the header pill + /locations stay in sync
+    // (this child effect runs before SearchProvider's localStorage hydration).
+    if (seededFromUrl || urlGuests) {
+      writeSearchPrefs({
+        location: p?.location ?? '',
+        checkIn: seededFromUrl ? urlIn : (p?.checkIn ?? null),
+        checkOut: seededFromUrl ? urlOut : (p?.checkOut ?? null),
+        guests: urlGuests ?? p?.guests ?? { adults: 2, children: 0, infants: 0 },
+      });
+    }
+    // Mount-only seed — `availability` is a stable server prop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Anchor the desktop calendar popup to the dates input via fixed positioning,
