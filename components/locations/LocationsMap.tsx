@@ -61,6 +61,10 @@ const GLYPHS: Record<Landmark['kind'], string> = {
     '<svg width="13" height="13" viewBox="0 0 24 24" fill="#57544d"><circle cx="7" cy="7" r="2.3"/><circle cx="17" cy="7" r="2.3"/><circle cx="7" cy="17" r="2.3"/><circle cx="17" cy="17" r="2.3"/></svg>',
   station:
     '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#57544d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="13" rx="2"/><path d="M6 10h12M8.5 20l-1.5 2M15.5 20l1.5 2"/></svg>',
+  airport:
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="#57544d"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>',
+  restaurant:
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#57544d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v7M4.5 3v4a2.5 2.5 0 0 0 5 0V3M7 10v11"/><path d="M18 3c-2 1.5-3 4-3 7h3v11"/></svg>',
 };
 
 // Badge (white circle + glyph) plus a haloed label. `data-label` lets the zoom
