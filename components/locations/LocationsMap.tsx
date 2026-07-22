@@ -263,7 +263,9 @@ export function LocationsMap(props: LocationsMapProps) {
         .filter((e): e is Extract<MarkerEntry, { kind: 'individual' }> => !!e && e.kind === 'individual')
         .map((e) => e.priceRon);
       const label = formatRef.current(Math.min(...prices));
-      entry.el.innerHTML = pinInnerHTML(entry.color, label, visible.length);
+      // A lone visible member reads as a plain pin — no "1" count badge.
+      const badgeCount = visible.length > 1 ? visible.length : undefined;
+      entry.el.innerHTML = pinInnerHTML(entry.color, label, badgeCount);
       entry.el.setAttribute('aria-label', pinAriaLabel(label, undefined, visible.length));
       styleMarker(entry.el, entry.groupIds.includes(activeId ?? ''));
     });
