@@ -32,6 +32,11 @@ const CITY_TAX_PER_PERSON = CITY_TAX_RON_PER_PERSON_NIGHT;
 // so re-enabling later is a one-line flip.
 const MULTI_ROOM_ENABLED = false;
 
+// Launch: extra services (breakfast / late check-out / early check-in) are not
+// sold yet — they return later via Stripe products or on-site upsells. Gates
+// ONLY the upgrades UI; state/pricing plumbing stays wired for the flip back.
+const UPGRADES_ENABLED = false;
+
 function formatDate(d: Date | null) {
   if (!d) return null;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -58,8 +63,8 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   const [rateId, setRateId] = useState<'saver' | 'flex'>('saver');
   const [upgrades, setUpgrades] = useState<Record<string, boolean>>({
     breakfast: false,
-    late_checkout: true,
-    early_checkin: true,
+    late_checkout: UPGRADES_ENABLED,
+    early_checkin: UPGRADES_ENABLED,
   });
   const [priceOpen, setPriceOpen] = useState(false);
 
@@ -468,7 +473,8 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
         ))}
       </div>
 
-      {/* Upgrades */}
+      {/* Upgrades (hidden at launch — UPGRADES_ENABLED) */}
+      {UPGRADES_ENABLED && (
       <div className="mt-4 space-y-2">
         {property.upgrades.map((u) => (
           <label key={u.id} className="flex cursor-pointer items-center justify-between rounded-2xl border border-gray-line p-3">
@@ -490,6 +496,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
           </label>
         ))}
       </div>
+      )}
 
       {/* ── Add another room (v1: hidden — MULTI_ROOM_ENABLED) ── */}
       {MULTI_ROOM_ENABLED && validSiblings.length > 0 && (
