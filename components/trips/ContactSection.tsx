@@ -1,5 +1,5 @@
 import { Reveal } from '@/components/Reveal';
-import { PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact';
+import { CONTACT_EMAIL, PHONE_DISPLAY, WHATSAPP_URL } from '@/lib/contact';
 
 export function ContactSection() {
   return (
@@ -22,7 +22,7 @@ export function ContactSection() {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
           <Reveal direction="up" delay={0}>
             <a
-              href="mailto:office@avexastays.com"
+              href={`mailto:${CONTACT_EMAIL}`}
               className="group flex h-full flex-col gap-2 rounded-[20px] border border-white/10 bg-white/5 px-8 py-9 transition-[transform,background-color,border-color] duration-[400ms] ease-[var(--ease-snap)] hover:-translate-y-1.5 hover:border-gold/20 hover:bg-gold/[0.08]"
             >
               <span className="mb-2 grid size-[52px] place-items-center rounded-[14px] bg-white/[0.08] text-gold">
@@ -42,7 +42,7 @@ export function ContactSection() {
               </span>
               <span className="font-mono-label mt-1 text-white/40">Email us</span>
               <span className="font-display text-2xl leading-tight tracking-[-0.01em] text-white">
-                office@avexastays.com
+                {CONTACT_EMAIL}
               </span>
               <span className="font-mono-label mt-3 tracking-[0.14em] text-gold transition-transform duration-200 group-hover:translate-x-1.5">
                 Send email →

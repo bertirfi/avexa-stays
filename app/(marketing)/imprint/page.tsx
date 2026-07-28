@@ -1,80 +1,73 @@
 import type { Metadata } from 'next';
 import { LegalShell } from '@/components/legal/LegalShell';
+import { CONTACT_EMAIL, PHONE_DISPLAY, PHONE_TEL } from '@/lib/contact';
 
 export const metadata: Metadata = {
-  title: 'Imprint',
+  title: 'Imprint & Legal Notice',
   description:
-    'Legal information and company details for AVEXA Stays, operated by PRIME GOLD LIVING SRL, Bucharest, Romania.',
+    'Legal information and company details for Avexa Stays, operated by Prime Gold Living SRL, Bucharest, Romania.',
   alternates: { canonical: '/imprint' },
 };
+
+const COMPANY = [
+  { label: 'Company Name', value: 'Prime Gold Living SRL' },
+  {
+    label: 'Registered Office',
+    value: 'Str. Fibrei 28, Bucuresti, Sector 2, Cod 020342, Romania',
+  },
+  { label: 'Trade Register Number', value: 'J2025057993006' },
+  { label: 'Tax Identification Number (CUI/CIF)', value: 'RO52265361' },
+] as const;
 
 export default function ImprintPage() {
   return (
     <LegalShell
-      title="Imprint"
-      updated="17 June 2026"
-      intro="Legal information about the company operating the AVEXA Stays website and booking service."
+      title="Imprint & Legal Notice"
+      updated="28 July 2026"
+      intro="Legal information about the company operating the Avexa Stays website and booking service."
     >
-      <h2>Company details</h2>
-      <p>
-        <strong>PRIME GOLD LIVING SRL</strong>
-        <br />
-        Str. Fibrei 28, Sector 2
-        <br />
-        020342 Bucharest, Romania
-      </p>
+      <h2>Company Information</h2>
+      <dl className="mb-4 mt-5 space-y-4 sm:space-y-3">
+        {COMPANY.map((row) => (
+          <div key={row.label} className="sm:grid sm:grid-cols-[240px_1fr] sm:gap-x-8">
+            <dt className="font-mono-label text-ink-60">{row.label}</dt>
+            <dd className="mt-1 text-ink sm:mt-0">{row.value}</dd>
+          </div>
+        ))}
+      </dl>
 
-      <h2>Registration</h2>
-      <ul>
-        <li>
-          <strong>Trade Register number:</strong> J2025057993006
-        </li>
-        <li>
-          <strong>Sole registration code (CUI):</strong> 52265361
-        </li>
-        <li>
-          <strong>EUID:</strong> ROONRC.J2025057993006
-        </li>
-        <li>
-          <strong>Date of incorporation:</strong> 1 August 2025
-        </li>
-      </ul>
+      <h2>Contact Information</h2>
+      <dl className="mb-4 mt-5 space-y-4 sm:space-y-3">
+        <div className="sm:grid sm:grid-cols-[240px_1fr] sm:gap-x-8">
+          <dt className="font-mono-label text-ink-60">Email</dt>
+          <dd className="mt-1 text-ink sm:mt-0">
+            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          </dd>
+        </div>
+        <div className="sm:grid sm:grid-cols-[240px_1fr] sm:gap-x-8">
+          <dt className="font-mono-label text-ink-60">Phone</dt>
+          <dd className="mt-1 text-ink sm:mt-0">
+            <a href={PHONE_TEL}>{PHONE_DISPLAY}</a>
+          </dd>
+        </div>
+      </dl>
 
-      <h2>Contact</h2>
+      <h2>Online Dispute Resolution (ODR)</h2>
       <p>
-        Email: <a href="mailto:hello@avexastays.com">hello@avexastays.com</a>
-        <br />
-        Website: <a href="https://avexastays.com">avexastays.com</a>
-      </p>
-
-      <h2>Consumer dispute resolution</h2>
-      <p>
-        AVEXA Stays operates under Romanian and EU consumer-protection law. For
-        complaints, you may contact the Romanian National Authority for Consumer
-        Protection (ANPC) at{' '}
-        <a href="https://anpc.ro" rel="noopener noreferrer" target="_blank">
-          anpc.ro
-        </a>
-        . The European Commission also provides an Online Dispute Resolution
-        platform at{' '}
+        The European Commission provides a platform for online dispute
+        resolution (ODR), found at{' '}
         <a
-          href="https://ec.europa.eu/consumers/odr"
+          href="http://ec.europa.eu/consumers/odr/"
           rel="noopener noreferrer"
           target="_blank"
         >
           ec.europa.eu/consumers/odr
         </a>
-        . We are neither obliged nor generally willing to participate in dispute
-        resolution proceedings before a consumer arbitration board, but we always
-        aim to resolve any issue directly and fairly.
+        .
       </p>
-
-      <h2>Liability for content</h2>
       <p>
-        We prepare the content of this website with care. However, we assume no
-        liability for the accuracy, completeness, or timeliness of the content.
-        Listings, prices, and availability are subject to change and are confirmed
-        at the moment of booking.
+        We are neither obligated nor willing to participate in a dispute
+        settlement procedure before a consumer arbitration board.
       </p>
     </LegalShell>
   );
