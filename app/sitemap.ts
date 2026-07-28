@@ -38,7 +38,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.5,
     },
     // Legal pages — indexable trust signals, low priority.
-    ...['/privacy', '/terms', '/imprint', '/cancellation'].map((path) => ({
+    ...['/privacy', '/terms', '/imprint', '/cancellation', '/cookies'].map((path) => ({
       url: `${BASE_URL}${path}`,
       lastModified: now,
       changeFrequency: 'yearly' as const,

@@ -1,68 +1,62 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { LegalShell } from '@/components/legal/LegalShell';
 
 export const metadata: Metadata = {
-  title: 'Cancellation Policy',
+  title: 'Cancellation & Modification Policy',
   description:
-    'How cancellations, refunds, and no-shows work for AVEXA Stays bookings, including member free cancellation.',
+    'Flexible and Non-Refundable rate rules for Avexa Stays bookings — free cancellation windows, no-show charges, early departures, and refunds.',
   alternates: { canonical: '/cancellation' },
 };
 
 export default function CancellationPage() {
   return (
     <LegalShell
-      title="Cancellation Policy"
-      updated="17 June 2026"
-      intro="How cancellations and refunds work, depending on the rate you booked. This policy forms part of our Terms & Conditions."
+      title="Cancellation & Modification Policy"
+      updated="28 July 2026"
+      intro="We want to give you the flexibility you need while ensuring our properties are ready for your stay. When booking your Avexa apartment, you can choose between two rate plans."
     >
-      <h2>Member Flex rate</h2>
+      <h2>1. Flexible Rate (Standard)</h2>
       <p>
-        On the flexible member rate, you can cancel at no cost right up to the day
-        of arrival. If you cancel on the arrival date itself, a charge equal to
-        one night applies. Everything beyond that first night is refunded.
+        <strong>Free Cancellation:</strong> Cancel or modify free of charge up
+        to 48 hours before your scheduled arrival date (by 3:00 PM, local time).
+      </p>
+      <p>
+        <strong>Late Cancellation:</strong> If you cancel within 48 hours of
+        arrival, or in case of a no-show, the total price of the reservation
+        will be charged.
+      </p>
+      <p>
+        <strong>Payment:</strong> We may pre-authorize your credit card before
+        arrival to guarantee your booking.
       </p>
 
-      <h2>Saver rate</h2>
+      <h2>2. Non-Refundable Rate (Discounted)</h2>
       <p>
-        The Saver rate is offered at a lower price in exchange for being
-        non-refundable. If you cancel a Saver booking, the amount paid is not
-        refunded. Choose the Member Flex rate if you need flexibility.
+        This rate locks in our best price but is strictly non-refundable.
+      </p>
+      <p>
+        In case of cancellation, date modification, or no-show, no refunds will
+        be issued.
+      </p>
+      <p>
+        <strong>Payment:</strong> The total amount is charged automatically at
+        the time of booking.
       </p>
 
-      <h2>No-show</h2>
+      <h2>3. Early Departures</h2>
       <p>
-        If you do not arrive and have not cancelled, the booking is treated as a
-        no-show and is charged in full.
+        If you leave before your scheduled check-out date, the remaining nights
+        are not refunded.
       </p>
 
-      <h2>How to cancel</h2>
+      <h2>4. Refund Processing</h2>
       <p>
-        Cancel from your{' '}
-        <Link href="/my-trips">My Trips</Link> page, or email{' '}
-        <a href="mailto:hello@avexastays.com">hello@avexastays.com</a> with your
-        booking reference. The cancellation takes effect when we receive it.
+        Eligible refunds under the Flexible Rate are returned to your original
+        payment method.
       </p>
-
-      <h2>Refunds</h2>
       <p>
-        Eligible refunds are returned to your original payment method, normally
-        within 5–10 business days depending on your bank or card issuer.
-      </p>
-
-      <h2>Changes to your dates</h2>
-      <p>
-        Need different dates rather than a cancellation? Contact us — date changes
-        are subject to availability and any difference in price, and we will
-        always try to help.
-      </p>
-
-      <h2>Exceptional circumstances</h2>
-      <p>
-        In cases of force majeure or other exceptional events beyond your control,
-        contact us directly. We assess these situations fairly and on a
-        case-by-case basis. Your statutory consumer rights remain unaffected. See
-        our <Link href="/terms">Terms &amp; Conditions</Link> for more.
+        Please allow 5–10 business days for the funds to appear, depending on
+        your bank.
       </p>
     </LegalShell>
   );
