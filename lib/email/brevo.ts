@@ -1,15 +1,19 @@
 /**
- * Minimal transactional email via Resend HTTP API — server-only.
+ * Minimal transactional email via the Brevo API — server-only.
  *
- * Scope (deliberate): auth emails go through Supabase SMTP; the guest
- * check-in message goes EXCLUSIVELY via the reservation's Hostaway
- * conversation (lib/hostaway/confirmation.ts — client rule: one email, no
- * fallback sender). The app itself sends ONE email — the refund notice when
- * payment succeeded but the dates were taken (see the Stripe webhook).
- * Best-effort: a missing key or API failure must never break the money
- * flow, only log.
+ * Scope (deliberate): auth emails go through Supabase SMTP (pointed at Brevo
+ * SMTP in the Supabase dashboard); the guest check-in message goes EXCLUSIVELY
+ * via the reservation's Hostaway conversation (lib/hostaway/confirmation.ts —
+ * client rule: one email, no fallback sender). The app itself sends ONE email —
+ * the refund notice when payment succeeded but the dates were taken (see the
+ * Stripe webhook) — plus the internal ops alert.
+ * Best-effort: a missing key or API failure must never break the money flow,
+ * only log.
  */
-const FROM = 'AVEXA Stays <office@avexastays.com>';
+const SENDER = {
+  name: process.env.BREVO_SENDER_NAME || 'AVEXA Stays',
+  email: process.env.BREVO_SENDER_EMAIL || 'office@avexastays.com',
+};
 
 /** Escape guest-supplied text before interpolating into email HTML. */
 function escapeHtml(s: string): string {
@@ -24,28 +28,34 @@ export async function sendEmail(input: {
   subject: string;
   html: string;
 }): Promise<boolean> {
-  const key = process.env.RESEND_API_KEY;
+  const key = process.env.BREVO_API_KEY;
   if (!key) {
-    console.warn('[email] RESEND_API_KEY not set — skipping:', input.subject);
+    console.warn('[email] BREVO_API_KEY not set — skipping:', input.subject);
     return false;
   }
   try {
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${key}`,
+        'api-key': key,
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
-      body: JSON.stringify({ from: FROM, ...input }),
+      body: JSON.stringify({
+        sender: SENDER,
+        to: [{ email: input.to }],
+        subject: input.subject,
+        htmlContent: input.html,
+      }),
       cache: 'no-store',
     });
     if (!res.ok) {
-      console.error('[email] Resend failed:', res.status, await res.text().catch(() => ''));
+      console.error('[email] Brevo failed:', res.status, await res.text().catch(() => ''));
       return false;
     }
     return true;
   } catch (err) {
-    console.error('[email] Resend error:', err instanceof Error ? err.message : err);
+    console.error('[email] Brevo error:', err instanceof Error ? err.message : err);
     return false;
   }
 }

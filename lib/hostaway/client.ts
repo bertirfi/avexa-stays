@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { sendEmail } from '@/lib/email/resend';
+import { sendEmail } from '@/lib/email/brevo';
 import type {
   HostawayCalendarDay,
   HostawayConversation,
