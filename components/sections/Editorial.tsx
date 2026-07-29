@@ -116,7 +116,11 @@ export function Editorial() {
                   src={src}
                   alt=""
                   fill
-                  sizes="(min-width:768px) 28vw, 0px"
+                  quality={85}
+                  // 2× the card's ~28vw: the card is portrait but the photos are
+                  // landscape, so object-cover crops the sides and zooms in —
+                  // a file sized to the card width would be upscaled and blurry.
+                  sizes="(min-width:768px) 56vw, 0px"
                   className={cn(
                     'object-cover transition-all duration-700 ease-[var(--ease-snap)]',
                     i === current ? 'scale-100 opacity-100' : 'scale-[1.04] opacity-0',
@@ -174,7 +178,9 @@ export function Editorial() {
                   src={src}
                   alt=""
                   fill
-                  sizes="(min-width:768px) 28vw, 0px"
+                  quality={85}
+                  // Same crop-zoom compensation as the LEFT card above.
+                  sizes="(min-width:768px) 56vw, 0px"
                   className={cn(
                     'object-cover transition-all duration-700 ease-[var(--ease-snap)]',
                     i === current ? 'scale-100 opacity-100' : 'scale-[1.04] opacity-0',
@@ -214,7 +220,7 @@ export function Editorial() {
                   alt ? 'ml-7 h-[200px]' : 'mr-7 h-[260px]',
                 )}
               >
-                <Image src={LEFT_IMAGES[i]} alt="" fill sizes="100vw" className="object-cover" />
+                <Image src={LEFT_IMAGES[i]} alt="" fill quality={85} sizes="100vw" className="object-cover" />
               </div>
               <h3
                 className={cn(
