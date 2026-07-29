@@ -16,13 +16,13 @@ const panels = [
     eyebrow: '02',
     title: 'Digital Check-in',
     body: 'No lobby. No waiting. Verify your ID from your phone and receive your unique access code exactly 24 hours before you arrive in Bucharest city center.',
-    image: '/listing-photos/09-hallway.jpeg',
+    image: '/how-avexa-works/digital-check-in.jpg',
   },
   {
     eyebrow: '03',
     title: 'Enter & Explore',
     body: 'Your Bucharest city center door opens. Lights calibrated. Linens pressed. Temperature set. The space is ready. The city is next.',
-    image: '/listing-photos/33-open-streets.jpeg',
+    image: '/how-avexa-works/enter-and-explore.jpeg',
   },
 ];
 
@@ -57,6 +57,7 @@ export function HowItWorks() {
                   src={p.image}
                   alt=""
                   fill
+                  quality={85}
                   sizes="(min-width: 768px) 50vw, 100vw"
                   className={cn(
                     'object-cover transition-all duration-700',
