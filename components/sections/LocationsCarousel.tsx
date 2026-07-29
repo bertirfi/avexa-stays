@@ -140,7 +140,11 @@ export function LocationsCarousel() {
                   alt=""
                   fill
                   draggable={false}
-                  sizes="(max-width: 640px) 200px, 420px"
+                  quality={85}
+                  // 2× the card width: the cards are near-square but most covers
+                  // are wide landscape shots, so object-cover crops the sides and
+                  // zooms — a card-width file would be upscaled and blurry.
+                  sizes="(max-width: 640px) 400px, 840px"
                   className="object-cover transition-transform duration-[600ms] ease-[var(--ease-snap)] sm:group-hover:scale-[1.04]"
                   style={{ objectPosition: n.coverPosition ?? 'center' }}
                 />
