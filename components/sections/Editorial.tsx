@@ -41,18 +41,20 @@ const STEPS = [
   },
 ];
 
+// LEFT also feeds the mobile stacked variant (one image per step) — keep the
+// four strongest, most varied shots here.
 const LEFT_IMAGES = [
-  '/listing-photos/30-living-room.jpeg',
-  '/listings/202/00-cover.jpeg',
-  '/listings/301/00-cover.jpeg',
-  '/listings/304/00-cover.jpeg',
+  '/editorial/01.jpeg',
+  '/editorial/03.jpeg',
+  '/editorial/07.jpeg',
+  '/editorial/06.jpeg',
 ];
 
 const RIGHT_IMAGES = [
-  '/listings/101/00-cover.jpeg',
-  '/listing-photos/09-hallway.jpeg',
-  '/listings/203/00-cover.jpeg',
-  '/listing-photos/33-open-streets.jpeg',
+  '/editorial/02.jpeg',
+  '/editorial/04.jpeg',
+  '/editorial/05.jpeg',
+  '/editorial/01B.jpg',
 ];
 
 export function Editorial() {
