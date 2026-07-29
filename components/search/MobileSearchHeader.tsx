@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/chrome/Logo';
+import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
 import { MobileSearchOverlay } from '@/components/search/MobileSearchOverlay';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { signOutClient } from '@/lib/auth/client';
@@ -30,21 +31,9 @@ export function MobileSearchHeader() {
   const { user } = useAuth();
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-  const lastY = useRef(0);
-
-  useEffect(() => {
-    function onScroll() {
-      const y = window.scrollY;
-      if (y < 80) setCollapsed(false);
-      else if (y > lastY.current + 4) setCollapsed(true);
-      else if (y < lastY.current - 4) setCollapsed(false);
-      lastY.current = y;
-    }
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  // Single source of truth for scroll direction (jitter-hardened in the
+  // provider) — a local listener here once flickered out of sync with TabBar.
+  const { scrollingDown: collapsed } = useChromeScroll();
 
   if (!isSearchPage) return null;
 
