@@ -51,15 +51,16 @@ GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-...
 
 # ============================================
-# EMAIL MARKETING — RESEND AUDIENCES (newsletter)
+# EMAIL — BREVO (transactional + newsletter)
 # ============================================
-# /api/newsletter adds contacts to a Resend Audience — same RESEND_API_KEY the
-# refund notice already uses (existing account, no second subscription).
-# Setup: Resend dashboard → Audiences → Create → copy the id below. Until the
-# id is set, the form honestly answers 503 "Subscriptions open soon".
-RESEND_AUDIENCE_ID=
-# (Brevo was the earlier plan for campaigns — dropped for now; revisit only if
-# real campaign tooling is ever needed.)
+# lib/email/brevo.ts sends the refund notice + ops alert; /api/newsletter adds
+# contacts to a Brevo list. Auth emails go through Supabase SMTP, pointed at
+# Brevo SMTP (smtp-relay.brevo.com:587) in the Supabase dashboard.
+# Setup: Brevo → Contacts → Lists → create → copy the numeric id below. Until
+# it is set, the form honestly answers 503 "Subscriptions open soon".
+BREVO_LIST_ID=
+# (Resend was the launch provider — fully replaced by Brevo; RESEND_* vars can
+# be deleted from Vercel once Brevo is verified working.)
 
 # ============================================
 # ANALYTICS

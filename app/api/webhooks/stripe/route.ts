@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { createReservation, findRecentDirectReservation } from '@/lib/hostaway/client';
 import { sendBookingConfirmation } from '@/lib/hostaway/confirmation';
 import type { HostawayFinanceField } from '@/lib/hostaway/types';
-import { refundNoticeEmail, sendEmail } from '@/lib/email/resend';
+import { refundNoticeEmail, sendEmail } from '@/lib/email/brevo';
 import type { Database } from '@/types/database.types';
 
 /**
