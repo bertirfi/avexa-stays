@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { CancelTripButton } from '@/components/trips/CancelTripButton';
 
 /**
  * View model for a single trip card. Built server-side in
@@ -25,6 +26,10 @@ export interface Trip {
   approxLabel: string | null;
   /** Raw booking status: 'confirmed' | 'cancelled' | 'pending' | … */
   status: string;
+  /** Flexible rate + inside the published free-cancellation window. */
+  cancellable: boolean;
+  /** "Aug 15, 3:00 PM" — the free-cancellation deadline, when cancellable. */
+  cancelDeadlineLabel: string | null;
 }
 
 export function TripsList({
@@ -124,8 +129,17 @@ function TripCard({ trip }: { trip: Trip }) {
           >
             View apartment
           </Link>
-          <p className="text-sm text-ink-60">Need changes? Contact us below.</p>
+          {trip.cancellable ? (
+            <CancelTripButton bookingId={trip.id} />
+          ) : (
+            <p className="text-sm text-ink-60">Need changes? Contact us below.</p>
+          )}
         </div>
+        {trip.cancellable && trip.cancelDeadlineLabel && (
+          <p className="mt-3 text-xs text-ink-60">
+            Free cancellation (Flexible rate) until {trip.cancelDeadlineLabel}, Bucharest time.
+          </p>
+        )}
       </div>
     </article>
   );

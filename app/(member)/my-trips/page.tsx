@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { requireUser } from '@/lib/auth/server';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
+import { freeCancelDeadlineMs, isFreeCancellable } from '@/lib/booking/cancellation';
 import { properties } from '@/lib/properties';
 import { EmptyTripsState } from '@/components/trips/EmptyTripsState';
 import { TripsList, type Trip } from '@/components/trips/TripsList';
@@ -74,7 +75,7 @@ export default async function MyTripsPage() {
   const { data } = await supabase
     .from('bookings')
     .select(
-      'id, property_id, status, check_in, check_out, adults, children, infants, total_ron, display_currency, display_fx_rate, order_id',
+      'id, property_id, status, check_in, check_out, adults, children, infants, total_ron, display_currency, display_fx_rate, order_id, rate_plan, hostaway_reservation_id',
     )
     .order('check_in', { ascending: false });
 
@@ -83,6 +84,10 @@ export default async function MyTripsPage() {
   const trips: Trip[] = rows.map((b) => {
     const property = properties.find((p) => p.id === b.property_id);
     const totalRon = Math.round(Number(b.total_ron));
+    // The action re-checks this server-side at cancel time — here it only
+    // decides whether the button renders (and the page is SSR per-request,
+    // so "now" is honest, not a stale build-time value).
+    const cancellable = isFreeCancellable(b);
     return {
       id: b.id,
       orderId: b.order_id,
@@ -101,6 +106,16 @@ export default async function MyTripsPage() {
       totalLabel: `${totalRon.toLocaleString('en-US')} RON`,
       approxLabel: formatApproxLabel(totalRon, b.display_currency, b.display_fx_rate),
       status: b.status,
+      cancellable,
+      cancelDeadlineLabel: cancellable
+        ? new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Europe/Bucharest',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+          }).format(new Date(freeCancelDeadlineMs(b.check_in)))
+        : null,
     };
   });
 
