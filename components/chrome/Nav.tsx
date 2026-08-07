@@ -35,7 +35,8 @@ export function Nav() {
   const router = useRouter();
   const isHome = pathname === '/';
   // On the homepage + locations page, the mobile MobileSearchHeader replaces
-  // this nav (≤sm). Desktop and all other pages keep the normal nav.
+  // this nav below md — the same breakpoint where this nav's search pills
+  // start existing, so no viewport width is ever left without a search UI.
   const isSearchPage = pathname === '/' || pathname === '/locations';
 
   const { scrollY, pinned } = useChromeScroll();
@@ -119,7 +120,7 @@ export function Nav() {
         className={cn(
           'fixed inset-x-0 top-0 z-50 transition-[background,border-color] duration-300 ease-[var(--ease-snap)]',
           transparent ? 'bg-transparent' : 'border-b border-gray-line bg-cream/95 backdrop-blur',
-          isSearchPage && 'max-sm:hidden',
+          isSearchPage && 'max-md:hidden',
         )}
       >
         <div className="mx-auto max-w-[1400px] px-6 md:px-7">

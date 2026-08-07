@@ -99,10 +99,12 @@ export function Editorial() {
 
   return (
     <section id="editorial" className="bg-gold text-ink">
-      {/* Desktop: pinned scroll-story (hidden on mobile). Skipped entirely under
-          reduced motion — the stacked variant below then covers all breakpoints. */}
+      {/* Desktop: pinned scroll-story (hidden on mobile). md boundary, matching
+          the side image cards below (md:block) — at sm the tunnel would run
+          text-only with no images. Skipped entirely under reduced motion —
+          the stacked variant below then covers all breakpoints. */}
       {!prefersReducedMotion && (
-      <div ref={tunnelRef} className="relative hidden sm:block" style={{ height: '400vh' }}>
+      <div ref={tunnelRef} className="relative hidden md:block" style={{ height: '400vh' }}>
         <div className="sticky top-0 flex h-screen items-center overflow-hidden">
           <div
             className="mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-10 px-6 md:grid-cols-[1fr_1.4fr_1fr] md:px-10"
@@ -199,7 +201,7 @@ export function Editorial() {
       <div
         className={cn(
           'px-6 pb-14 pt-12',
-          prefersReducedMotion ? 'block' : 'sm:hidden',
+          prefersReducedMotion ? 'block' : 'md:hidden',
         )}
       >
         <p className="font-mono-label mb-5 text-ink-60">— STAYS THAT FIT THE TRIP</p>

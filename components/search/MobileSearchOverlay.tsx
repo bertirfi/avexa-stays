@@ -238,7 +238,7 @@ export function MobileSearchOverlay({ open, onClose }: Props) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 24 }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed inset-0 z-[300] flex flex-col bg-gray-light text-ink sm:hidden"
+          className="fixed inset-0 z-[300] flex flex-col bg-gray-light text-ink md:hidden"
         >
           {/* Top bar */}
           <div className="flex flex-shrink-0 justify-end px-4 py-3.5">
