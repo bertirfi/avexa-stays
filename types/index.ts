@@ -18,6 +18,17 @@ export interface Neighborhood {
   propertyCount: number;
 }
 
+// ── Buildings ──────────────────────────────────────────────────
+// /locations groups suites by the physical building they sit in (street
+// address), the way guests actually think about an address.
+export type BuildingId = 'cv142' | 'cv2' | 'coltei25' | 'polona115';
+
+export interface Building {
+  id: BuildingId;
+  /** Street address — displayed as-is, no invented brand names. */
+  name: string;
+}
+
 // ── Properties ─────────────────────────────────────────────────
 export type StatIcon = 'users' | 'bed' | 'sofa' | 'bath';
 
@@ -91,6 +102,8 @@ export interface Property {
   neighborhood: NeighborhoodId;
   neighborhoodLabel: string;
   neighborhoodColor: string;
+  /** Physical building this suite belongs to — see BUILDINGS in lib/properties. */
+  building: BuildingId;
   address: string;
   coordinates?: { lat: number; lng: number };
   stats: PropertyStat[];

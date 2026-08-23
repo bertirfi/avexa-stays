@@ -57,12 +57,17 @@ function withCoordinates(property: Property): Property {
  * catalog always wins over the `content` JSON cached in Supabase, so rewrites
  * ship without re-seeding. The cached blob may also still hold the removed
  * `pitch` field — strip it so the stale key never leaks past this overlay.
+ *
+ * `building` rides along for the same reason: rows seeded before the field
+ * existed carry no building id, which would silently drop the suite out of the
+ * grouped /locations list. Forcing it from the catalog keeps grouping total.
  */
 function withEditorialContent(property: Property): Property {
   const source = staticProperties.find((p) => p.id === property.id);
   if (!source) return property;
   const merged: Property = {
     ...property,
+    building: source.building,
     description: source.description,
     goodToKnow: source.goodToKnow,
     metaDescription: source.metaDescription,

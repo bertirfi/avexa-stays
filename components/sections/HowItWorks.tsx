@@ -17,7 +17,7 @@ const panels = [
     eyebrow: '02',
     title: 'Digital Check-in',
     body: 'No lobby. No waiting. Verify your ID from your phone and receive your unique access code exactly 24 hours before you arrive in Bucharest city center.',
-    image: '/how-avexa-works/digital-check-in.jpg',
+    image: '/how-avexa-works/digital-check-in-door.jpg',
   },
   {
     eyebrow: '03',

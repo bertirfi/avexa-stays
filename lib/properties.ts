@@ -1,4 +1,4 @@
-import type { NeighborhoodId, Property, PropertyRate, PropertyUpgrade } from '@/types';
+import type { Building, NeighborhoodId, Property, PropertyRate, PropertyUpgrade } from '@/types';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 
 /**
@@ -47,6 +47,21 @@ const nbh: Record<
   'piata-romana':     { label: 'Piața Romană',     color: '#6A1B9A' },
 };
 
+/**
+ * The four AVEXA buildings, in /locations display order (client-confirmed).
+ * Named by street address — guests navigate by address, not by brand.
+ *   Calea Victoriei 142 → 102, 202, 301, 302, 303
+ *   Calea Victoriei 2   → 101, 201
+ *   Colței 25           → 203
+ *   Polona 115          → 304
+ */
+export const BUILDINGS: Building[] = [
+  { id: 'cv142', name: 'Calea Victoriei 142' },
+  { id: 'cv2', name: 'Calea Victoriei 2' },
+  { id: 'coltei25', name: 'Colței 25' },
+  { id: 'polona115', name: 'Polona 115' },
+];
+
 const sharedTagline = 'The city, effortlessly yours.';
 const sharedCheckin = '3:00 PM – 12:00 AM';
 const sharedCheckout = '11:00 AM';
@@ -62,6 +77,7 @@ export const properties: Property[] = [
     neighborhood: 'old-city-center',
     neighborhoodLabel: nbh['old-city-center'].label,
     neighborhoodColor: nbh['old-city-center'].color,
+    building: 'cv2',
     address: 'Calea Victoriei Nr. 2, Sector 3, Bucharest',
     stats: [
       { icon: 'users', label: '2 Guests' },
@@ -159,6 +175,7 @@ export const properties: Property[] = [
     neighborhood: 'calea-victoriei',
     neighborhoodLabel: nbh['calea-victoriei'].label,
     neighborhoodColor: nbh['calea-victoriei'].color,
+    building: 'cv142',
     address: 'Calea Victoriei 142-148, Sector 1, Bucharest',
     stats: [
       { icon: 'users', label: '2 Guests' },
@@ -251,6 +268,7 @@ export const properties: Property[] = [
     neighborhood: 'old-city-center',
     neighborhoodLabel: nbh['old-city-center'].label,
     neighborhoodColor: nbh['old-city-center'].color,
+    building: 'cv2',
     address: 'Calea Victoriei Nr. 2, Sector 3, Bucharest',
     stats: [
       { icon: 'users', label: '4 Guests' },
@@ -348,6 +366,7 @@ export const properties: Property[] = [
     neighborhood: 'calea-victoriei',
     neighborhoodLabel: nbh['calea-victoriei'].label,
     neighborhoodColor: nbh['calea-victoriei'].color,
+    building: 'cv142',
     address: 'Calea Victoriei 142-148, Sector 1, Bucharest',
     stats: [
       { icon: 'users', label: '4 Guests' },
@@ -442,6 +461,7 @@ export const properties: Property[] = [
     neighborhood: 'universitate',
     neighborhoodLabel: nbh['universitate'].label,
     neighborhoodColor: nbh['universitate'].color,
+    building: 'coltei25',
     address: 'Colței Street 25, Sector 3, Bucharest',
     stats: [
       { icon: 'users', label: '4 Guests' },
@@ -539,6 +559,7 @@ export const properties: Property[] = [
     neighborhood: 'calea-victoriei',
     neighborhoodLabel: nbh['calea-victoriei'].label,
     neighborhoodColor: nbh['calea-victoriei'].color,
+    building: 'cv142',
     address: 'Calea Victoriei, Sector 1, Bucharest',
     stats: [
       { icon: 'users', label: '6 Guests' },
@@ -636,6 +657,7 @@ export const properties: Property[] = [
     neighborhood: 'calea-victoriei',
     neighborhoodLabel: nbh['calea-victoriei'].label,
     neighborhoodColor: nbh['calea-victoriei'].color,
+    building: 'cv142',
     address: 'Calea Victoriei 142-148, Sector 1, Bucharest',
     stats: [
       { icon: 'users', label: '6 Guests' },
@@ -729,6 +751,7 @@ export const properties: Property[] = [
     neighborhood: 'calea-victoriei',
     neighborhoodLabel: nbh['calea-victoriei'].label,
     neighborhoodColor: nbh['calea-victoriei'].color,
+    building: 'cv142',
     address: 'Calea Victoriei 142-148, Sector 1, Bucharest',
     stats: [
       { icon: 'users', label: '6 Guests' },
@@ -823,6 +846,7 @@ export const properties: Property[] = [
     neighborhood: 'piata-romana',
     neighborhoodLabel: nbh['piata-romana'].label,
     neighborhoodColor: nbh['piata-romana'].color,
+    building: 'polona115',
     address: 'Polonă Street, Sector 1, Bucharest',
     stats: [
       { icon: 'users', label: '6 Guests' },

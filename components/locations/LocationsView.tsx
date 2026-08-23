@@ -19,6 +19,7 @@ import { QUICK_FILTERS, matchesFilters } from '@/components/locations/filters';
 import { useChromeScroll } from '@/components/chrome/ChromeScrollProvider';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { neighborhoods } from '@/lib/neighborhoods';
+import { BUILDINGS } from '@/lib/properties';
 import { cn } from '@/lib/cn';
 import type { Property } from '@/types';
 
@@ -227,12 +228,13 @@ export function LocationsView({ properties }: { properties: Property[] }) {
     ? (properties.find((p) => p.id === popupId) ?? null)
     : null;
 
-  const groups = neighborhoods
-    .map((n) => ({
-      neighborhood: n,
-      items: filtered.filter((p) => p.neighborhood === n.id),
-    }))
-    .filter((g) => g.items.length > 0);
+  // Grouped by building (BUILDINGS order is the client-confirmed display order).
+  // Built from `filtered`, so every search/zone/amenity filter applies first and
+  // a building with nothing left simply drops out — no empty headers.
+  const groups = BUILDINGS.map((building) => ({
+    building,
+    items: filtered.filter((p) => p.building === building.id),
+  })).filter((g) => g.items.length > 0);
 
   // Real Google map when a key is configured + coordinates exist; otherwise the
   // decorative map. Both share the same props, so it's a drop-in swap.
@@ -362,7 +364,7 @@ export function LocationsView({ properties }: { properties: Property[] }) {
             <div className="mb-6 text-[13px] text-ink-60">
               {activeCount > 0 || occupants > 1 || zoneFilter
                 ? `Showing ${filtered.length} of ${properties.length} suites`
-                : `Showing all ${properties.length} suites · grouped by neighborhood`}
+                : `Showing all ${properties.length} suites · grouped by building`}
             </div>
           )}
 
@@ -418,19 +420,24 @@ export function LocationsView({ properties }: { properties: Property[] }) {
             )}
           >
             {groups.map((g) => (
-              <section key={g.neighborhood.id} id={`zone-${g.neighborhood.id}`} className="scroll-mt-40">
+              <section key={g.building.id} id={`building-${g.building.id}`} className="scroll-mt-40">
                 <motion.div
                   initial={{ opacity: 0, y: 16 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.4 }}
                   transition={{ duration: 0.5 }}
-                  className="mb-5 flex items-center gap-3"
+                  className="mb-5"
                 >
-                  <h2 className="font-display text-xl tracking-[-0.01em]">{g.neighborhood.label}</h2>
-                  <span className="font-mono-label text-ink-60">
-                    {g.items.length} {g.items.length === 1 ? 'stay' : 'stays'}
+                  <span className="font-mono-label mb-1.5 block text-[11px] tracking-[0.16em] text-gold-dark">
+                    — BUILDING
                   </span>
-                  <span className="h-px flex-1 bg-gray-line" />
+                  <div className="flex items-center gap-3">
+                    <h2 className="font-display text-xl tracking-[-0.01em]">{g.building.name}</h2>
+                    <span className="font-mono-label whitespace-nowrap text-ink-60">
+                      {g.items.length} {g.items.length === 1 ? 'suite' : 'suites'}
+                    </span>
+                    <span className="h-px flex-1 bg-gray-line" />
+                  </div>
                 </motion.div>
 
                 <div className="flex flex-col gap-5">
