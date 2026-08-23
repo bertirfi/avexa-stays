@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import { LegalShell } from '@/components/legal/LegalShell';
+import { CANCELLATION_POLICY } from '@/lib/policies';
 
 export const metadata: Metadata = {
   title: 'Cancellation & Modification Policy',
   description:
-    'Flexible and Non-Refundable rate rules for Avexa Stays bookings — free cancellation windows, no-show charges, early departures, and refunds.',
+    'Cancellation rules for Avexa Stays bookings — the flexible member refund grid, non-member terms, city tax refunds, early departures, and refund processing.',
   alternates: { canonical: '/cancellation' },
 };
 
@@ -12,47 +13,43 @@ export default function CancellationPage() {
   return (
     <LegalShell
       title="Cancellation & Modification Policy"
-      updated="28 July 2026"
-      intro="We want to give you the flexibility you need while ensuring our properties are ready for your stay. When booking your Avexa apartment, you can choose between two rate plans."
+      updated="23 August 2026"
+      intro="AVEXIAN members get flexible cancellation by right. Here is exactly how it works."
     >
-      <h2>1. Flexible Rate (Standard)</h2>
-      <p>
-        <strong>Free Cancellation:</strong> Cancel or modify free of charge up
-        to 48 hours before your scheduled arrival date (by 3:00 PM, local time).
-      </p>
-      <p>
-        <strong>Late Cancellation:</strong> If you cancel within 48 hours of
-        arrival, or in case of a no-show, the total price of the reservation
-        will be charged.
-      </p>
+      <h2>1. Members — flexible by right</h2>
+      <p>Free AVEXA membership unlocks the following cancellation grid on every booking:</p>
+      <div className="my-6 grid gap-px overflow-hidden rounded-xl border border-gray-line bg-gray-line md:grid-cols-3">
+        {CANCELLATION_POLICY.memberTiers.map((line) => (
+          <div key={line} className="bg-cream px-5 py-4">
+            <p className="mb-0 text-[15px] leading-[1.5] text-ink-80">{line}</p>
+          </div>
+        ))}
+      </div>
       <p>
         <strong>Payment:</strong> We may pre-authorize your credit card before
         arrival to guarantee your booking.
       </p>
 
-      <h2>2. Non-Refundable Rate (Discounted)</h2>
+      <h2>2. Non-member bookings</h2>
+      <p>{CANCELLATION_POLICY.nonMember}</p>
       <p>
-        This rate locks in our best price but is strictly non-refundable.
-      </p>
-      <p>
-        In case of cancellation, date modification, or no-show, no refunds will
-        be issued.
-      </p>
-      <p>
-        <strong>Payment:</strong> The total amount is charged automatically at
-        the time of booking.
+        Online booking currently requires a free AVEXA membership account, so
+        this applies to bookings made without membership once guest checkout
+        opens.
       </p>
 
-      <h2>3. Early Departures</h2>
+      <h2>3. City tax</h2>
+      <p>{CANCELLATION_POLICY.cityTax}</p>
+
+      <h2>4. Early departures</h2>
       <p>
         If you leave before your scheduled check-out date, the remaining nights
         are not refunded.
       </p>
 
-      <h2>4. Refund Processing</h2>
+      <h2>5. Refund processing</h2>
       <p>
-        Eligible refunds under the Flexible Rate are returned to your original
-        payment method.
+        Eligible refunds are returned to your original payment method.
       </p>
       <p>
         Please allow 5–10 business days for the funds to appear, depending on

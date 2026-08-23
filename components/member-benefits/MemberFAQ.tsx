@@ -7,28 +7,28 @@ export interface QA {
 
 export const faqs: QA[] = [
   {
-    q: 'Is membership really free?',
-    a: 'Yes — completely free, with no hidden fees, no trials, and no expiry date. You sign up once and keep your benefits forever.',
+    q: 'What are AVEXA Coins (AVX)?',
+    a: 'Our loyalty currency: 1 AVX = 1 RON. You earn a percentage of the net accommodation value of every completed stay — from 5% as BRONZE up to 15% as DIAMOND HERO — and spend them on future bookings.',
   },
   {
-    q: 'How is the 15% discount applied?',
-    a: "The member rate appears automatically once you're signed in. No promo codes needed — every listing shows your discounted price by default.",
+    q: 'When can I use my coins?',
+    a: 'Coins become active 24 hours after check-out and stay valid for 12 months. Use them to pay for future stays; PLATINUM and DIAMOND members can spend them on anything, including upsells like late check-out or airport transfer.',
   },
   {
-    q: 'Can I cancel a booking for free?',
-    a: 'Members can cancel at no cost right up to the day of arrival. If you cancel on the arrival date itself, a one-night charge applies.',
+    q: 'How do I level up?',
+    a: 'Tiers look at your last 12 months and both conditions must be met: number of completed stays AND nights. Example: GOLD needs 3 stays and 10 nights.',
   },
   {
-    q: 'Does the 7+ night discount stack with the member rate?',
-    a: "It does. For stays of seven nights or more, the 25% long-stay discount is applied on top of your 15% member rate — so you're saving even more.",
+    q: 'Can I cancel my booking?',
+    a: 'Members enjoy flexible cancellation: 100% refund when cancelling at least 72 hours before check-in, 50% between 72 and 24 hours. Non-member bookings are non-refundable. City tax is always refunded in full.',
   },
   {
-    q: 'Is early check-in guaranteed?',
-    a: "Early check-in from 2 PM is available subject to same-day availability. In most cases it's confirmed — we'll let you know by noon on the day.",
+    q: 'Is early check-in or late check-out included?',
+    a: 'They are bookable upsells, subject to availability — pay with money or, at PLATINUM and DIAMOND, with your AVX Coins.',
   },
   {
-    q: "What's included in the welcome package?",
-    a: 'A selection of drinks and snacks sourced from local producers — waiting at the door when you arrive. The selection changes by season and location.',
+    q: 'How much does membership cost?',
+    a: 'Nothing. Free to join, free forever.',
   },
 ];
 

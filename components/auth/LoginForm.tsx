@@ -9,9 +9,9 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { safeNext } from '@/lib/safeNext';
 
 const perks = [
-  'Always the best price, 15% off',
-  'Free early check-in & late check-out',
-  'Extra perks on every stay',
+  'Earn AVEXA Coins on every stay',
+  'Flexible cancellation — members only',
+  'Spend coins on stays and experiences',
 ];
 
 const BG_1 =
@@ -197,7 +197,7 @@ export function LoginForm() {
         </div>
 
         <h1 className="font-display text-[26px] leading-[1.15] tracking-[-0.02em] text-ink">
-          {mode === 'choose' && 'Your best rate starts here'}
+          {mode === 'choose' && 'Your AVEXIAN journey starts here'}
           {mode === 'login' && 'Welcome back'}
           {mode === 'signup' && 'Join AVEXA'}
           {mode === 'forgot' && 'Reset your password'}

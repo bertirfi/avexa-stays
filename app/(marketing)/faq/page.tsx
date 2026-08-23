@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Reveal } from '@/components/Reveal';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { CONTACT_EMAIL, WHATSAPP_URL } from '@/lib/contact';
+import { CANCELLATION_POLICY } from '@/lib/policies';
 
 export const metadata: Metadata = {
   title: 'FAQ',
@@ -118,9 +119,9 @@ const categories: { title: string; items: FaqItem[] }[] = [
       {
         q: 'How can I cancel, edit, or extend my stay?',
         a: [
-          'It depends on the rate you booked.',
-          'With the Flexible Rate you can cancel or modify free of charge up to 48 hours before your arrival date (by 3:00 PM local time); within 48 hours or for no-shows the full reservation is charged.',
-          'The Non-Refundable Rate cannot be cancelled or refunded.',
+          `AVEXIAN members enjoy flexible cancellation: ${CANCELLATION_POLICY.memberTiers[0].toLowerCase()}, ${CANCELLATION_POLICY.memberTiers[1].toLowerCase()}.`,
+          CANCELLATION_POLICY.nonMember,
+          CANCELLATION_POLICY.cityTax,
           `To cancel, change dates, or extend your stay, contact us any time at [${CONTACT_EMAIL}](mail) or on [WhatsApp](wa) — our 24/7 reception handles every request.`,
           'Full details are in our [Cancellation Policy](cancellation).',
         ],
@@ -128,15 +129,15 @@ const categories: { title: string; items: FaqItem[] }[] = [
       {
         q: 'How can I request an early check-in or a late check-out?',
         a: [
-          'You can request an early check-in or late check-out through My Trips.',
-          'We always do our best to accommodate these requests, subject to availability on that specific day!',
+          'Early check-in and late check-out are paid upsells you can book through My Trips, subject to availability on that specific day.',
+          'PLATINUM and DIAMOND HERO members can pay for these upsells with their AVX Coins instead.',
         ],
       },
       {
         q: 'When will I know if my early check-in or late check-out request is approved?',
         a: [
           'You will receive a confirmation notification via WhatsApp or SMS within 48 hours of submitting your request.',
-          'Please note that we exclusively offer early check-in starting at 1:00 PM, and late check-out until 1:00 PM.',
+          'Early check-in is bookable starting at 1:00 PM, and late check-out until 1:00 PM — these are availability terms, not free benefits.',
         ],
       },
       {

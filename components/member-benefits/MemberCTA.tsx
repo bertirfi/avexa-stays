@@ -28,14 +28,14 @@ export function MemberCTA() {
           className="font-display text-white"
           style={{ fontSize: 'clamp(36px,5.5vw,64px)', lineHeight: 1 }}
         >
-          Start saving on every stay
+          Elevate your journey
           <span
             aria-hidden
             className="ml-[0.08em] inline-block size-[0.14em] translate-y-[0.04em] rounded-full bg-gold-dark align-baseline pulse-dot"
           />
         </h2>
         <p className="mt-[18px] text-[17px] leading-[1.65] text-white/[0.72]">
-          Join the AVEXA member club — free, in 30 seconds.
+          Join the AVEXIAN community today — free, in 30 seconds.
         </p>
         <div className="mt-10 flex flex-col flex-wrap items-center justify-center gap-2.5 sm:flex-row sm:gap-3.5">
           <Link

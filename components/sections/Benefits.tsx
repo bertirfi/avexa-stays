@@ -10,12 +10,12 @@ interface Benefit {
 }
 
 const benefits: Benefit[] = [
-  { index: '01', title: 'Enjoy 15% off every booking', glyph: '%', variant: 'large' },
-  { index: '02', title: 'Enjoy 25% off 7+ nights', glyph: '7+' },
-  { index: '03', title: 'Free cancellation', glyph: '✕' },
-  { index: '04', title: 'Early check-in from 2PM', glyph: '2PM' },
-  { index: '05', title: 'Late check-out until 1PM', glyph: '1PM' },
-  { index: '06', title: 'Welcome drinks & snacks', glyph: '♢', variant: 'large' },
+  { index: '01', title: 'Direct booking. Best price, guaranteed.', glyph: '✓', variant: 'large' },
+  { index: '02', title: 'Earn AVEXA Coins on every stay — 1 AVX = 1 RON', glyph: 'AVX' },
+  { index: '03', title: 'Flexible cancellation, exclusively for members', glyph: '✕' },
+  { index: '04', title: 'Digital check-in. No front desk, no waiting.', glyph: '◱' },
+  { index: '05', title: 'Spend your coins: late check-out, transfers & more', glyph: 'AVX' },
+  { index: '06', title: '24/7 human support on WhatsApp', glyph: '24/7', variant: 'large' },
 ];
 
 export function Benefits() {
@@ -33,22 +33,18 @@ export function Benefits() {
         <Reveal direction="up">
           <div className="grid items-end gap-10 md:grid-cols-[1.4fr_1fr]">
             <div>
-              <p className="font-mono-label mb-3 text-gold">— Member Club</p>
+              <p className="font-mono-label mb-3 text-gold">— The AVEXIAN Club</p>
               <h2 className="font-display text-4xl md:text-6xl">
-                Exclusive perks,
-                <br />
-                <em className="not-italic text-gold">
-                  for free
-                  <span
-                    aria-hidden
-                    className="ml-1 inline-block size-[0.14em] -translate-y-[0.04em] rounded-full bg-gold align-baseline pulse-dot"
-                  />
-                </em>
+                Your next premium hub is waiting
+                <span
+                  aria-hidden
+                  className="ml-1 inline-block size-[0.14em] -translate-y-[0.04em] rounded-full bg-gold align-baseline pulse-dot"
+                />
               </h2>
             </div>
             <div>
               <p className="max-w-md text-base text-ink-80">
-                Free to join, free forever. The lowest rate we offer is always reserved for members — plus a handful of extras that make every stay softer.
+                The smartest way to experience Bucharest is just a click away. Claim your first AVEXA Coins and instantly upgrade your next trip.
               </p>
               <Link
                 href="/login"

@@ -7,16 +7,18 @@ interface Row {
 }
 
 const rows: Row[] = [
-  { feature: 'Best available rate', guest: 'Standard price', member: '15% off' },
-  { feature: '7+ night discount', guest: '—', member: '25% off' },
-  { feature: 'Cancellation', guest: '48h notice', member: 'Free until arrival' },
-  { feature: 'Check-in', guest: '3:00 PM', member: '2:00 PM' },
-  { feature: 'Check-out', guest: '11:00 AM', member: '1:00 PM' },
-  { feature: 'Welcome package', guest: '—', member: 'Drinks & snacks' },
-  { feature: 'Cost', guest: '—', member: 'Free, forever' },
+  { feature: 'Price', guest: 'Standard price', member: 'Same price + AVX Coins back on every stay' },
+  {
+    feature: 'Cancellation',
+    guest: 'Non-refundable',
+    member: 'Flexible: 100% refund ≥72h before check-in · 50% between 72h and 24h',
+  },
+  { feature: 'AVX Coins', guest: '—', member: '5%–15% of every stay, 1 AVX = 1 RON' },
+  { feature: 'Upsells', guest: 'Pay full price', member: 'PLATINUM & DIAMOND pay with coins' },
+  { feature: 'Cost to join', guest: '—', member: 'Free, forever' },
 ];
 
-const cols = 'grid grid-cols-[1.2fr_0.8fr_1fr] md:grid-cols-3';
+const cols = 'grid grid-cols-[1fr_0.8fr_1.6fr] md:grid-cols-[1fr_0.8fr_1.6fr]';
 
 export function MemberCompare() {
   return (
@@ -49,7 +51,7 @@ export function MemberCompare() {
                 Guest
               </div>
               <div className="font-display px-3 py-5 text-center text-base text-gold md:px-7">
-                Member
+                AVEXIAN Member
               </div>
             </div>
 
@@ -65,7 +67,7 @@ export function MemberCompare() {
                 <div className="px-3 py-3.5 text-center text-xs text-white/45 md:px-7 md:py-[18px] md:text-sm">
                   {row.guest}
                 </div>
-                <div className="px-3 py-3.5 text-center text-xs text-white md:px-7 md:py-[18px] md:text-sm">
+                <div className="px-3 py-3.5 text-left text-xs leading-[1.5] text-white md:px-7 md:py-[18px] md:text-sm">
                   <strong className="font-bold text-gold">{row.member}</strong>
                 </div>
               </div>
