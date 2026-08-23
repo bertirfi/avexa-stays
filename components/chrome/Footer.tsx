@@ -106,16 +106,20 @@ export function Footer() {
               <NewsletterForm />
             </div>
             <p className="mt-4 text-xs text-cream/60">
-              By subscribing, you agree to receive promotional emails from AVEXA. We&apos;ll use your data in
-              accordance with our{' '}
-              <Link href="/privacy" className="underline hover:text-gold">
-                Privacy Policy
-              </Link>{' '}
-              and{' '}
-              <Link href="/terms" className="underline hover:text-gold">
-                Terms &amp; Conditions
-              </Link>
-              .
+              <span className="block">
+                By subscribing, you agree to receive promotional emails from AVEXA.
+              </span>
+              <span className="block">
+                We&apos;ll use your data in accordance with our{' '}
+                <Link href="/privacy" className="underline hover:text-gold">
+                  Privacy Policy
+                </Link>{' '}
+                and{' '}
+                <Link href="/terms" className="underline hover:text-gold">
+                  Terms &amp; Conditions
+                </Link>
+                .
+              </span>
             </p>
           </div>
         </div>

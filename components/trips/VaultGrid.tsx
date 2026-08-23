@@ -1,4 +1,5 @@
 import { TIERS, tierRank, type TierId } from '@/lib/avx/tiers';
+import { Sentences } from '@/components/shared/Sentences';
 
 /**
  * The Vault (M2.5.3) — every AVEXIAN experience, grouped by the tier that
@@ -43,10 +44,7 @@ export function VaultGrid({ userTier }: { userTier: TierId }) {
       </div>
 
       <p className="mt-8 max-w-[640px] text-xs leading-relaxed text-white/35">
-        AVX Coins pay for future stays at every tier — 1 AVX = 1 RON. From
-        Platinum, coins pay for anything, every upsell included.
-        Diamond Heroes enjoy every upsell free, subject to availability. AVX
-        Coins are non-transferable and hold no cash value.
+        <Sentences text="AVX Coins pay for future stays at every tier — 1 AVX = 1 RON. From Platinum, coins pay for anything, every upsell included. Diamond Heroes enjoy every upsell free, subject to availability. AVX Coins are non-transferable and hold no cash value." />
       </p>
     </div>
   );

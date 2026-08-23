@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useState } from 'react';
 import { Reveal } from '@/components/Reveal';
+import { Sentences } from '@/components/shared/Sentences';
 import { cn } from '@/lib/cn';
 
 const panels = [
@@ -81,7 +82,9 @@ export function HowItWorks() {
                     )}
                   >
                     <h3 className="font-display text-5xl md:text-7xl">{p.title}</h3>
-                    <p className="mt-4 max-w-md text-cream/80">{p.body}</p>
+                    <p className="mt-4 max-w-md text-cream/80">
+                      <Sentences text={p.body} />
+                    </p>
                   </div>
 
                   {/* Collapsed panel: title rotated vertical (reads bottom-to-top) */}
@@ -102,7 +105,7 @@ export function HowItWorks() {
 
         <Reveal direction="up">
           <p className="mt-12 max-w-[520px] font-semibold text-cream/80">
-            Everything from booking to departure happens on your phone. No queue, no paperwork, no handover calls.
+            <Sentences text="Everything from booking to departure happens on your phone. No queue, no paperwork, no handover calls." />
           </p>
         </Reveal>
       </div>

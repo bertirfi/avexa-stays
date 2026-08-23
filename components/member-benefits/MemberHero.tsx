@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'motion/react';
+import { Sentences } from '@/components/shared/Sentences';
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -77,7 +78,7 @@ export function MemberHero() {
           transition={{ duration: 0.9, delay: 0.85, ease }}
           className="mx-auto mt-10 max-w-[520px] text-[17px] font-light leading-[1.65] text-white/65"
         >
-          Unlock Exclusivity &amp; Elevate Every Stay. Free to join, free forever.
+          <Sentences text="Unlock Exclusivity & Elevate Every Stay. Free to join, free forever." />
         </motion.p>
 
         <motion.div

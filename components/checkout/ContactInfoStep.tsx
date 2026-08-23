@@ -237,9 +237,14 @@ export function ContactInfoStep({ form, setForm, onNext }: Props) {
       </div>
 
       <p className="text-xs text-ink-60">
-        Expect emails and mobile updates from AVEXA to keep you informed about your bookings and our services. By clicking &quot;Next&quot;, you agree that your information will be handled per our{' '}
-        <Link className="underline hover:text-gold-dark" href="/terms">terms and conditions</Link> and{' '}
-        <Link className="underline hover:text-gold-dark" href="/privacy">Privacy Policy</Link>.
+        <span className="block">
+          Expect emails and mobile updates from AVEXA to keep you informed about your bookings and our services.
+        </span>
+        <span className="block">
+          By clicking &quot;Next&quot;, you agree that your information will be handled per our{' '}
+          <Link className="underline hover:text-gold-dark" href="/terms">terms and conditions</Link> and{' '}
+          <Link className="underline hover:text-gold-dark" href="/privacy">Privacy Policy</Link>.
+        </span>
       </p>
 
       <button

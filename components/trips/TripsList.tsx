@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { CancelTripButton } from '@/components/trips/CancelTripButton';
+import { Sentences } from '@/components/shared/Sentences';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 
 /**
@@ -145,14 +146,20 @@ function TripCard({ trip }: { trip: Trip }) {
           ) : trip.nonRefundableNow ? (
             <p className="text-sm text-ink-60">Non-refundable now — contact us.</p>
           ) : (
-            <p className="text-sm text-ink-60">Need changes? Contact us below.</p>
+            <p className="text-sm text-ink-60">
+              <Sentences text="Need changes? Contact us below." />
+            </p>
           )}
         </div>
         {trip.cancellable && trip.halfDeadlineLabel && (
           <p className="mt-3 text-xs text-ink-60">
-            {trip.refundPercent === 100 && trip.fullDeadlineLabel
-              ? `100% refund until ${trip.fullDeadlineLabel}, then 50% until ${trip.halfDeadlineLabel}, Bucharest time. ${CANCELLATION_POLICY.cityTax}`
-              : `50% refund until ${trip.halfDeadlineLabel}, Bucharest time. ${CANCELLATION_POLICY.cityTax}`}
+            <Sentences
+              text={
+                trip.refundPercent === 100 && trip.fullDeadlineLabel
+                  ? `100% refund until ${trip.fullDeadlineLabel}, then 50% until ${trip.halfDeadlineLabel}, Bucharest time. ${CANCELLATION_POLICY.cityTax}`
+                  : `50% refund until ${trip.halfDeadlineLabel}, Bucharest time. ${CANCELLATION_POLICY.cityTax}`
+              }
+            />
           </p>
         )}
       </div>

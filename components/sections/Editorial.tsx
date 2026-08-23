@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { motion, useReducedMotion } from 'motion/react';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { Sentences } from '@/components/shared/Sentences';
 import { cn } from '@/lib/cn';
 
 /**
@@ -182,10 +183,12 @@ export function Editorial() {
                       className="font-display"
                       style={{ fontSize: 'clamp(42px, 5.5vw, 72px)', lineHeight: 1.05, letterSpacing: '-0.02em' }}
                     >
-                      {s.title}
+                      <Sentences text={s.title} />
                       {s.titleVisual}
                     </h2>
-                    <p className="mt-[18px] max-w-[400px] text-[17px] leading-[1.65] text-ink-80">{s.sub}</p>
+                    <p className="mt-[18px] max-w-[400px] text-[17px] leading-[1.65] text-ink-80">
+                      <Sentences text={s.sub} />
+                    </p>
                   </div>
                 ))}
               </div>
@@ -265,7 +268,7 @@ export function Editorial() {
                   alt ? 'ml-7' : 'mr-7',
                 )}
               >
-                {s.title}
+                <Sentences text={s.title} />
                 {s.titleVisual}
               </h3>
               <p
@@ -274,7 +277,7 @@ export function Editorial() {
                   alt ? 'ml-7' : 'mr-7',
                 )}
               >
-                {s.sub}
+                <Sentences text={s.sub} />
               </p>
             </motion.article>
           );

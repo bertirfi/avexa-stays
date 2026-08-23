@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { StaySection } from '@/components/stay/StaySection';
+import { Sentences } from '@/components/shared/Sentences';
 import type { Property } from '@/types';
 
 function Paragraphs({ text }: { text: string }) {
@@ -8,7 +9,7 @@ function Paragraphs({ text }: { text: string }) {
     <>
       {text.split('\n\n').map((p, i) => (
         <p key={i} className="text-ink-80 leading-relaxed">
-          {p}
+          <Sentences text={p} />
         </p>
       ))}
     </>
@@ -35,7 +36,9 @@ export function StayGoodToKnow({ property }: { property: Property }) {
         <Card icon="shield" title="House rules" body={`Up to ${property.maxGuests} guests. No pets. No parties.`} />
       </div>
       {property.goodToKnow && (
-        <p className="mt-6 rounded-card bg-cream p-5 text-sm text-ink-80">{property.goodToKnow}</p>
+        <p className="mt-6 rounded-card bg-cream p-5 text-sm text-ink-80">
+          <Sentences text={property.goodToKnow} />
+        </p>
       )}
     </StaySection>
   );
@@ -46,7 +49,9 @@ function Card({ icon, title, body }: { icon: 'key' | 'clock' | 'shield'; title: 
     <div className="rounded-card border border-gray-line p-5">
       <Icon name={icon} size={22} className="text-gold-dark" />
       <h3 className="mt-3 font-display text-lg">{title}</h3>
-      <p className="mt-1 text-sm text-ink-60">{body}</p>
+      <p className="mt-1 text-sm text-ink-60">
+        <Sentences text={body} />
+      </p>
     </div>
   );
 }
@@ -62,7 +67,9 @@ export function StayFAQ({ property }: { property: Property }) {
               {faq.q}
               <Icon name="chevDown" size={16} className="transition group-open/faq:rotate-180" />
             </summary>
-            <p className="mt-3 text-sm text-ink-80">{faq.a}</p>
+            <p className="mt-3 text-sm text-ink-80">
+              <Sentences text={faq.a} />
+            </p>
           </details>
         ))}
       </div>
@@ -164,7 +171,9 @@ export function StayTestimonials({ property }: { property: Property }) {
               {r.location && <span className="text-ink-60">· {r.location}</span>}
               <span className="ml-auto text-ink-60">{r.date}</span>
             </div>
-            <p className="text-sm text-ink-80">{r.body}</p>
+            <p className="text-sm text-ink-80">
+              <Sentences text={r.body} />
+            </p>
           </article>
         ))}
       </div>
@@ -181,7 +190,9 @@ export function StayTestimonials({ property }: { property: Property }) {
                   {r.location && <span className="text-ink-60">· {r.location}</span>}
                   <span className="ml-auto text-ink-60">{r.date}</span>
                 </div>
-                <p className="text-sm text-ink-80">{r.body}</p>
+                <p className="text-sm text-ink-80">
+                  <Sentences text={r.body} />
+                </p>
               </article>
             ))}
           </div>

@@ -1,4 +1,5 @@
 import type { AvxWalletData } from '@/lib/avx/ledger';
+import { Sentences } from '@/components/shared/Sentences';
 
 const DATE_FORMAT = new Intl.DateTimeFormat('en-US', {
   timeZone: 'Europe/Bucharest',
@@ -67,7 +68,7 @@ export function AvxWallet({ wallet }: { wallet: AvxWalletData | null }) {
       </div>
 
       <p className="mt-auto pt-6 text-xs text-white/35">
-        1 AVX = 1 RON. Non-transferable, no cash value.
+        <Sentences text="1 AVX = 1 RON. Non-transferable, no cash value." />
       </p>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/cn';
+import { Sentences } from '@/components/shared/Sentences';
 
 interface Props {
   firstName: string;
@@ -120,7 +121,7 @@ export function PersonalDetailsCard({ firstName, lastName, email, phone, onSave 
           </div>
           {error && (
             <p className="mt-4 rounded-lg bg-[#FF4136]/10 px-3.5 py-2.5 text-[13px] font-medium text-[#c0281f]">
-              {error}
+              <Sentences text={error} />
             </p>
           )}
           <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:justify-end">

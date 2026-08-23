@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { Reveal } from '@/components/Reveal';
+import { Sentences } from '@/components/shared/Sentences';
 import { cn } from '@/lib/cn';
 
 interface Perk {
@@ -152,7 +153,7 @@ function PerkText({ perk, featured }: { perk: Perk; featured?: boolean }) {
           featured ? 'text-white/60' : 'text-ink-80',
         )}
       >
-        {perk.desc}
+        <Sentences text={perk.desc} />
       </p>
       <span
         className={cn(

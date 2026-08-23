@@ -1,4 +1,5 @@
 import { Reveal } from '@/components/Reveal';
+import { Sentences } from '@/components/shared/Sentences';
 
 export function MemberStatement() {
   return (
@@ -25,10 +26,7 @@ export function MemberStatement() {
           />
         </div>
         <p className="mx-auto mt-8 max-w-[620px] text-[16px] leading-[1.75] text-ink-80 md:text-[17px]">
-          Earn AVEXA Coins (AVX) with every stay and craft your perfect experience. From
-          late check-outs to private airport transfers, your loyalty unlocks the
-          exclusive AVEXIAN Vault. Use your coins to buy back your time and absolute
-          comfort. 1 AVX = 1 RON — what you see is what you get.
+          <Sentences text="Earn AVEXA Coins (AVX) with every stay and craft your perfect experience. From late check-outs to private airport transfers, your loyalty unlocks the exclusive AVEXIAN Vault. Use your coins to buy back your time and absolute comfort. 1 AVX = 1 RON — what you see is what you get." />
         </p>
       </Reveal>
     </section>

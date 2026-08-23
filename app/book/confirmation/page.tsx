@@ -115,11 +115,17 @@ export default async function BookingConfirmationPage({
               Payment received — but the dates were just taken
             </h1>
             <p className="mt-3 leading-relaxed text-ink/70">
-              Another guest booked these dates moments before your payment
-              completed. <strong className="text-ink">You have been refunded in full</strong>{' '}
-              ({formatRon(Number(booking.total_ron))}) — depending on your bank,
-              it appears within 5–10 business days. We&apos;re sorry; the city is
-              still yours on other dates.
+              <span className="block">
+                Another guest booked these dates moments before your payment completed.
+              </span>
+              <span className="block">
+                <strong className="text-ink">You have been refunded in full</strong>{' '}
+                ({formatRon(Number(booking.total_ron))}) — depending on your bank,
+                it appears within 5–10 business days.
+              </span>
+              <span className="block">
+                We&apos;re sorry; the city is still yours on other dates.
+              </span>
             </p>
             <Link
               href={property ? `/locations/${property.slug}` : '/locations'}

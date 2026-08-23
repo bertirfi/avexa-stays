@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { LegalShell } from '@/components/legal/LegalShell';
+import { Sentences } from '@/components/shared/Sentences';
 import { CONTACT_EMAIL } from '@/lib/contact';
 
 export const metadata: Metadata = {
@@ -65,9 +66,8 @@ export default function PrivacyPage() {
           WhatsApp/SMS notifications and PIN delivery), and billing address.
         </li>
         <li>
-          <strong>Transaction Data:</strong> Payment details processed securely
-          by our third-party payment provider Stripe. We do not store your full
-          credit card details on our servers.
+          <strong>Transaction Data:</strong>{' '}
+          <Sentences text="Payment details processed securely by our third-party payment provider Stripe. We do not store your full credit card details on our servers." />
         </li>
         <li>
           <strong>Booking Data:</strong> Arrival and departure dates,
