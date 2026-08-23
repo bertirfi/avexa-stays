@@ -8,10 +8,15 @@ import {
   refundPercentFor,
 } from '@/lib/booking/cancellation';
 import { properties } from '@/lib/properties';
+import { computeProgress, tierMeta } from '@/lib/avx/tiers';
+import { getWallet } from '@/lib/avx/ledger';
 import { EmptyTripsState } from '@/components/trips/EmptyTripsState';
 import { TripsList, type Trip } from '@/components/trips/TripsList';
 import { MosaicSection } from '@/components/trips/MosaicSection';
 import { ContactSection } from '@/components/trips/ContactSection';
+import { AvxWallet } from '@/components/trips/AvxWallet';
+import { AvexianMeter } from '@/components/trips/AvexianMeter';
+import { VaultGrid } from '@/components/trips/VaultGrid';
 
 export const metadata: Metadata = {
   title: 'My Trips',
@@ -158,8 +163,52 @@ export default async function MyTripsPage() {
     user.email?.split('@')[0] ||
     'there';
 
+  // AVEXIAN loyalty: tier progress from the raw booking rows (cancelled/
+  // pending filtered inside), wallet via the service-role ledger — null until
+  // the 004_avx migration runs, which renders the "being prepared" card.
+  const progress = computeProgress(rows);
+  const wallet = await getWallet(user.id);
+  const nextMeta = progress.next ? tierMeta(progress.next.tier) : null;
+
   return (
     <>
+      <section className="bg-ink pt-28 pb-[clamp(70px,8vw,110px)] text-white md:pt-36">
+        <div className="mx-auto max-w-5xl px-6 md:px-10">
+          <p className="font-mono-label text-gold-dark">— Membership</p>
+          <h2 className="font-display mt-3.5 text-[clamp(36px,5vw,60px)] leading-none">
+            Your AVEXIAN Journey
+            <span
+              aria-hidden
+              className="ml-[0.08em] inline-block size-[0.14em] translate-y-[0.04em] rounded-full bg-gold-dark align-baseline pulse-dot"
+            />
+          </h2>
+
+          <div className="mt-9 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <AvxWallet wallet={wallet} />
+            <AvexianMeter
+              tierName={tierMeta(progress.tier).name}
+              stays={progress.stays}
+              nights={progress.nights}
+              next={
+                progress.next && nextMeta
+                  ? {
+                      tierName: nextMeta.name,
+                      staysNeeded: progress.next.staysNeeded,
+                      nightsNeeded: progress.next.nightsNeeded,
+                      staysTarget: progress.next.staysTarget,
+                      nightsTarget: progress.next.nightsTarget,
+                    }
+                  : null
+              }
+            />
+          </div>
+
+          <div className="mt-14">
+            <VaultGrid userTier={progress.tier} />
+          </div>
+        </div>
+      </section>
+
       {trips.length === 0 ? (
         <EmptyTripsState name={firstName} />
       ) : (

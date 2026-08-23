@@ -73,7 +73,7 @@ export function TripsList({
         {/* Past — rendered only when there are past stays */}
         {past.length > 0 && (
           <div className="mt-16">
-            <h2 className="font-mono-label mb-4 text-ink-60">— Past stays</h2>
+            <h2 className="font-mono-label mb-4 text-ink-60">— Past &amp; cancelled stays</h2>
             <div className="grid gap-4">
               {past.map((t) => (
                 <TripCard key={t.id} trip={t} />
