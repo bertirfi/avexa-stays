@@ -106,8 +106,8 @@ export function ResetPasswordForm() {
               Link expired or invalid
             </h1>
             <p className="mt-4 text-[14px] leading-[1.6] text-ink-80">
-              Password reset links are single-use and expire quickly. Request a new one from the
-              sign-in page.
+              <span className="block">Password reset links are single-use and expire quickly.</span>
+              <span className="block">Request a new one from the sign-in page.</span>
             </p>
             <Link
               href="/login"

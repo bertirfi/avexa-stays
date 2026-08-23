@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'motion/react';
+import { Sentences } from '@/components/shared/Sentences';
 
 export function Hero() {
   return (
@@ -93,8 +94,7 @@ export function Hero() {
           transition={{ duration: 0.9, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
           className="mx-auto mt-5 max-w-[520px] text-[15px] leading-relaxed text-cream/60 md:text-base"
         >
-          Best rates are just the beginning. Become an AVEXIAN Traveller.
-          Experience MORE. Unwind completely.
+          <Sentences text="Best rates are just the beginning. Become an AVEXIAN Traveller. Experience MORE. Unwind completely." />
         </motion.p>
       </div>
 

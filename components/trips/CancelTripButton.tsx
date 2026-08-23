@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { cancelBooking } from '@/app/(member)/my-trips/actions';
+import { Sentences } from '@/components/shared/Sentences';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 
 const ERROR_COPY: Record<string, string> = {
@@ -58,10 +59,12 @@ export function CancelTripButton({
   return (
     <div className="flex flex-wrap items-center gap-3">
       <p className="w-full text-xs text-ink-60">
-        {refundPercent === 100
-          ? CANCELLATION_POLICY.memberTiers[0]
-          : CANCELLATION_POLICY.memberTiers[1]}{' '}
-        {CANCELLATION_POLICY.cityTax}
+        <span className="block">
+          {refundPercent === 100
+            ? CANCELLATION_POLICY.memberTiers[0]
+            : CANCELLATION_POLICY.memberTiers[1]}
+        </span>
+        <span className="block">{CANCELLATION_POLICY.cityTax}</span>
       </p>
       <button
         type="button"
@@ -93,7 +96,11 @@ export function CancelTripButton({
           Keep booking
         </button>
       )}
-      {error && <p className="w-full text-sm text-[#B23A3A]">{error}</p>}
+      {error && (
+        <p className="w-full text-sm text-[#B23A3A]">
+          <Sentences text={error} />
+        </p>
+      )}
     </div>
   );
 }

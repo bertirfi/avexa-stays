@@ -1,4 +1,5 @@
 import { Reveal } from '@/components/Reveal';
+import { Sentences } from '@/components/shared/Sentences';
 
 interface Step {
   num: string;
@@ -65,7 +66,7 @@ export function MemberJoin() {
                   {step.title}
                 </h3>
                 <p className="mx-auto mt-2.5 max-w-[260px] text-[15px] leading-[1.65] text-ink-80">
-                  {step.desc}
+                  <Sentences text={step.desc} />
                 </p>
               </div>
             </Reveal>,

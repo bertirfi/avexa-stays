@@ -1,4 +1,5 @@
 import { Reveal } from '@/components/Reveal';
+import { Sentences } from '@/components/shared/Sentences';
 
 export interface QA {
   q: string;
@@ -66,7 +67,7 @@ export function MemberFAQ() {
                 </summary>
                 <div className="pb-7">
                   <p className="max-w-[640px] text-[15px] leading-[1.7] text-ink-80">
-                    {item.a}
+                    <Sentences text={item.a} />
                   </p>
                 </div>
               </details>

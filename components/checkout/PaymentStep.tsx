@@ -7,6 +7,7 @@ import type { HydratedBooking } from '@/lib/booking';
 import type { ContactForm } from '@/components/checkout/ContactInfoStep';
 import type { QuoteState } from '@/components/checkout/CheckoutApp';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
+import { Sentences } from '@/components/shared/Sentences';
 
 interface Props {
   hydrated: HydratedBooking;
@@ -160,10 +161,10 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
           <Icon name="info" size={18} className="mt-0.5 shrink-0 text-gold-dark" />
           <div>
             <strong className="block text-ink">Remember to use your Business card</strong>
-            <span className="text-ink-80">
-              This stay will be invoiced to {form.companyName || 'your company'}. Pay with the
-              company card so your records stay aligned.
+            <span className="block text-ink-80">
+              This stay will be invoiced to {form.companyName || 'your company'}.
             </span>
+            <span className="block text-ink-80">Pay with the company card so your records stay aligned.</span>
           </div>
         </div>
       )}
@@ -173,8 +174,8 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
           <Icon name="sparkles" size={18} className="mt-0.5 shrink-0 text-gold-dark" />
           <div className="text-sm text-ink-80">
             <strong className="block text-ink">You&apos;ll finish on Stripe&apos;s secure page</strong>
-            Cards, Apple Pay and Google Pay are all supported there. We never see or store your
-            card details — payment is handled entirely by Stripe.
+            <span className="block">Cards, Apple Pay and Google Pay are all supported there.</span>
+            <span className="block">We never see or store your card details — payment is handled entirely by Stripe.</span>
           </div>
         </div>
         <div className="mt-4 flex items-center gap-2 border-t border-gray-line pt-4">
@@ -193,7 +194,9 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
         <div className="flex items-start gap-3 rounded-card border border-red-300 bg-red-50 p-4 text-sm" role="alert">
           <Icon name="info" size={18} className="mt-0.5 shrink-0 text-red-600" />
           <div>
-            <span className="block text-ink">{state.message}</span>
+            <span className="block text-ink">
+              <Sentences text={state.message} />
+            </span>
             {state.unavailable && (
               <Link href="/locations" className="mt-1 inline-block font-semibold text-gold-dark underline">
                 Pick new dates →

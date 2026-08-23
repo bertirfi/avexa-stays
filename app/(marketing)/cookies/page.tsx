@@ -96,8 +96,10 @@ export default function CookiesPage() {
 
       <h2>Contact</h2>
       <p>
-        Questions about cookies or your data? Email{' '}
-        <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+        <span className="block">Questions about cookies or your data?</span>
+        <span className="block">
+          Email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+        </span>
       </p>
       <p>
         For the full picture of how we handle personal data, see our{' '}

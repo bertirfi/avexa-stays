@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Sentences } from '@/components/shared/Sentences';
 
 export function EmptyTripsState({ name }: { name: string }) {
   return (
@@ -32,7 +33,7 @@ export function EmptyTripsState({ name }: { name: string }) {
             Hi {name}, no trips yet — let&apos;s fix that.
           </h1>
           <p className="mx-auto mt-5 max-w-lg text-ink-80">
-            Browse our Bucharest apartments and book your first stay. Your booking details, check-in codes, and trip history will all appear here.
+            <Sentences text="Browse our Bucharest apartments and book your first stay. Your booking details, check-in codes, and trip history will all appear here." />
           </p>
           <Link
             href="/locations"

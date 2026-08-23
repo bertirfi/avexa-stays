@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { Sentences } from '@/components/shared/Sentences';
 
 interface LegalShellProps {
   title: string;
@@ -27,7 +28,11 @@ export function LegalShell({ title, updated, intro, children }: LegalShellProps)
           {title}
         </h1>
         <p className="font-mono-label mt-4 text-ink-60">Last updated · {updated}</p>
-        {intro && <p className="mt-5 text-[17px] leading-relaxed text-ink-80">{intro}</p>}
+        {intro && (
+          <p className="mt-5 text-[17px] leading-relaxed text-ink-80">
+            <Sentences text={intro} />
+          </p>
+        )}
 
         <div
           className="mt-10 text-[15.5px] text-ink-80 [&_a]:text-gold-dark [&_a]:underline [&_a]:underline-offset-2 [&_h2]:font-display [&_h2]:mb-3 [&_h2]:mt-12 [&_h2]:text-2xl [&_h2]:text-ink [&_h2]:tracking-[-0.01em] [&_h3]:mb-2 [&_h3]:mt-6 [&_h3]:font-semibold [&_h3]:text-ink [&_li]:mb-1.5 [&_p]:mb-4 [&_p]:leading-[1.7] [&_strong]:text-ink [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-5"

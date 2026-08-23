@@ -44,7 +44,8 @@ export function ConfirmationPoller() {
           Payment received — confirming your suite…
         </h1>
         <p className="mt-3 text-ink/70">
-          This takes a few seconds. The page updates automatically.
+          <span className="block">This takes a few seconds.</span>
+          <span className="block">The page updates automatically.</span>
         </p>
         <div className="mt-8 h-1 w-full overflow-hidden rounded-full bg-ink/10">
           <div className="h-full w-1/3 animate-pulse rounded-full bg-gold" />
@@ -62,8 +63,8 @@ export function ConfirmationPoller() {
         Still finalizing your booking
       </h1>
       <p className="mt-3 leading-relaxed text-ink/70">
-        Your payment went through — the confirmation is taking longer than usual.
-        It will appear in My Trips shortly.
+        <span className="block">Your payment went through — the confirmation is taking longer than usual.</span>
+        <span className="block">It will appear in My Trips shortly.</span>
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         <Link

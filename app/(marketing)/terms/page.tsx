@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LegalShell } from '@/components/legal/LegalShell';
+import { Sentences } from '@/components/shared/Sentences';
 
 export const metadata: Metadata = {
   title: 'Terms & Conditions',
@@ -38,8 +39,7 @@ export default function TermsPage() {
       <p>To make a booking, you must be at least 18 years old.</p>
       <p>A booking is a request to stay for the dates and apartment you select.</p>
       <p>
-        The contract is formed once we confirm your booking and payment is
-        successfully processed. We confirm by email.
+        <Sentences text="The contract is formed once we confirm your booking and payment is successfully processed. We confirm by email." />
       </p>
       <p>
         As required by Romanian law, a valid government-issued ID/Passport must be
@@ -81,13 +81,12 @@ export default function TermsPage() {
       <p>By staying with us, you agree to the following:</p>
       <ul>
         <li>
-          <strong>Information:</strong> Provide accurate booking and guest
-          information. Unregistered guests are not permitted.
+          <strong>Information:</strong>{' '}
+          <Sentences text="Provide accurate booking and guest information. Unregistered guests are not permitted." />
         </li>
         <li>
-          <strong>Respect the property:</strong> Respect the apartment,
-          neighbors, and house rules. Parties, events, and loud noises are
-          strictly prohibited.
+          <strong>Respect the property:</strong>{' '}
+          <Sentences text="Respect the apartment, neighbors, and house rules. Parties, events, and loud noises are strictly prohibited." />
         </li>
         <li>
           <strong>No Smoking:</strong> All Avexa properties are strictly
@@ -98,11 +97,8 @@ export default function TermsPage() {
           otherwise in the specific apartment&apos;s listing.
         </li>
         <li>
-          <strong>Damages &amp; Penalties:</strong> You are entirely responsible
-          for any damage, missing items, or deep cleaning required during or
-          after your stay. AVEXA Stays reserves the right to charge your payment
-          method on file for any damages, smoking fines, or violations of the
-          house rules.
+          <strong>Damages &amp; Penalties:</strong>{' '}
+          <Sentences text="You are entirely responsible for any damage, missing items, or deep cleaning required during or after your stay. AVEXA Stays reserves the right to charge your payment method on file for any damages, smoking fines, or violations of the house rules." />
         </li>
       </ul>
 

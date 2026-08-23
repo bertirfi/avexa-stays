@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Reveal } from '@/components/Reveal';
+import { Sentences } from '@/components/shared/Sentences';
 import { cn } from '@/lib/cn';
 
 interface Benefit {
@@ -44,7 +45,7 @@ export function Benefits() {
             </div>
             <div>
               <p className="max-w-md text-base text-ink-80">
-                The smartest way to experience Bucharest is just a click away. Claim your first AVEXA Coins and instantly upgrade your next trip.
+                <Sentences text="The smartest way to experience Bucharest is just a click away. Claim your first AVEXA Coins and instantly upgrade your next trip." />
               </p>
               <Link
                 href="/login"
@@ -78,7 +79,9 @@ export function Benefits() {
                   </span>
                   <span className="font-mono-label">{b.index}</span>
                 </div>
-                <h3 className="mt-12 font-display text-3xl">{b.title}</h3>
+                <h3 className="mt-12 font-display text-3xl">
+                  <Sentences text={b.title} />
+                </h3>
               </article>
             </Reveal>
           ))}

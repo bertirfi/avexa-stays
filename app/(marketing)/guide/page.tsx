@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Reveal } from '@/components/Reveal';
+import { Sentences } from '@/components/shared/Sentences';
 import { JsonLd } from '@/components/seo/JsonLd';
 
 const SITE_URL = 'https://avexastays.com';
@@ -168,11 +169,7 @@ export default function GuidePage() {
       <div className="mx-auto max-w-[760px] px-6 py-20 md:px-10 md:py-28">
         <Reveal direction="up">
           <p className="text-[19px] leading-[1.7] text-ink-80">
-            Bucharest rewards the curious. Romania&apos;s capital is a city of grand
-            boulevards and hidden courtyards, Belle Époque palaces and brutalist
-            landmarks, late dinners and longer mornings. AVEXA&apos;s apartments sit
-            right in the Bucharest city center — so this guide starts where you will
-            be standing.
+            <Sentences text="Bucharest rewards the curious. Romania's capital is a city of grand boulevards and hidden courtyards, Belle Époque palaces and brutalist landmarks, late dinners and longer mornings. AVEXA's apartments sit right in the Bucharest city center — so this guide starts where you will be standing." />
           </p>
         </Reveal>
 
@@ -185,7 +182,7 @@ export default function GuidePage() {
               <div className="mt-4 space-y-4">
                 {s.body.map((p, i) => (
                   <p key={i} className="text-[16px] leading-[1.75] text-ink-80">
-                    {p}
+                    <Sentences text={p} />
                   </p>
                 ))}
               </div>
@@ -194,11 +191,13 @@ export default function GuidePage() {
               {s.id === 'neighbourhoods' && (
                 <div className="mt-6 rounded-card border border-gray-line bg-white p-5">
                   <p className="text-[15px] text-ink-80">
-                    Every AVEXA suite sits in one of these districts.{' '}
-                    <Link href="/locations" className="font-semibold text-gold-dark underline underline-offset-2">
-                      Browse all locations
-                    </Link>{' '}
-                    to pick your corner of the city.
+                    <span className="block">Every AVEXA suite sits in one of these districts.</span>
+                    <span className="block">
+                      <Link href="/locations" className="font-semibold text-gold-dark underline underline-offset-2">
+                        Browse all locations
+                      </Link>{' '}
+                      to pick your corner of the city.
+                    </span>
                   </p>
                 </div>
               )}
@@ -215,7 +214,9 @@ export default function GuidePage() {
             {tips.map((t) => (
               <div key={t.label}>
                 <dt className="font-mono-label text-gold-dark">{t.label}</dt>
-                <dd className="mt-1.5 text-[15px] leading-relaxed text-ink-80">{t.value}</dd>
+                <dd className="mt-1.5 text-[15px] leading-relaxed text-ink-80">
+                  <Sentences text={t.value} />
+                </dd>
               </div>
             ))}
           </dl>

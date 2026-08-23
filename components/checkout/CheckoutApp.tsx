@@ -185,8 +185,11 @@ function UnavailableGate({ slug }: { slug: string }) {
       </div>
       <h2 className="font-display text-3xl">These dates are no longer available</h2>
       <p className="mt-3 text-ink-80">
-        Someone just booked this suite for your dates. Nothing was charged — pick
-        new dates and you&apos;re a couple of clicks from the city again.
+        <span className="block">Someone just booked this suite for your dates.</span>
+        <span className="block">
+          Nothing was charged — pick new dates and you&apos;re a couple of clicks
+          from the city again.
+        </span>
       </p>
       <Link
         href={`/locations/${slug}`}
@@ -206,7 +209,8 @@ function QuoteErrorRetry({ onRetry }: { onRetry: () => void }) {
       </div>
       <p className="font-semibold text-ink">We couldn&apos;t load your price</p>
       <p className="mt-1.5 text-sm text-ink-60">
-        Something interrupted the connection. Your dates are still held — try again.
+        <span className="block">Something interrupted the connection.</span>
+        <span className="block">Your dates are still held — try again.</span>
       </p>
       <button
         type="button"

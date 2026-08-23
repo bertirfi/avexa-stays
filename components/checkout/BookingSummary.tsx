@@ -6,6 +6,7 @@ import { shortDate } from '@/lib/booking';
 import type { QuoteState } from '@/components/checkout/CheckoutApp';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { CANCELLATION_POLICY } from '@/lib/policies';
+import { Sentences } from '@/components/shared/Sentences';
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -138,7 +139,7 @@ export function BookingSummary({ hydrated, quoteState }: BookingSummaryProps) {
 
       {/* Cancellation notice — single source of truth (lib/policies). */}
       <div className="border-t border-gray-line p-4 text-xs text-ink-60">
-        <strong className="text-ink">Cancellation.</strong> {CANCELLATION_POLICY.summary}
+        <strong className="text-ink">Cancellation.</strong> <Sentences text={CANCELLATION_POLICY.summary} />
       </div>
 
       <button

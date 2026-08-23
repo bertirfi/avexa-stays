@@ -162,7 +162,8 @@ const categories: { title: string; items: FaqItem[] }[] = [
       {
         q: 'Do you offer room decorations for birthdays or special events?',
         a: [
-          'Absolutely! We love helping you celebrate.',
+          'Absolutely!',
+          'We love helping you celebrate.',
           'We offer custom room decoration services for birthdays, anniversaries, or any special occasion.',
           'Each setup is thoughtfully arranged to make your surprise memorable.',
           'Simply request it in advance via My Trips.',
@@ -238,15 +239,20 @@ export default function FaqPage() {
           Frequently asked questions
         </h1>
         <p className="mt-5 max-w-[56ch] text-[17px] leading-relaxed text-ink-80">
-          Everything about your stay, from online check-in to extra services.
-          Cannot find your answer? Our 24/7 reception is one message away at{' '}
-          <a
-            href={`mailto:${CONTACT_EMAIL}`}
-            className="font-semibold text-gold-dark underline underline-offset-2"
-          >
-            {CONTACT_EMAIL}
-          </a>
-          .
+          <span className="block">
+            Everything about your stay, from online check-in to extra services.
+          </span>
+          <span className="block">Cannot find your answer?</span>
+          <span className="block">
+            Our 24/7 reception is one message away at{' '}
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="font-semibold text-gold-dark underline underline-offset-2"
+            >
+              {CONTACT_EMAIL}
+            </a>
+            .
+          </span>
         </p>
 
         <div className="mt-16 space-y-20 md:mt-20 md:space-y-24">

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
+import { Sentences } from '@/components/shared/Sentences';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { safeNext } from '@/lib/safeNext';
 
@@ -332,9 +333,13 @@ export function LoginForm() {
 function Feedback({ error, info }: { error: string | null; info: string | null }) {
   if (!error && !info) return null;
   return error ? (
-    <p className="rounded-lg bg-red-500/10 px-3 py-2 text-left text-[13px] font-medium text-red-700">{error}</p>
+    <p className="rounded-lg bg-red-500/10 px-3 py-2 text-left text-[13px] font-medium text-red-700">
+      <Sentences text={error} />
+    </p>
   ) : (
-    <p className="rounded-lg bg-gold/15 px-3 py-2 text-left text-[13px] font-medium text-gold-dark">{info}</p>
+    <p className="rounded-lg bg-gold/15 px-3 py-2 text-left text-[13px] font-medium text-gold-dark">
+      <Sentences text={info ?? ''} />
+    </p>
   );
 }
 

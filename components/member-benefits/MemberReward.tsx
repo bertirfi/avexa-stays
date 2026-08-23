@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Reveal } from '@/components/Reveal';
+import { Sentences } from '@/components/shared/Sentences';
 import { cn } from '@/lib/cn';
 
 interface Tier {
@@ -77,8 +78,7 @@ export function MemberTiers() {
             />
           </h2>
           <p className="mx-auto mt-6 max-w-[560px] text-[17px] leading-[1.65] text-white/60">
-            Your progress looks at the last 12 rolling months — completed stays only.
-            Both thresholds must be met to level up.
+            <Sentences text="Your progress looks at the last 12 rolling months — completed stays only. Both thresholds must be met to level up." />
           </p>
         </Reveal>
 
@@ -127,7 +127,7 @@ export function MemberTiers() {
                       <strong className="font-bold text-gold">{tier.earn}</strong>
                     </td>
                     <td className="px-5 py-5 text-sm leading-[1.6] text-white/70 md:px-7">
-                      {tier.unlock}
+                      <Sentences text={tier.unlock} />
                     </td>
                   </tr>
                 ))}
@@ -146,7 +146,9 @@ export function MemberTiers() {
                 <span aria-hidden className="mt-[3px] flex-none text-white/25">
                   —
                 </span>
-                {note}
+                <span>
+                  <Sentences text={note} />
+                </span>
               </li>
             ))}
           </ul>
