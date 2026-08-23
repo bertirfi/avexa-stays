@@ -73,7 +73,7 @@ export function Footer() {
 
             <h4 className="font-mono-label mb-3 mt-8 text-gold">Pay with</h4>
             <ul className="flex flex-wrap gap-2">
-              {['PayPal', 'Apple Pay', 'G Pay', 'Mastercard', 'VISA'].map((p) => (
+              {['VISA', 'Mastercard', 'AMEX', 'Apple Pay', 'G Pay'].map((p) => (
                 <li
                   key={p}
                   className="rounded-md border border-cream/15 px-2 py-1 text-[11px] font-medium text-cream/80"

@@ -19,6 +19,11 @@ type AvailabilityInsert = Database['public']['Tables']['availability']['Insert']
 // OTA bookings (a Booking.com reservation 200 days out never reached the cache).
 export const SYNC_WINDOW_DAYS = 380;
 
+// "From X/night" basis: the min over the NEXT 60 days only — an honest
+// near-term floor, not a promo price 11 months out (display decision to
+// confirm with Vlad; the sync window itself stays 380d for availability).
+export const FROM_PRICE_WINDOW_DAYS = 60;
+
 /**
  * Re-pull one listing's calendar and mirror it into the availability cache,
  * then recompute the property's price_from_ron. Idempotent: the upsert mirrors
@@ -64,8 +69,11 @@ export async function syncListingAvailability(opts: {
     if (error) throw new Error(`availability upsert: ${error.message}`);
   }
 
+  const fromCutoff = new Date(Date.now() + FROM_PRICE_WINDOW_DAYS * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
   const openPrices = rows
-    .filter((r) => r.available && r.price_ron > 0)
+    .filter((r) => r.available && r.price_ron > 0 && r.date < fromCutoff)
     .map((r) => r.price_ron);
   const priceFrom = openPrices.length
     ? Math.min(...openPrices)

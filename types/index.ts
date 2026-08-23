@@ -33,7 +33,7 @@ export interface PropertyPhoto {
 }
 
 export interface PropertyRate {
-  id: 'saver' | 'flex';
+  id: 'standard';
   name: string;
   /** RON per night — money of record; convert only at display (lib/currency). */
   perNight: number;
@@ -100,13 +100,14 @@ export interface Property {
   metaDescription: string;
   /** SERP title override for names that would push the title past 60 chars. */
   metaTitle?: string;
-  pitch?: string;
   goodToKnow?: string;
   checkin: string;
   checkout: string;
   cover: string; // shortcut to photos[0].src — relative path under /public
   photos: PropertyPhoto[];
   rates: PropertyRate[];
+  /** Per-stay cleaning fee, RON (money of record) — charged on top of the nightly rate. */
+  cleaningRon: number;
   upgrades: PropertyUpgrade[];
   amenitiesTop: string[];
   amenitiesProperty: CategorizedAmenities;
@@ -139,7 +140,6 @@ export interface Booking {
   checkOut: string;
   nights: number;
   guests: GuestCounts;
-  rateId: 'saver' | 'flex';
   upgrades: Record<string, boolean>;
   pricePerNight: number;
   subtotal: number;

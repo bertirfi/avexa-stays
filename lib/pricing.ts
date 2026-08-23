@@ -8,8 +8,9 @@ import {
  *
  * Accommodation, per night:
  *   accommodation_RON = ceil( base_RON × (1 + markup) × (1 + paymentFee) )
- *     markup     — AVEXA margin          (env AVEXA_MARKUP_PERCENT, default 18)
- *     paymentFee — card-processing cost  (env AVEXA_PAYMENT_FEE_PERCENT, default 3)
+ *     markup     — AVEXA margin          (env AVEXA_MARKUP_PERCENT, default 21)
+ *     paymentFee — card-processing cost  (env AVEXA_PAYMENT_FEE_PERCENT, default 0)
+ *   Spec M1.1.1: a single flat +21% — with fee=0 this is exactly ceil(base × 1.21).
  *   Guests see ONE "total price" line — the markup/fee split is never shown.
  *
  * City tax — state tax, passed through at face value (NO markup, NO fee):
@@ -42,12 +43,12 @@ function positive(value: string | undefined, fallback: number): number {
 
 /** AVEXA margin over the Hostaway base price. */
 export function getMarkup(): number {
-  return pct(process.env.AVEXA_MARKUP_PERCENT, 18);
+  return pct(process.env.AVEXA_MARKUP_PERCENT, 21);
 }
 
-/** Card-processing cost applied on top of the marked-up price. */
+/** Card-processing cost applied on top of the marked-up price (0 = folded into the margin). */
 export function getPaymentFee(): number {
-  return pct(process.env.AVEXA_PAYMENT_FEE_PERCENT, 3);
+  return pct(process.env.AVEXA_PAYMENT_FEE_PERCENT, 0);
 }
 
 /** Display rate: RON per 1 EUR. */

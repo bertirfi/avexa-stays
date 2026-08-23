@@ -13,22 +13,29 @@ import type { Property } from '@/types';
  * the static RON rates until the next live render.
  */
 
-/** Rebuild rates[].perNight (RON) from the live base price; rates[0] = charged RON. */
+/** Single rate: rates[0].perNight (RON) = charged per-night price from the live base. */
 function applyLivePricing(property: Property, priceFromRon: number | null): Property {
-  const base = property.rates[0]?.perNight;
-  if (!priceFromRon || priceFromRon <= 0 || !base || base <= 0) return property;
-
-  // Flex (rates[1]) has no independent Hostaway price — it inherits the
-  // flex/saver ratio baked into the static catalog.
-  const effective = accommodationRonPerNight(priceFromRon);
-  const factor = effective / base;
+  if (!priceFromRon || priceFromRon <= 0 || property.rates.length === 0) return property;
   return {
     ...property,
-    rates: property.rates.map((rate, i) => ({
-      ...rate,
-      perNight:
-        i === 0 ? effective : Math.max(effective, Math.round(rate.perNight * factor)),
-    })),
+    rates: [{ ...property.rates[0], perNight: accommodationRonPerNight(priceFromRon) }],
+  };
+}
+
+/**
+ * The rate CARD (name/perks/policy copy) and the cleaning fee are code-owned
+ * editorial/config content — the static catalog always wins over the `content`
+ * JSON cached in Supabase (which may still hold the old saver/flex dual rate
+ * and predates `cleaningRon`). Only the live perNight survives from the row.
+ */
+function withCatalogRate(property: Property): Property {
+  const source = staticProperties.find((p) => p.id === property.id);
+  if (!source) return property;
+  const perNight = property.rates[0]?.perNight ?? source.rates[0].perNight;
+  return {
+    ...property,
+    rates: [{ ...source.rates[0], perNight }],
+    cleaningRon: source.cleaningRon,
   };
 }
 
@@ -45,19 +52,24 @@ function withCoordinates(property: Property): Property {
 }
 
 /**
- * SEO copy (SERP title/description) is code-owned editorial content, same as
- * coordinates: the static catalog always wins over the `content` JSON cached
- * in Supabase. The cached blob predates these fields (`as Property` hid the
- * gap), which shipped property pages without any meta description.
+ * Editorial copy (SERP title/description, the on-page description, and the
+ * Good-to-know notes) is code-owned content, same as coordinates: the static
+ * catalog always wins over the `content` JSON cached in Supabase, so rewrites
+ * ship without re-seeding. The cached blob may also still hold the removed
+ * `pitch` field — strip it so the stale key never leaks past this overlay.
  */
-function withSeoFields(property: Property): Property {
+function withEditorialContent(property: Property): Property {
   const source = staticProperties.find((p) => p.id === property.id);
   if (!source) return property;
-  return {
+  const merged: Property = {
     ...property,
+    description: source.description,
+    goodToKnow: source.goodToKnow,
     metaDescription: source.metaDescription,
     metaTitle: source.metaTitle,
   };
+  delete (merged as unknown as Record<string, unknown>).pitch;
+  return merged;
 }
 
 export async function getAllPropertiesData(): Promise<Property[]> {
@@ -71,7 +83,7 @@ export async function getAllPropertiesData(): Promise<Property[]> {
       throw new Error(error?.message ?? 'no property rows');
     }
     return data.map((row) =>
-      withCoordinates(withSeoFields(applyLivePricing(row.content as unknown as Property, row.price_from_ron))),
+      withCoordinates(withEditorialContent(withCatalogRate(applyLivePricing(row.content as unknown as Property, row.price_from_ron)))),
     );
   } catch {
     return staticProperties.map(withCoordinates);
@@ -87,7 +99,7 @@ export async function getPropertyData(idOrSlug: string): Promise<Property | null
       .or(`id.eq.${safe},slug.eq.${safe}`)
       .maybeSingle();
     if (error || !data) throw new Error(error?.message ?? 'not found');
-    return withCoordinates(withSeoFields(applyLivePricing(data.content as unknown as Property, data.price_from_ron)));
+    return withCoordinates(withEditorialContent(withCatalogRate(applyLivePricing(data.content as unknown as Property, data.price_from_ron))));
   } catch {
     const fallback = staticProperties.find((p) => p.id === safe || p.slug === safe);
     return fallback ? withCoordinates(fallback) : null;

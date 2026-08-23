@@ -1,9 +1,42 @@
 'use client';
 
 import Image from 'next/image';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
+import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
+
+/**
+ * T1's micro-animation: a battery glyph whose fill grows 0%→100% once it
+ * scrolls into view. Static (full) under prefers-reduced-motion.
+ */
+function BatteryGlyph() {
+  const reduceMotion = useReducedMotion();
+  return (
+    <span
+      aria-hidden
+      className="relative ml-3 inline-block h-[0.5em] w-[1.2em] align-middle"
+    >
+      <span className="absolute inset-0 rounded-[3px] border-[1.5px] border-current opacity-70" />
+      <span className="absolute top-1/2 -right-[0.16em] h-[0.26em] w-[0.09em] -translate-y-1/2 rounded-r-[1px] bg-current opacity-70" />
+      {/* Branch on element type: useReducedMotion flips from null→true AFTER
+          mount, and a motion element mounted at scaleX:0 would keep its inline
+          transform forever (whileInView never fires) — a plain span can't. */}
+      {reduceMotion ? (
+        <span className="absolute inset-[2.5px] rounded-[1px] bg-[#7fae7a]" />
+      ) : (
+        <motion.span
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.6, ease: 'easeOut' }}
+          style={{ transformOrigin: 'left' }}
+          className="absolute inset-[2.5px] rounded-[1px] bg-[#7fae7a]"
+        />
+      )}
+    </span>
+  );
+}
 
 /**
  * Tracks the `prefers-reduced-motion: reduce` media query. Initializes from
@@ -22,22 +55,23 @@ function usePrefersReducedMotion(): boolean {
   return reduced;
 }
 
-const STEPS = [
+const STEPS: { title: string; sub: string; titleVisual?: ReactNode }[] = [
   {
-    title: 'Business or leisure.',
-    sub: 'Designed for the way you actually travel — whether it\'s a laptop-and-latte workweek or a long weekend with nowhere to be.',
+    title: 'Recharge in Bucharest with AVEXA.',
+    sub: 'Step inside clinical-grade comfort. Belong to the new, modern way to experience the heart of Bucharest — and recharge.',
+    titleVisual: <BatteryGlyph />,
   },
   {
-    title: 'Long stay or weekend away.',
-    sub: 'From a two-night escape to a month-long relocation. Rates that get better the longer you stay.',
+    title: 'Engineered for Focus. Designed for Rest.',
+    sub: 'Whether you are closing deals or exploring the historic center, your tech-enabled AVEXA sanctuary is flawlessly prepared for you.',
   },
   {
-    title: 'The city, on your terms.',
-    sub: 'Walkable nightlife or a quiet residential street — pick the corner of Bucharest that fits the trip.',
+    title: 'Total Autonomy. Instant Digital Access.',
+    sub: 'Your smartphone is your key. Bypass the front desk, avoid the queues, and arrive completely at your own pace.',
   },
   {
-    title: 'No front desk. No friction. No compromise.',
-    sub: 'Six neighborhoods. Dozens of spaces. One membership that unlocks them all.',
+    title: "Don't just stay. Belong.",
+    sub: 'AVEXIAN Travellers use AVEXA (AVX) Coins to experience MORE. From early check-ins to uniquely curated urban moments.',
   },
 ];
 
@@ -99,10 +133,12 @@ export function Editorial() {
 
   return (
     <section id="editorial" className="bg-gold text-ink">
-      {/* Desktop: pinned scroll-story (hidden on mobile). Skipped entirely under
-          reduced motion — the stacked variant below then covers all breakpoints. */}
+      {/* Desktop: pinned scroll-story (hidden on mobile). md boundary, matching
+          the side image cards below (md:block) — at sm the tunnel would run
+          text-only with no images. Skipped entirely under reduced motion —
+          the stacked variant below then covers all breakpoints. */}
       {!prefersReducedMotion && (
-      <div ref={tunnelRef} className="relative hidden sm:block" style={{ height: '400vh' }}>
+      <div ref={tunnelRef} className="relative hidden md:block" style={{ height: '400vh' }}>
         <div className="sticky top-0 flex h-screen items-center overflow-hidden">
           <div
             className="mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-10 px-6 md:grid-cols-[1fr_1.4fr_1fr] md:px-10"
@@ -147,6 +183,7 @@ export function Editorial() {
                       style={{ fontSize: 'clamp(42px, 5.5vw, 72px)', lineHeight: 1.05, letterSpacing: '-0.02em' }}
                     >
                       {s.title}
+                      {s.titleVisual}
                     </h2>
                     <p className="mt-[18px] max-w-[400px] text-[17px] leading-[1.65] text-ink-80">{s.sub}</p>
                   </div>
@@ -199,7 +236,7 @@ export function Editorial() {
       <div
         className={cn(
           'px-6 pb-14 pt-12',
-          prefersReducedMotion ? 'block' : 'sm:hidden',
+          prefersReducedMotion ? 'block' : 'md:hidden',
         )}
       >
         <p className="font-mono-label mb-5 text-ink-60">— STAYS THAT FIT THE TRIP</p>
@@ -229,6 +266,7 @@ export function Editorial() {
                 )}
               >
                 {s.title}
+                {s.titleVisual}
               </h3>
               <p
                 className={cn(

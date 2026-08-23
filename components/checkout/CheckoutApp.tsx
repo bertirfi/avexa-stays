@@ -88,7 +88,6 @@ export function CheckoutApp({ initialContact }: { initialContact: InitialContact
           adults: raw.guests.adults,
           children: raw.guests.children,
           infants: raw.guests.infants,
-          rateId: raw.rateId,
           breakfast: Boolean(raw.upgrades?.breakfast),
         }),
       });

@@ -24,7 +24,8 @@ export function MobileBookingBar({
   return (
     <div
       className={cn(
-        'fixed inset-x-0 z-40 flex items-center justify-between gap-3 border-t border-gray-line bg-white px-5 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] transition-[bottom] duration-300 ease-[var(--ease-snap)] lg:hidden',
+        // <md only — from 768px up, <StickyBookingBar> takes over (Spec M1.5.1).
+        'fixed inset-x-0 z-40 flex items-center justify-between gap-3 border-t border-gray-line bg-white px-5 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] transition-[bottom] duration-300 ease-[var(--ease-snap)] md:hidden',
         'bottom-0',
         // Tab bar is visible below md when scrolling up / near top — lift the
         // booking bar to sit just above it. While scrolling down the tab bar

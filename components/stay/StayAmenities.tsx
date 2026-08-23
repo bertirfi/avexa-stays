@@ -3,15 +3,15 @@
 import { useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { AmenityModal } from '@/components/stay/AmenityModal';
+import { StaySection } from '@/components/stay/StaySection';
 import type { Property } from '@/types';
 
 export function StayAmenities({ property }: { property: Property }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <section className="border-b border-gray-line py-10">
-      <h2 className="font-display mb-4 text-2xl">Room amenities</h2>
-
+    // First accordion on the page — the only one that starts open.
+    <StaySection title="Room amenities" defaultOpen>
       <div className="grid grid-cols-1 gap-x-6 md:grid-cols-2">
         {property.amenitiesTop.map((a) => (
           <div key={a} className="flex items-center gap-3 py-3 text-base text-ink">
@@ -30,6 +30,6 @@ export function StayAmenities({ property }: { property: Property }) {
       </button>
 
       <AmenityModal open={open} onClose={() => setOpen(false)} property={property} />
-    </section>
+    </StaySection>
   );
 }

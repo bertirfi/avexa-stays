@@ -100,7 +100,7 @@ export default async function BookingConfirmationPage({
               </div>
             </dl>
             <p className="mt-4 text-[12px] text-ink/50">
-              VAT included · Check-in details arrive by email before your stay.
+              11% VAT included · Check-in details arrive by email before your stay.
             </p>
             <Link
               href="/my-trips"

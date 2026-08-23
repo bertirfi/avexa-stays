@@ -29,7 +29,8 @@ export const QuoteInputSchema = z.object({
   adults: z.number().int().min(1).max(10),
   children: z.number().int().min(0).max(10),
   infants: z.number().int().min(0).max(10),
-  rateId: z.enum(['saver', 'flex']),
+  // Single flat rate since M1.1 — a legacy `rateId` from an open old tab is an
+  // unknown key, which z.object() strips: accepted and ignored by design.
   breakfast: z.boolean().default(false),
   displayCurrency: z.enum(['EUR', 'RON', 'USD']).default('EUR'),
 });
@@ -58,7 +59,10 @@ export type CheckoutBody = z.infer<typeof CheckoutBodySchema>;
  */
 export interface QuoteBreakdown {
   accommodationRon: number;
+  /** Per-night charged prices (RON) — the expandable accommodation breakdown. */
+  nightly: Array<{ date: string; ron: number }>;
   extrasRon: number;
+  cleaningRon: number;
   cityTaxRon: number;
   totalRon: number;
   nights: number;

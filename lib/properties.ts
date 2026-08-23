@@ -1,4 +1,5 @@
 import type { NeighborhoodId, Property, PropertyRate, PropertyUpgrade } from '@/types';
+import { CANCELLATION_POLICY } from '@/lib/policies';
 
 /**
  * AVEXA properties — ported verbatim from stay-data-*.jsx files
@@ -12,37 +13,23 @@ const baseUpgrades: PropertyUpgrade[] = [
   { id: 'early_checkin', name: 'Early check-in', price: 105, unit: '', free: true },
 ];
 
-// Static-fallback nightly rates in RON (used only when Supabase is down;
-// live prices overlay from Hostaway via applyLivePricing).
-function rates(saverRon: number, flexRon: number): PropertyRate[] {
+// Static-fallback nightly rate in RON (used only when Supabase is down;
+// live prices overlay from Hostaway via applyLivePricing). ONE rate per suite —
+// cancellation is a membership right (DX7), never a rate tier (M1.1.1).
+function rates(ron: number): PropertyRate[] {
   return [
     {
-      id: 'saver',
-      name: 'Member Saver',
-      perNight: saverRon,
-      discount: 15,
-      refundable: false,
-      perks: [
-        'Non-refundable rate',
-        'Best price: 15% off',
-        'Free early check-in & late check-out',
-        'Free welcome drinks & snacks',
-      ],
-      warn: 'No refund in the event of cancellation',
-    },
-    {
-      id: 'flex',
-      name: 'Member Flex',
-      perNight: flexRon,
-      discount: 5,
+      id: 'standard',
+      name: 'Direct rate',
+      perNight: ron,
+      discount: 0,
       refundable: true,
       perks: [
-        'Best price: 5% off',
-        'Free early check-in & late check-out',
-        'Free welcome drinks & snacks',
+        'Earn AVEXA Coins on this stay',
+        'Flexible cancellation for members',
+        'Digital check-in, no front desk',
       ],
-      highlight: 'Free cancellation until 4:00pm, one day before arrival',
-      cancelNote: 'Cancellation time shown is based on the location of the property',
+      highlight: CANCELLATION_POLICY.summary,
     },
   ];
 }
@@ -86,9 +73,7 @@ export const properties: Property[] = [
     metaDescription:
       'A chic studio for two inside the interwar Adriatica Palace, at the gateway to Old Town — a Bucharest city center apartment with digital check-in.',
     description:
-      'Reside in a piece of Bucharest\'s history. Located within the iconic Palace of the "Adriatica" Society, this unique sanctuary blends interwar elegance with the AVEXA standard of tech-enabled hospitality.\n\nPositioned exactly at the gateway to the vibrant Old Town, you are completely connected to the city\'s pulse, yet insulated in absolute comfort.\n\nIf you\'re visiting Bucharest for a city break with just a backpack and a desire for adventure, this stylish, compact sanctuary offers everything you need to recharge in the heart of the city.\n\nA chic and comfortable bedroom featuring a cozy double bed, relaxing wall plants, a spacious closet, and fresh linens & towels. A modern, well-appointed bathroom equipped with a sleek shower cabin, sink, toilet, and fresh towels.\n\nA fully equipped kitchenette with a small refrigerator, coffee maker, toaster, microwave, induction cooktop, and kettle — perfect for preparing quick meals and drinks.\n\nThoughtful amenities: toiletries, coffee, tea, sugar, salt, pepper, oil, and vinegar are provided to make you feel at home.',
-    pitch:
-      'Zero Friction Access — Bypass the front desk completely. Secure digital entry allows you to arrive on your own schedule.\n\nA Botanical Retreat — The room is uniquely crafted with lush green installations, designed to induce the serenity of nature in the heart of the urban center.\n\nEngineered for Rest — A supremely quiet room featuring a double bed and premium linens, guaranteeing a restorative night\'s sleep.\n\nThe Spa Experience — A contemporary compact yet sophisticated bathroom featuring a high-end shower cabin, modern fixtures, and a refreshing ambiance.\n\nExecutive Ready — High-speed Wi-Fi, dedicated climate control, and a gourmet kitchenette complete with a coffee machine to start your mornings focused and refreshed.',
+      'A compact studio for two inside the interwar Adriatica Palace, at the very gateway to Bucharest\'s Old Town. Living greenery, a cozy double bed with fresh linens, and a sleek shower cabin keep the space calm, while the equipped kitchenette handles quick meals and coffee. Digital check-in means you arrive on your own schedule — no front desk.',
     checkin: sharedCheckin,
     checkout: sharedCheckout,
     cover: '/listings/101/00-cover.jpeg',
@@ -105,7 +90,8 @@ export const properties: Property[] = [
       { id: 10, label: 'Exterior View', src: '/listings/101/23-exterior.jpeg' },
       { id: 11, label: 'Building Entrance', src: '/listings/101/25-building-entrance.jpeg' },
     ],
-    rates: rates(415, 467),
+    rates: rates(415),
+    cleaningRon: 120,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchenette', 'Elevator',
@@ -165,6 +151,98 @@ export const properties: Property[] = [
 
   // ─────────────────────────────────────────────────────────────
   {
+    id: '102',
+    slug: 'the-modern-beige-deluxe',
+    name: 'The Modern Beige Deluxe',
+    subtitle: 'AVEXA Suite 102',
+    tagline: sharedTagline,
+    neighborhood: 'calea-victoriei',
+    neighborhoodLabel: nbh['calea-victoriei'].label,
+    neighborhoodColor: nbh['calea-victoriei'].color,
+    address: 'Calea Victoriei 142-148, Sector 1, Bucharest',
+    stats: [
+      { icon: 'users', label: '2 Guests' },
+      { icon: 'bed', label: 'Studio' },
+      { icon: 'sofa', label: '1 Double Bed' },
+      { icon: 'bath', label: '1 Bathroom' },
+    ],
+    maxGuests: 2,
+    metaDescription:
+      'A quiet garden-view studio on Calea Victoriei with digital check-in and a compact kitchenette — a peaceful Bucharest city center apartment, sleeps 2.',
+    description:
+      'A garden-facing studio set directly on Calea Victoriei, insulated from the boulevard while the city\'s best restaurants, shops, and coffee sit outside the door. Lush green installations, a double bed with premium linens, and a spa-style shower cabin set the tone; an in-unit washer and dryer plus a full kitchenette make longer stays effortless.',
+    goodToKnow:
+      'House notes: quiet hours run 22:00–08:00 and parties are strictly prohibited. The apartment is smoke-free — smoking indoors or on the balcony incurs a €500 ozone cleaning fee — and is fitted with smart smoke detectors.',
+    checkin: sharedCheckin,
+    checkout: sharedCheckout,
+    cover: '/listings/102/00-cover.jpeg',
+    photos: [
+      { id: 1, label: 'Cover', src: '/listings/102/00-cover.jpeg' },
+      { id: 2, label: 'Living Room', src: '/listings/102/01-living-room.jpeg' },
+      { id: 3, label: 'Living Room — Wide', src: '/listings/102/01a-living-room-wide.jpeg' },
+      { id: 4, label: 'Green Wall Desk', src: '/listings/102/02-green-wall-desk.jpeg' },
+      { id: 5, label: 'Bedroom', src: '/listings/102/08-bedroom.jpeg' },
+      { id: 6, label: 'Kitchen', src: '/listings/102/07-kitchen.jpeg' },
+      { id: 7, label: 'Bathroom', src: '/listings/102/06-bathroom.jpeg' },
+      { id: 8, label: 'Decor Shelf', src: '/listings/102/05-decor-shelf.jpeg' },
+      { id: 9, label: 'Green Wall Detail', src: '/listings/102/09-green-wall-detail.jpeg' },
+      { id: 10, label: 'Window View', src: '/listings/102/11-window-view.jpeg' },
+      { id: 11, label: 'Wall Art Detail', src: '/listings/102/12-wall-art-detail.jpeg' },
+      { id: 12, label: 'Living Room — Alt', src: '/listings/102/13-living-room-alt.jpeg' },
+    ],
+    rates: rates(479),
+    cleaningRon: 120,
+    upgrades: baseUpgrades,
+    amenitiesTop: [
+      'Free Wi-Fi', 'Air conditioning', 'Kitchenette', 'Washer & Dryer',
+      'Garden view', 'Hair dryer', 'Heating', 'Smart TV with Netflix',
+      'Elevator', 'Self check-in',
+    ],
+    amenitiesProperty: {
+      'Internet & Office': ['Wi-Fi', 'Dedicated workspace'],
+      'Parking & Facilities': ['Elevator', 'Paid street parking off premises', 'Single level home', 'No stairs in home'],
+      'Services': ['Luggage dropoff allowed', 'Long term stays allowed', 'Self check-in (Lockbox)', 'Housekeeping — available at extra cost'],
+      'Not Included': ['Pets not allowed', 'Full kitchen', 'Private entrance', 'Carbon monoxide alarm'],
+    },
+    amenitiesRoom: {
+      'Bathroom': ['Hair dryer', 'Shampoo', 'Body soap', 'Hot water', 'Shower gel'],
+      'Bedroom & Laundry': ['Washer', 'Free dryer — In unit', 'Essentials (towels, bed sheets, soap, toilet paper)', 'Hangers', 'Bed linens', 'Cotton linens', 'Iron', 'Clothing storage: closet and wardrobe'],
+      'Entertainment': ['Ethernet connection', 'Smart TV with Netflix, premium cable'],
+      'Heating & Cooling': ['Air conditioning', 'Central heating'],
+      'Home Safety': ['Smoke alarm', 'Fire extinguisher'],
+      'Kitchen & Dining': ['Microwave', 'Cooking basics (pots, pans, oil, salt & pepper)', 'Dishes and silverware', 'Mini fridge', 'Freezer', 'Hot water kettle', 'Coffee maker (drip)', 'Wine glasses', 'Toaster', 'Induction stove', 'Kitchenette', 'Coffee'],
+    },
+    faqs: [
+      { q: 'Can I park there?', a: 'Free street parking is available nearby on Calea Victoriei. Paid street parking off premises is also available. No reservation needed.' },
+      { q: 'Is the apartment quiet?', a: 'Yes — the studio faces the building\'s interior garden rather than the boulevard, making it one of the quietest units on Calea Victoriei.' },
+      { q: 'Is the apartment suitable for longer stays?', a: 'Yes, long-term stays of 28 days or more are welcome. The kitchenette is fully equipped for self-catering, with an in-unit washer and dryer, and housekeeping is available at extra cost.' },
+    ],
+    nearby: [
+      { category: 'Top Attractions', name: 'Museum of Art Collections', distance: '100 m' },
+      { category: 'Top Attractions', name: 'Revolution Square', distance: '800 m' },
+      { category: 'Top Attractions', name: 'National Museum of Art of Romania', distance: '850 m' },
+      { category: 'Top Attractions', name: 'Cismigiu Gardens', distance: '1.2 km' },
+      { category: 'Top Attractions', name: 'Grigore Antipa National Museum', distance: '1.6 km' },
+      { category: 'Top Attractions', name: 'Museum of Romanian Peasant', distance: '1.7 km' },
+      { category: 'Top Attractions', name: 'Bucharest Arch of Triumph', distance: '3.2 km' },
+      { category: 'Top Attractions', name: 'Ceausescu Mansion', distance: '3.4 km' },
+      { category: 'Top Attractions', name: 'National Museum Cotroceni', distance: '3.5 km' },
+      { category: 'Top Attractions', name: 'Carol Park', distance: '3.7 km' },
+      { category: 'Restaurants & Cafés', name: 'French Bakery', distance: '50 m' },
+      { category: 'Restaurants & Cafés', name: 'Cascara Coffee Roaster', distance: '50 m' },
+      { category: 'Restaurants & Cafés', name: 'Eden Bistro', distance: '50 m' },
+      { category: 'Public Transit', name: 'Piata Romana Metro Station', distance: '600 m' },
+      { category: 'Public Transit', name: 'Piața Victoriei 1', distance: '1.2 km' },
+      { category: 'Public Transit', name: 'Bucharest North Railway Station', distance: '1.7 km' },
+      { category: 'Public Transit', name: 'Gara Basarab', distance: '2.5 km' },
+      { category: 'Closest Airports', name: 'Băneasa Airport', distance: '7 km' },
+      { category: 'Closest Airports', name: 'Henri Coandă International Airport', distance: '15 km' },
+    ],
+    reviews: [],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  {
     id: '201',
     slug: 'the-golden-forest',
     name: 'The Golden Forest',
@@ -184,9 +262,7 @@ export const properties: Property[] = [
     metaDescription:
       'A botanical one-bedroom in the Adriatica Palace — soundproofed King bedroom, Dâmbovița River views, sleeps 4. Bucharest city center, digital check-in.',
     description:
-      'Reside in a piece of Bucharest\'s history. Located within the iconic Palace of the "Adriatica" Society, this unique sanctuary blends interwar elegance with the AVEXA standard of tech-enabled hospitality.\n\nOverlooking the Dâmbovița River and positioned exactly at the gateway to the vibrant Old Town, you are completely connected to the city\'s pulse, yet insulated in absolute comfort.\n\nThe living area is a unique "botanical sanctuary" featuring nature-inspired green installations, smart TV streaming services, and a spacious sofa that converts into a comfortable Queen bed (160x200 cm).\n\nA completely soundproofed, exceptionally quiet bedroom featuring a King-size bed designed for deep relaxation.\n\nA modern spa-style bathroom with a walk-in shower, atmospheric LED lighting, and an in-unit washing machine. The kitchen is fully equipped including a stove, oven, dishwasher, and a premium coffee maker.',
-    pitch:
-      'Zero Friction Access — Bypass the front desk completely. Secure digital entry allows you to arrive on your own schedule.\n\nA Botanical Retreat — The living space is uniquely crafted with lush green installations, designed to induce the serenity of nature in the heart of the urban center.\n\nEngineered for Rest — A supremely quiet master bedroom featuring a King-size bed and premium linens, guaranteeing a restorative night\'s sleep.\n\nThe Spa Experience — A contemporary bathroom equipped with a walk-in shower and atmospheric LED lighting, prepared with clinical precision.\n\nExecutive Ready — High-speed Wi-Fi, dedicated climate control, and a gourmet kitchen complete with a coffee machine to start your mornings focused and refreshed.',
+      'A one-bedroom in the Palace of the "Adriatica" Society, overlooking the Dâmbovița River with the Old Town beginning at your doorstep. The completely soundproofed bedroom holds a King-size bed; the botanical living room adds a Queen sofa bed, hosting four in total. A walk-in shower with LED lighting and a full kitchen with dishwasher and oven complete the suite.',
     checkin: sharedCheckin,
     checkout: sharedCheckout,
     cover: '/listings/201/00-cover.jpeg',
@@ -203,7 +279,8 @@ export const properties: Property[] = [
       { id: 10, label: 'Living Room', src: '/listings/201/32-apartment-view.jpeg' },
       { id: 11, label: 'Staircase', src: '/listings/201/34-staircase.jpeg' },
     ],
-    rates: rates(572, 656),
+    rates: rates(572),
+    cleaningRon: 150,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -282,9 +359,7 @@ export const properties: Property[] = [
     metaDescription:
       'One-bedroom directly on Calea Victoriei — two private balconies, Știrbey Palace views, 65-inch TV, sleeps 4. Digital check-in, Bucharest city center.',
     description:
-      'Experience Bucharest from its most prestigious vantage point. Situated directly on Calea Victoriei, this sophisticated residence places you in the vibrant epicenter of the city\'s culture, fashion, and gastronomy.\n\nFrom world-class restaurants and artisanal coffee shops to high-end shopping and major landmarks, everything is within reach. This apartment offers a stunning blend of modern comfort and historic charm, boasting a direct view of the Stirbey Palace.\n\nStart your mornings with coffee on one of the two private balconies, overlooking the vibrant Calea Victoriei. Unwind in the living room with a massive 169 cm (65-inch) TV — perfect for movie nights.\n\nThe bedroom features a queen-size bed (160x200) with a premium orthopedic mattress. The living room sofa transforms into a comfortable 150x190 bed for extra guests.\n\nFully equipped kitchen with dishwasher, oven, full-size fridge, coffee maker, kettle, and toaster. A spa-like bathroom featuring modern design, LED mirror, and high-end finishes.',
-    pitch:
-      'Zero Friction Access — Bypass the front desk completely. Secure digital entry allows you to arrive on your own schedule.\n\nA Botanical Retreat — The living space is uniquely crafted with lush green installations, designed to induce the serenity of nature in the heart of the urban center.\n\nEngineered for Rest — A supremely quiet master bedroom featuring a queen-size bed and premium linens, guaranteeing a restorative night\'s sleep.\n\nThe Spa Experience — A contemporary bathroom featuring a golden cabin shower, a smart shower and an ambient LED mirror, meticulously designed for pure relaxation.\n\nExecutive Ready — High-speed Wi-Fi, dedicated climate control, and a gourmet kitchen complete with a coffee machine to start your mornings focused and refreshed.',
+      'Two private balconies look straight onto Calea Victoriei and the Știrbey Palace from this one-bedroom for four. Inside: a queen bed on a premium orthopedic mattress, a convertible sofa for extra guests, a 65-inch screen for movie nights, and a fully equipped kitchen with dishwasher and oven. Morning coffee comes with a palace view.',
     checkin: sharedCheckin,
     checkout: sharedCheckout,
     cover: '/listings/202/00-cover.jpeg',
@@ -299,7 +374,8 @@ export const properties: Property[] = [
       { id: 8, label: 'Open Streets Festival', src: '/listings/202/33-open-streets.jpeg' },
       { id: 9, label: 'Restaurant Nearby', src: '/listings/202/37-restaurant.jpeg' },
     ],
-    rates: rates(730, 835),
+    rates: rates(730),
+    cleaningRon: 150,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -377,9 +453,7 @@ export const properties: Property[] = [
     metaDescription:
       'A quiet one-bedroom near Universitate, 2 minutes from Old Town — rare two bathrooms, sleeps 4. Bucharest city center apartment with digital check-in.',
     description:
-      'Experience Bucharest from a sophisticated, central sanctuary. Situated just a 2-minute walk from the Old Town and minutes away from the central Universitate Subway Station, this residence places you at the vibrant epicenter of the city\'s culture, fashion, and gastronomy — while offering a surprisingly quiet, peaceful retreat from the urban bustle.\n\nFrom world-class restaurants to major landmarks, everything is within reach. This 5-star apartment is a masterclass in urban living, combining city-center excitement with the refined AVEXA standard of comfort and tech-enabled hospitality.\n\nThe spacious living space is uniquely modern, crafted to ensure a luxurious and relaxing stay in the heart of the urban center. A supremely quiet master bedroom featuring a Queen-size bed and premium linens, guaranteeing a restorative night\'s sleep.\n\nUnlike most central Bucharest rentals, this property features two contemporary bathrooms — one with a walk-in shower and one with a cabin shower — both prepared to pristine, immaculate standards.\n\nHigh-speed Wi-Fi, dedicated climate control, and a gourmet kitchen complete with a premium coffee machine to start your mornings focused and refreshed.',
-    pitch:
-      'Zero Friction Access — Bypass the front desk completely. Secure digital entry allows you to arrive on your own schedule.\n\nA Special Retreat — The spacious living space is uniquely modern, crafted to ensure a luxurious and relaxing stay in the heart of the urban center.\n\nEngineered for Rest — A supremely quiet master bedroom featuring a Queen-size bed and premium linens, guaranteeing a restorative night\'s sleep.\n\nThe Rare Luxury of Space — Unlike most central Bucharest rentals, this property features two contemporary bathrooms — one with a walk-in shower and one with a cabin shower — both prepared to pristine, immaculate standards.\n\nExecutive Ready — High-speed Wi-Fi, dedicated climate control, and a gourmet kitchen complete with a premium coffee machine to start your mornings focused and refreshed.',
+      'Two minutes from the Old Town and a short walk from Universitate metro, this one-bedroom pairs a supremely quiet Queen bedroom with a rarity among central Bucharest rentals: two contemporary bathrooms, one with a walk-in shower and one with a cabin shower. High-speed Wi-Fi, dedicated climate control, and a gourmet kitchen with premium coffee machine complete a genuinely restful base.',
     goodToKnow: 'Situated on an elevated ground floor — just 5 steps up from the entrance — this apartment perfectly combines easy access for your luggage with enhanced privacy. Located steps away from the vibrant Old Town, it serves as a remarkably quiet urban oasis, ensuring a peaceful and restful night\'s sleep inside.',
     checkin: sharedCheckin,
     checkout: sharedCheckout,
@@ -396,7 +470,8 @@ export const properties: Property[] = [
       { id: 9, label: 'Bathroom 1 — Vanity', src: '/listings/203/06-bathroom1-basins.jpeg' },
       { id: 10, label: 'Bathroom 2', src: '/listings/203/07-bathroom2.jpeg' },
     ],
-    rates: rates(677, 761),
+    rates: rates(677),
+    cleaningRon: 150,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -477,9 +552,7 @@ export const properties: Property[] = [
     metaDescription:
       'Two-bedroom apartment for six with calming views over Calea Victoriei — dining for 6, family-ready. Bucharest city center, digital check-in.',
     description:
-      'Welcome and enjoy this relaxing apartment, placed in a centrally located residence, set in the upscale Calea Victoriei area.\n\nSurrounded by fine restaurants, stylish shops, and major attractions, this elegant apartment is perfect for both family getaways and peaceful retreats. Relax and unwind while taking in the beautiful, calming views over Calea Victoriei.\n\nA stylish living room with a cozy dining area (table + 6 chairs) for you and your friends or family to enjoy. A spacious, comfortable sofa that converts into a bed (150 × 190 cm).\n\nTwo charming bedrooms: the first featuring a comfortable queen-size bed, a spacious closet, fresh linens & towels. The second featuring a single divan bed that easily converts into a comfortable queen-size bed, fresh linens & towels.\n\nA modern, luxurious bathroom with a walk-in shower, sink, toilet, and fresh towels. A fully equipped kitchen with a stove, oven, refrigerator, microwave, coffee maker, kettle, toaster, dishwasher and essentials.\n\nExtra amenities: toiletries, an iron & ironing board, good heating, A/C, washing machine with dryer. A baby crib and child seat are available upon request.',
-    pitch:
-      'Experience Bucharest from its most prestigious vantage point. Situated directly on Calea Victoriei, this sophisticated residence places you in the vibrant epicenter of the city\'s culture, fashion, and gastronomy.\n\nFrom world-class restaurants and artisanal coffee shops to high-end shopping and major landmarks, everything is within reach. This 5-star apartment is a masterclass in urban living, combining the excitement of the city center with the refined AVEXA standard of comfort and tech-enabled hospitality.',
+      'A two-bedroom residence for six with calming views over Calea Victoriei, surrounded by fine restaurants, stylish shops, and major attractions. A queen-size bedroom, a second bedroom that converts to a queen, and a sofa bed gather around a dining table for six; the kitchen runs from oven to dishwasher, and a baby crib and child seat are available on request.',
     checkin: sharedCheckin,
     checkout: sharedCheckout,
     cover: '/listings/301/00-cover.jpeg',
@@ -500,7 +573,8 @@ export const properties: Property[] = [
       { id: 14, label: 'Open Streets Festival', src: '/listings/301/33-open-streets.jpeg' },
       { id: 15, label: 'Restaurant Nearby', src: '/listings/301/37-restaurant.jpeg' },
     ],
-    rates: rates(782, 872),
+    rates: rates(782),
+    cleaningRon: 180,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Parking', 'Free Wi-Fi', 'Family rooms', 'Non-smoking rooms',
@@ -573,9 +647,7 @@ export const properties: Property[] = [
     metaDescription:
       'Elegant two-bedroom on Calea Victoriei with Știrbei Palace views and a quiet green courtyard — sleeps 6. Digital check-in, Bucharest city center.',
     description:
-      'Experience Bucharest from its most prestigious vantage point. Situated directly on Calea Victoriei, this sophisticated residence places you in the vibrant epicenter of the city\'s culture, fashion, and gastronomy.\n\nThis elegant 2-bedroom apartment combines modern design, comfort, and a touch of luxury — perfect for families, couples, groups, or business travelers.\n\nThe master bedroom features a queen-size bed and a large wardrobe. The second bedroom includes a 140x200 cm bed and another large wardrobe, ideal for families or friends traveling together.\n\nA fully equipped kitchen with stovetop, oven, large fridge, washing machine, toaster, kettle, and coffee maker. The spacious living room invites you to relax with a 164 cm smart TV and a 6-person dining table.\n\nA stylish bathroom featuring a walk-in shower and premium finishes. Beautiful views over Calea Victoriei and the Știrbei Palace. The building offers a quiet green courtyard at the back — the perfect balance between city energy and peaceful retreat.',
-    pitch:
-      'Zero Friction Access — Bypass the front desk completely. Secure digital entry allows you to arrive on your own schedule.\n\nSocially Centered Living — A stylish, expansive living area designed for connection, featuring a cozy dining zone for six — perfect for families or groups.\n\nFlexible Luxury Suites — Engineered for versatility and long stays, featuring two charming bedrooms with generous wardrobe space.\n\nEngineered for Rest — Experience absolute tranquility. Each bedroom is outfitted with premium linens, exterior blinds for total darkness, and designed for a restorative night\'s sleep.\n\nThe Spa Experience — A modern bathroom equipped with a walk-in shower and premium finishes.\n\nExecutive Ready — High-speed Wi-Fi, dedicated climate control, and a fully equipped gourmet kitchen with a premium coffee maker.',
+      'An elegant two-bedroom on Calea Victoriei where the windows frame the Știrbei Palace and a quiet green courtyard waits at the back of the building. A queen master and a second double bedroom sleep families or groups of up to six, joined by a 164 cm smart TV, a six-person dining table, and a walk-in shower with premium finishes.',
     checkin: sharedCheckin,
     checkout: sharedCheckout,
     cover: '/listings/302/00-cover.jpeg',
@@ -590,7 +662,8 @@ export const properties: Property[] = [
       { id: 8, label: 'Open Streets Festival', src: '/listings/302/33-open-streets.jpeg' },
       { id: 9, label: 'Restaurant Nearby', src: '/listings/302/37-restaurant.jpeg' },
     ],
-    rates: rates(730, 835),
+    rates: rates(730),
+    cleaningRon: 180,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -667,9 +740,7 @@ export const properties: Property[] = [
     metaDescription:
       'Freshly renovated two-bedroom over Calea Victoriei — Queen and double suites plus a sofa bed, dining for 6. Bucharest city center, digital check-in.',
     description:
-      'Experience Bucharest from its most prestigious vantage point. Situated directly on Calea Victoriei, this sophisticated residence places you in the vibrant epicenter of the city\'s culture, fashion, and gastronomy.\n\nFrom world-class restaurants and artisanal coffee shops to high-end shopping and major landmarks, everything is within reach. This 5-star apartment is a masterclass in urban living, combining the excitement of the city center with the refined AVEXA standard of comfort and tech-enabled hospitality.\n\nFreshly renovated at the end of March 2026, this space blends high-end modern luxury with that warm, soulful feeling of being home. Perched directly over Calea Victoriei, Bucharest\'s most historic and vibrant boulevard, you are at the epicenter of the city\'s energy.\n\nBedroom 1 features a plush 160x200 Queen bed. Bedroom 2 features a cozy 140x200 Double bed. The living room is equipped with a high-comfort 150x200 sofa bed — perfect for extra guests.\n\nA large dining table for 6, perfect for long breakfasts or planning your city tours. Full kitchen with modern appliances including a dishwasher and dryer.',
-    pitch:
-      'Zero Friction Access — Bypass the front desk completely. Secure digital entry allows you to arrive on your own schedule.\n\nSocially Centered Living — A stylish, expansive living area designed for connection, featuring a cozy dining zone for six — perfect for families or groups.\n\nFlexible Luxury Suites — Engineered for versatility and long stays, featuring two charming bedrooms with generous wardrobe space. The layout includes a plush Queen-size master bed and a comfortable double bed in the second suite.\n\nEngineered for Rest — Experience absolute tranquility. Each bedroom is outfitted with premium linens and designed to guarantee a restorative night\'s sleep amidst the city\'s pulse.\n\nThe Spa Experience — A modern, luxurious bathroom equipped with a sleek cabin shower and premium finishes.\n\nExecutive Ready — High-speed Wi-Fi, dedicated climate control, and a fully equipped gourmet kitchen with dishwasher and premium coffee maker.',
+      'Freshly renovated in spring 2026, this two-bedroom sits directly over Calea Victoriei, Bucharest\'s most historic boulevard. A plush Queen suite, a cozy double bedroom, and a high-comfort sofa bed sleep six, gathered around a dining table made for long breakfasts. The full kitchen brings modern appliances, dishwasher and dryer included, for stays of any length.',
     checkin: sharedCheckin,
     checkout: sharedCheckout,
     cover: '/listings/303/00-cover.jpeg',
@@ -683,7 +754,8 @@ export const properties: Property[] = [
       { id: 7, label: 'Bathroom', src: '/listings/303/08-bathroom.jpeg' },
       { id: 8, label: 'Living Room', src: '/listings/303/09-living-room.jpeg' },
     ],
-    rates: rates(782, 887),
+    rates: rates(782),
+    cleaningRon: 180,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -762,9 +834,7 @@ export const properties: Property[] = [
     metaDescription:
       'Quiet two-bedroom for six by Piața Romană — steps from the metro, 10 minutes\' walk to Calea Victoriei. Digital check-in, Bucharest city center.',
     description:
-      'Discover the perfect balance of central living and urban mobility. Located in the beating heart of the city, this stylish apartment offers immediate access to Bucharest\'s main subway network, making exploration completely effortless.\n\nEnjoy being just a 10-minute walk from Calea Victoriei and surrounded by a vibrant mix of top-tier restaurants, boutique shops, and must-see sights. It is a masterclass in smart city living, delivered with the signature AVEXA touch of luxury, peace, and seamless technology.\n\nA stylish, expansive living area designed for connection, featuring a cozy dining zone for six, perfect for families or groups.\n\nEngineered for versatility and long stays, featuring two charming bedrooms with wardrobes. The layout includes a plush Queen-size master bed and a comfortable double bed in the second suite.\n\nA modern, luxurious bathroom equipped with a sleek cabin shower and premium finishes, prepared with clinical precision to ensure your revitalization.\n\nStay effortlessly productive with high-speed Wi-Fi and dedicated climate control. The fully equipped gourmet kitchen, complete with a dishwasher and premium coffee maker, is stocked with essentials to keep your mornings focused and your stay hassle-free.',
-    pitch:
-      'Zero Friction Access — Bypass the front desk completely. Secure digital entry allows you to arrive on your own schedule.\n\nSocially Centered Living — A stylish, expansive living area designed for connection, featuring a cozy dining zone for six, perfect for families or groups.\n\nFlexible Luxury Suites — Engineered for versatility and long stays, featuring two charming bedrooms with wardrobes. The layout includes a plush Queen-size master bed and a comfortable double bed in the second suite.\n\nEngineered for Rest — Experience absolute tranquility. Each bedroom is outfitted with premium linens and designed to guarantee a restorative night\'s sleep amidst the city\'s pulse.\n\nThe Spa Experience — A modern, luxurious bathroom equipped with a sleek cabin shower and premium finishes.\n\nExecutive Ready — Stay effortlessly productive with high-speed Wi-Fi and dedicated climate control. The fully equipped gourmet kitchen is stocked with essentials.',
+      'A quiet two-bedroom for six near Piața Romană, steps from the metro and a ten-minute walk from Calea Victoriei. A queen-size master and a comfortable double suite anchor an expansive living area with a dining zone for six, and the equipped kitchen — dishwasher, premium coffee maker — handles slow mornings and long stays alike.',
     checkin: sharedCheckin,
     checkout: sharedCheckout,
     cover: '/listings/304/00-cover.jpeg',
@@ -785,7 +855,8 @@ export const properties: Property[] = [
       { id: 14, label: 'Terrace', src: '/listings/304/12-terrace.jpeg' },
       { id: 15, label: 'Street View', src: '/listings/304/13-street-view.jpeg' },
     ],
-    rates: rates(625, 709),
+    rates: rates(625),
+    cleaningRon: 180,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',

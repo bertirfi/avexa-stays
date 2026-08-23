@@ -396,6 +396,51 @@ export interface Database {
         };
         Relationships: [];
       };
+      avx_ledger: {
+        Row: {
+          id: string;
+          user_id: string;
+          booking_id: string | null;
+          type: 'earn' | 'spend' | 'expire' | 'revoke';
+          amount: number;
+          remaining: number | null;
+          tier: string | null;
+          percent: number | null;
+          activates_at: string | null;
+          expires_at: string | null;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          booking_id?: string | null;
+          type: 'earn' | 'spend' | 'expire' | 'revoke';
+          amount: number;
+          remaining?: number | null;
+          tier?: string | null;
+          percent?: number | null;
+          activates_at?: string | null;
+          expires_at?: string | null;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          booking_id?: string | null;
+          type?: 'earn' | 'spend' | 'expire' | 'revoke';
+          amount?: number;
+          remaining?: number | null;
+          tier?: string | null;
+          percent?: number | null;
+          activates_at?: string | null;
+          expires_at?: string | null;
+          note?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       integration_tokens: {
         Row: {
           provider: string;

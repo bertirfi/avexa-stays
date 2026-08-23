@@ -223,6 +223,36 @@ async function hostawayPost<T>(
   }
 }
 
+async function hostawayDelete<T>(path: string, isRetry = false): Promise<T> {
+  // Mirrors hostawayPost: 429 backoff independent of the one-shot 403 refresh.
+  for (let attempt = 0; ; attempt += 1) {
+    await space();
+    const token = await getAccessToken(isRetry);
+    const res = await fetch(`${BASE}${path}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}`, 'Cache-Control': 'no-cache' },
+      cache: 'no-store',
+    });
+
+    if (res.status === 403 && !isRetry) return hostawayDelete<T>(path, true);
+    if (res.status === 429 && attempt < MAX_429_RETRIES) {
+      await sleep(backoffForAttempt(res, attempt));
+      continue;
+    }
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new HostawayApiError(
+        `Hostaway DELETE ${path} failed: HTTP ${res.status}`,
+        res.status,
+        body.slice(0, 2000),
+      );
+    }
+
+    const body = (await res.json()) as HostawayResponse<T>;
+    return body.result;
+  }
+}
+
 // Hostaway reservation channel for our own direct-site bookings.
 const DIRECT_CHANNEL_ID = 2000;
 // Shows as the reservation `source` in the Hostaway dashboard.
@@ -357,6 +387,30 @@ export async function createReservation(
 
 export function getReservation(id: number | string): Promise<HostawayReservation> {
   return hostawayGet<HostawayReservation>(`/reservations/${id}`);
+}
+
+/**
+ * Cancel a reservation in the PMS (Hostaway keeps the record, status becomes
+ * cancelled; the calendar frees and the unified webhook fires). Idempotent for
+ * callers: cancelling an already-cancelled/deleted reservation returns cleanly
+ * instead of throwing, so a retried cancel flow never fails on this step.
+ */
+export async function cancelReservation(id: number | string): Promise<void> {
+  if (process.env.HOSTAWAY_MOCK_RESERVATIONS === '1') {
+    console.warn('[hostaway] MOCK cancel (HOSTAWAY_MOCK_RESERVATIONS=1) — real PMS not called');
+    return;
+  }
+  try {
+    await hostawayDelete<unknown>(`/reservations/${id}`);
+  } catch (err) {
+    if (
+      err instanceof HostawayApiError &&
+      (err.status === 404 || /cancel/i.test(err.body))
+    ) {
+      return; // already gone or already cancelled — the goal state
+    }
+    throw err;
+  }
 }
 
 /**

@@ -131,6 +131,30 @@ body {
   }
 }
 
+/* ── Stay page: smooth expand for the <details> accordions ────── */
+/* Progressive enhancement: browsers without ::details-content (Safari,
+   Firefox) ignore the whole block and snap open — the correct fallback.
+   `interpolate-size` is what makes `auto` animatable; it is gated with
+   @supports because a browser that has ::details-content but NOT
+   interpolate-size would otherwise leave the content clipped at 0. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (interpolate-size: allow-keywords) {
+    .stay-section {
+      interpolate-size: allow-keywords;
+    }
+    .stay-section::details-content {
+      block-size: 0;
+      overflow: clip;
+      transition:
+        block-size 260ms var(--ease-snap, ease),
+        content-visibility 260ms allow-discrete;
+    }
+    .stay-section[open]::details-content {
+      block-size: auto;
+    }
+  }
+}
+
 /* Avoid the 300ms double-tap-zoom delay on interactive elements. */
 button,
 a,

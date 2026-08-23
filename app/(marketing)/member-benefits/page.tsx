@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { MemberHero } from '@/components/member-benefits/MemberHero';
 import { MemberStatement } from '@/components/member-benefits/MemberStatement';
 import { MemberPerks } from '@/components/member-benefits/MemberPerks';
-import { MemberReward } from '@/components/member-benefits/MemberReward';
+import { MemberTiers } from '@/components/member-benefits/MemberReward';
 import { MemberCompare } from '@/components/member-benefits/MemberCompare';
 import { MemberJoin } from '@/components/member-benefits/MemberJoin';
 import { MemberFAQ, faqs } from '@/components/member-benefits/MemberFAQ';
@@ -10,9 +10,9 @@ import { MemberCTA } from '@/components/member-benefits/MemberCTA';
 import { JsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'Member Benefits',
+  title: 'AVEXA Coins Member Benefits',
   description:
-    'Free to join, free forever. Members get our lowest rate — 15% off every booking, 25% off long stays — plus free cancellation and early check-in.',
+    'Become an AVEXIAN Traveller: earn AVEXA Coins on every Bucharest stay, unlock flexible cancellation and spend coins on premium experiences. Free forever.',
   alternates: { canonical: '/member-benefits' },
 };
 
@@ -34,7 +34,7 @@ export default function MemberBenefitsPage() {
       <MemberHero />
       <MemberStatement />
       <MemberPerks />
-      <MemberReward />
+      <MemberTiers />
       <MemberCompare />
       <MemberJoin />
       <MemberFAQ />

@@ -16,9 +16,10 @@ interface GuestPopupProps {
    * The search pill sets this false and renders its own full-screen "Guests" step.
    */
   mobileSheet?: boolean;
+  /** Adults + children cap. Defaults to 6 (generic search-pill behavior). */
+  maxOccupants?: number;
 }
 
-const MAX_OCCUPANTS = 6; // adults + children
 const MAX_INFANTS = 4;
 
 const rows = [
@@ -103,7 +104,13 @@ function MobileStepperBtn({
   );
 }
 
-export function GuestPopup({ guests, onChange, onClose, mobileSheet = true }: GuestPopupProps) {
+export function GuestPopup({
+  guests,
+  onChange,
+  onClose,
+  mobileSheet = true,
+  maxOccupants = 6,
+}: GuestPopupProps) {
   // Portal mount guard (SSR-safe)
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -115,7 +122,7 @@ export function GuestPopup({ guests, onChange, onClose, mobileSheet = true }: Gu
       if (next.infants < 0 || next.infants > MAX_INFANTS) return;
     } else {
       if (next[key] < rows.find((r) => r.key === key)!.min) return;
-      if (next.adults + next.children > MAX_OCCUPANTS) return;
+      if (next.adults + next.children > maxOccupants) return;
     }
 
     onChange(next);
@@ -143,7 +150,7 @@ export function GuestPopup({ guests, onChange, onClose, mobileSheet = true }: Gu
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-line" />
 
         {/* Capacity info */}
-        <p className="mb-4 text-xs text-ink-60">Max 6 guests capacity</p>
+        <p className="mb-4 text-xs text-ink-60">Max {maxOccupants} guests capacity</p>
 
         <ul className="divide-y divide-gray-line">
           {rows.map((r) => {
@@ -152,7 +159,7 @@ export function GuestPopup({ guests, onChange, onClose, mobileSheet = true }: Gu
             const canInc =
               r.key === 'infants'
                 ? val < MAX_INFANTS
-                : guests.adults + guests.children < MAX_OCCUPANTS;
+                : guests.adults + guests.children < maxOccupants;
 
             return (
               <li key={r.key} className="flex items-center justify-between py-4">
@@ -210,6 +217,7 @@ export function GuestPopup({ guests, onChange, onClose, mobileSheet = true }: Gu
     <>
       {/* ── DESKTOP 320px popup: hidden on mobile ── */}
       <div className="hidden md:block w-[320px] rounded-3xl bg-white p-6 text-ink shadow-[var(--shadow-pill)]">
+        <p className="mb-3 text-xs text-ink-60">Max {maxOccupants} guests capacity</p>
         <ul className="divide-y divide-gray-line">
           {rows.map((r) => {
             const val = guests[r.key];
@@ -217,7 +225,7 @@ export function GuestPopup({ guests, onChange, onClose, mobileSheet = true }: Gu
             const canInc =
               r.key === 'infants'
                 ? val < MAX_INFANTS
-                : guests.adults + guests.children < MAX_OCCUPANTS;
+                : guests.adults + guests.children < maxOccupants;
 
             return (
               <li key={r.key} className="flex items-center justify-between py-4">

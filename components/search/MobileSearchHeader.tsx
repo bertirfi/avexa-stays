@@ -18,11 +18,13 @@ const links = [
 ];
 
 /**
- * Mobile-only (≤sm) sticky search header for the homepage + locations page.
+ * Mobile sticky search header (<md) for the homepage + locations page.
  * Row 1 (logo + hamburger) stays; the "Start your search" pill collapses on
  * scroll down and returns on scroll up. Tapping it opens the Airbnb-style
- * full-screen search overlay. On ≥sm this renders nothing (the desktop Nav +
- * search pills take over).
+ * full-screen search overlay. From md up this renders nothing — the desktop
+ * Nav's search pills exist only from md, so the boundary MUST be md on both
+ * sides: an sm boundary here once left 640–767px viewports (unfolded
+ * foldables, small tablets) with no search UI at all.
  */
 export function MobileSearchHeader() {
   const pathname = usePathname();
@@ -41,7 +43,7 @@ export function MobileSearchHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-[120] bg-cream px-4 pb-3 pt-2.5 sm:hidden">
+      <header className="sticky top-0 z-[120] bg-cream px-4 pb-3 pt-2.5 md:hidden">
         {/* Row 1 — logo + hamburger */}
         <div className="flex items-center justify-between">
           <Link href="/" aria-label="AVEXA home">
@@ -78,7 +80,7 @@ export function MobileSearchHeader() {
       {/* Slide-in menu */}
       <div
         className={cn(
-          'fixed inset-0 z-[130] bg-ink text-cream transition-transform duration-500 ease-[var(--ease-snap)] sm:hidden',
+          'fixed inset-0 z-[130] bg-ink text-cream transition-transform duration-500 ease-[var(--ease-snap)] md:hidden',
           menuOpen ? 'translate-x-0' : 'translate-x-full',
         )}
         aria-hidden={!menuOpen}

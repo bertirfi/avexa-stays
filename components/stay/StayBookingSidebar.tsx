@@ -8,13 +8,17 @@ import { Icon } from '@/components/Icon';
 import { CalendarPopup } from '@/components/search/CalendarPopup';
 import { GuestPopup } from '@/components/search/GuestPopup';
 import { MobileBookingBar } from '@/components/stay/MobileBookingBar';
+import { StickyBookingBar } from '@/components/stay/StickyBookingBar';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
 import type { Booking, GuestCounts, Property } from '@/types';
 import type { AvailabilityMap } from '@/lib/data/availability';
 import { ymd, parseYmd } from '@/lib/date';
 import { CITY_TAX_RON_PER_PERSON_NIGHT } from '@/lib/currency';
+import { CANCELLATION_POLICY } from '@/lib/policies';
 import { readSearchPrefs, writeSearchPrefs } from '@/lib/searchPrefs';
+import { buildSearchQuery, readGuestParams, readRangeParams } from '@/lib/searchParams';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { CONTACT_EMAIL } from '@/lib/contact';
 import { cn } from '@/lib/cn';
 
 interface Props {
@@ -37,6 +41,19 @@ const MULTI_ROOM_ENABLED = false;
 // ONLY the upgrades UI; state/pricing plumbing stays wired for the flip back.
 const UPGRADES_ENABLED = false;
 
+// Mirrors lib/booking/quote.ts MAX_NIGHTS — duplicated here (not imported)
+// because that module pulls in the server-only Hostaway client.
+const MAX_NIGHTS = 30;
+
+/** Clamp URL/localStorage-seeded guests to this property's capacity: drop
+ * children first, then adults down to a floor of 1. Infants are untouched. */
+function clampGuestsToMax(g: GuestCounts, maxGuests: number): GuestCounts {
+  let { adults, children } = g;
+  while (adults + children > maxGuests && children > 0) children -= 1;
+  while (adults + children > maxGuests && adults > 1) adults -= 1;
+  return { adults, children, infants: g.infants };
+}
+
 function formatDate(d: Date | null) {
   if (!d) return null;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -52,6 +69,65 @@ function siblingPerNight(sib: Property): number | null {
   return sib.rates[0]?.perNight ?? null;
 }
 
+/** Today in Europe/Bucharest — the guest may sit in any timezone, the calendar
+ *  is the property's. en-CA formats as YYYY-MM-DD. */
+function todayInBucharest(): Date {
+  const s = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Bucharest' });
+  return parseYmd(s) ?? new Date();
+}
+
+function addDays(d: Date, n: number): Date {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+}
+
+/**
+ * Default range so the total is on screen the moment the page loads (Numa
+ * parity) instead of an empty "Add dates" box:
+ *   1. first free day of NEXT calendar month, min_stay honoured;
+ *   2. else the first free day from today+7 onwards;
+ *   3. else — availability cache offline — the 15th of next month, 1 night.
+ * Returns null when the cache IS loaded but holds no bookable window at all,
+ * in which case the box keeps its "Add dates" empty state.
+ */
+function pickDefaultRange(availability: AvailabilityMap | undefined): [Date, Date] | null {
+  const today = todayInBucharest();
+
+  if (!availability || Object.keys(availability).length === 0) {
+    const start = new Date(today.getFullYear(), today.getMonth() + 1, 15);
+    return [start, addDays(start, 1)];
+  }
+
+  /** Nights to book starting on `d` (= its min_stay), or null when not bookable. */
+  const nightsFrom = (d: Date): number | null => {
+    const day = availability[ymd(d)];
+    if (!day?.available) return null;
+    const n = Math.max(1, day.minStay);
+    // Seeding a range the server would reject dead-ends the guest at checkout.
+    if (n > MAX_NIGHTS) return null;
+    for (let i = 1; i < n; i += 1) {
+      if (!availability[ymd(addDays(d, i))]?.available) return null;
+    }
+    return n;
+  };
+
+  const scan = (from: Date, until: Date): [Date, Date] | null => {
+    for (let d = from; d <= until; d = addDays(d, 1)) {
+      const n = nightsFrom(d);
+      if (n !== null) return [d, addDays(d, n)];
+    }
+    return null;
+  };
+
+  const firstOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+  // Day 0 of month+2 = last day of month+1.
+  const lastOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+
+  // The cache covers ~180 days; scanning a year just runs off its end harmlessly.
+  return scan(firstOfNextMonth, lastOfNextMonth) ?? scan(addDays(today, 7), addDays(today, 365));
+}
+
 export function StayBookingSidebar({ property, siblings = [], availability }: Props) {
   const router = useRouter();
   const { currency, format, approx } = useCurrency();
@@ -60,13 +136,22 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   const [showCal, setShowCal] = useState(false);
   const [guests, setGuests] = useState<GuestCounts>({ adults: 2, children: 0, infants: 0 });
   const [showGuests, setShowGuests] = useState(false);
-  const [rateId, setRateId] = useState<'saver' | 'flex'>('saver');
   const [upgrades, setUpgrades] = useState<Record<string, boolean>>({
     breakfast: false,
     late_checkout: UPGRADES_ENABLED,
     early_checkin: UPGRADES_ENABLED,
   });
   const [priceOpen, setPriceOpen] = useState(false);
+  /** True while the range on screen came from pickDefaultRange, not the guest. */
+  const [autoPicked, setAutoPicked] = useState(false);
+
+  /** Every calendar edit goes through here so an auto-seeded range stops being
+   *  "auto" the moment the guest touches it (and starts mirroring to the URL). */
+  function selectRange(s: Date | null, e: Date | null) {
+    setAutoPicked(false);
+    setStart(s);
+    setEnd(e);
+  }
 
   // Multi-room state
   const [addedRoomIds, setAddedRoomIds] = useState<string[]>([]);
@@ -81,17 +166,8 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     // window.location instead of useSearchParams keeps the sidebar in the
     // static (ISR) HTML — no Suspense/CSR bailout needed for a mount-only read.
     const q = new URLSearchParams(window.location.search);
-    const urlIn = q.get('checkIn');
-    const urlOut = q.get('checkOut');
-    const urlAdults = q.get('adults');
-    const urlGuests: GuestCounts | null =
-      urlAdults !== null
-        ? {
-            adults: Math.min(10, Math.max(1, Number(urlAdults) || 1)),
-            children: Math.min(10, Math.max(0, Number(q.get('children')) || 0)),
-            infants: Math.min(10, Math.max(0, Number(q.get('infants')) || 0)),
-          }
-        : null;
+    const { arrival: urlIn, departure: urlOut } = readRangeParams(q);
+    const urlGuests: GuestCounts | null = readGuestParams(q);
 
     const hasAvailData = availability && Object.keys(availability).length > 0;
     const everyNightFree = (s: Date, e: Date) => {
@@ -123,8 +199,8 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
       if (s) setStart(s);
       if (e) setEnd(e);
     }
-    if (urlGuests) setGuests(urlGuests);
-    else if (p?.guests) setGuests(p.guests);
+    if (urlGuests) setGuests(clampGuestsToMax(urlGuests, property.maxGuests));
+    else if (p?.guests) setGuests(clampGuestsToMax(p.guests, property.maxGuests));
 
     // Persist URL-seeded values so the header pill + /locations stay in sync
     // (this child effect runs before SearchProvider's localStorage hydration).
@@ -139,6 +215,41 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     // Mount-only seed — `availability` is a stable server prop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Numa parity: with no URL params and no saved prefs the box would open on
+  // "Add dates" with no total. Fill the VOID ONLY — this runs after the seed
+  // above has committed, so a URL/prefs range is already in state and wins.
+  useEffect(() => {
+    if (!mounted || startDate || endDate) return;
+    const range = pickDefaultRange(availability);
+    if (!range) return;
+    setStart(range[0]);
+    setEnd(range[1]);
+    setAutoPicked(true);
+    // Runs once, right after the mount seed — re-running on date changes would
+    // re-seed the moment the guest clears the calendar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted]);
+
+  // Mirror the picked dates into the URL so the stay page is shareable and the
+  // header pill / back-nav to /locations keep the same range. replace +
+  // scroll:false = no history spam, no jump, and the page stays static (the
+  // seed above reads window.location, never useSearchParams).
+  useEffect(() => {
+    if (!mounted) return; // don't clobber the URL before the seed has run
+    // An auto-seeded range is a convenience, not a guest choice — never put it
+    // in the URL (nor in searchPrefs), or it would leak into shared links, the
+    // header pill and /locations as if the guest had searched for it.
+    if (autoPicked) return;
+    // No dates → keep the bare canonical URL, no guest-count noise.
+    const query =
+      startDate && endDate
+        ? buildSearchQuery({ start: startDate, end: endDate, guests })
+        : '';
+    const next = query ? `?${query}` : '';
+    if (window.location.search === next) return;
+    router.replace(`${window.location.pathname}${next}`, { scroll: false });
+  }, [mounted, autoPicked, startDate, endDate, guests, router]);
 
   // Anchor the desktop calendar popup to the dates input via fixed positioning,
   // so the sidebar's `overflow-y-auto` cannot clip it.
@@ -162,37 +273,31 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     };
   }, [showCal]);
 
-  const rate = property.rates.find((r) => r.id === rateId)!;
+  // Single flat rate since M1.1 — rates[0] is the one direct rate.
+  const rate = property.rates[0];
   const nights = nightsBetween(startDate, endDate);
+  // Server (lib/booking/quote.ts) rejects stays over MAX_NIGHTS — surface the
+  // limit here so the calendar doesn't dead-end the guest at checkout.
+  const exceedsMaxNights = nights > MAX_NIGHTS;
 
   // Breakfast per-day-per-person price from the property's own upgrades catalog
   // (RON, money of record) — never hardcoded. Mirrors lib/booking/quote so the
   // sidebar estimate lines up with the authoritative checkout quote.
   const breakfastPrice = property.upgrades.find((u) => u.id === 'breakfast')?.price ?? 0;
 
-  // Flex has no independent per-night calendar price — it inherits the catalog
-  // flex/saver ratio on top of the live (saver-based) availability prices.
-  // MUST mirror lib/booking/quote.ts so the displayed total equals the charge.
-  const rateFactor = useMemo(() => {
-    const saver = property.rates[0]?.perNight;
-    const flex = property.rates[1]?.perNight;
-    return rateId === 'flex' && saver && flex ? flex / saver : 1;
-  }, [property.rates, rateId]);
-
-  // Per-night member prices for the selected range: real prices from availability
-  // where present, else the flat listing rate. Sum drives the total.
+  // Per-night prices for the selected range: real prices from availability
+  // (already markup-applied by lib/data/availability — the SAME lib/pricing
+  // math /api/quote charges), else the flat listing rate. Sum drives the total.
   const stayNightPrices = useMemo(() => {
     if (!startDate || nights === 0) return [] as number[];
     const out: number[] = [];
     const cur = new Date(startDate);
     for (let i = 0; i < nights; i += 1) {
-      const baseNight =
-        availability?.[ymd(cur)]?.ron ?? property.rates[0]?.perNight ?? rate.perNight;
-      out.push(Math.round(baseNight * rateFactor));
+      out.push(availability?.[ymd(cur)]?.ron ?? rate.perNight);
       cur.setDate(cur.getDate() + 1);
     }
     return out;
-  }, [availability, startDate, nights, property.rates, rate.perNight, rateFactor]);
+  }, [availability, startDate, nights, rate.perNight]);
 
   const staySubtotal = stayNightPrices.reduce((a, b) => a + b, 0);
   const isVariablePricing = new Set(stayNightPrices).size > 1;
@@ -231,14 +336,18 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     // per-day-per-person price — no hardcoded figure).
     const breakfastTotal = upgrades.breakfast ? breakfastPrice * nights * occupants : 0;
     const mainCityTax = CITY_TAX_PER_PERSON * nights * occupants;
+    // Per-stay cleaning fee (RON) — mirrors lib/booking/quote so the displayed
+    // total equals the server charge. Breakdown order: accommodation →
+    // extra services → cleaning → city tax (M1.1.5).
+    const cleaning = property.cleaningRon;
     // Member stay price = sum of per-night prices (variable from availability,
     // else flat rate.perNight × nights).
-    const mainRoomTotal = staySubtotal + breakfastTotal + mainCityTax;
+    const mainRoomTotal = staySubtotal + breakfastTotal + cleaning + mainCityTax;
 
-    // Added rooms keep the flat saver rate × nights + city tax (no per-room calendar).
+    // Added rooms keep the flat rate × nights + cleaning + city tax (no per-room calendar).
     const addedRoomsTotal = addedRooms.reduce((sum, sib) => {
       const pn = siblingPerNight(sib)!;
-      return sum + pn * nights + CITY_TAX_PER_PERSON * nights * occupants;
+      return sum + pn * nights + sib.cleaningRon + CITY_TAX_PER_PERSON * nights * occupants;
     }, 0);
 
     const combinedTotal = mainRoomTotal + addedRoomsTotal;
@@ -246,12 +355,13 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     return {
       staySubtotal,
       breakfastTotal,
+      cleaning,
       cityTax: mainCityTax,
       total: mainRoomTotal,
       combinedTotal,
       occupants,
     };
-  }, [staySubtotal, nights, guests, upgrades, addedRooms, breakfastPrice]);
+  }, [staySubtotal, nights, guests, upgrades, addedRooms, breakfastPrice, property.cleaningRon]);
 
   // RON total actually charged — combinedTotal only applies once multi-room
   // re-enables (roomCount stays 1 in practice while MULTI_ROOM_ENABLED is false).
@@ -262,13 +372,13 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
       setShowCal(true);
       return;
     }
+    if (exceedsMaxNights) return;
     const booking: Booking = {
       propertyId: property.id,
       checkIn: ymd(startDate),
       checkOut: ymd(endDate),
       nights,
       guests,
-      rateId,
       upgrades,
       // Persist the MEMBER price (no rack / no struck framing) — matches the
       // sidebar and the no-struck-price decision; checkout shows this directly.
@@ -296,20 +406,73 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   const ctaLabel =
     nights === 0
       ? 'Select dates'
-      : !loggedIn
-        ? 'Sign up & book →'
-        : roomCount > 1 && MULTI_ROOM_ENABLED
-          ? `Book ${roomCount} rooms →`
-          : 'Book best rate →';
+      : exceedsMaxNights
+        ? `Max ${MAX_NIGHTS} nights`
+        : !loggedIn
+          ? 'Sign up & book →'
+          : roomCount > 1 && MULTI_ROOM_ENABLED
+            ? `Book ${roomCount} rooms →`
+            : 'Book best rate →';
 
   const mobileBar = mounted
     ? createPortal(
         <MobileBookingBar
           priceLabel={nights === 0 ? 'From' : 'Total'}
           priceValue={mobileBarPrice}
-          taxNote={nights === 0 ? '/night' : 'Taxes & charges incl.'}
+          taxNote={
+            nights === 0
+              ? '/night · Select dates'
+              : `${nights} night${nights === 1 ? '' : 's'} · taxes & charges incl.`
+          }
           ctaLabel={ctaLabel}
           onBook={book}
+        />,
+        document.body,
+      )
+    : null;
+
+  // Tablet/desktop (≥768px): slim top bar once the sidebar's Book button has
+  // scrolled out of view (Spec M1.5.1). Same numbers as the sidebar — it reads
+  // the values computed above rather than recomputing any pricing.
+  const bookBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [bookBtnVisible, setBookBtnVisible] = useState(true);
+  useEffect(() => {
+    const el = bookBtnRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setBookBtnVisible(entry.isIntersecting),
+      { threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const stickyBar = mounted
+    ? createPortal(
+        <StickyBookingBar
+          show={!bookBtnVisible}
+          propertyName={property.name}
+          datesLabel={
+            startDate && endDate
+              ? `${formatDate(startDate)} – ${formatDate(endDate)}`
+              : 'Select dates'
+          }
+          priceLabel={nights === 0 ? 'From' : 'Total'}
+          priceValue={mobileBarPrice}
+          note={
+            nights === 0
+              ? 'per night'
+              : `${nights} night${nights === 1 ? '' : 's'} · taxes & charges incl.`
+          }
+          ctaLabel={ctaLabel}
+          onBook={() => {
+            // No dates yet → send the guest to the sidebar to pick them;
+            // otherwise go straight to checkout like the sidebar button.
+            if (nights === 0) {
+              bookBtnRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }
+            book();
+          }}
         />,
         document.body,
       )
@@ -334,10 +497,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                 startDate={startDate}
                 endDate={endDate}
                 priceByDate={availability}
-                onSelect={(s, e) => {
-                  setStart(s);
-                  setEnd(e);
-                }}
+                onSelect={selectRange}
                 onClose={() => setShowCal(false)}
               />
             </div>
@@ -349,10 +509,17 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   return (
     <>
     <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto rounded-card border border-gray-line bg-white p-6 shadow-[var(--shadow-pill)]">
-      <div className="mb-4 flex items-baseline gap-1.5">
+      <div className="mb-1 flex items-baseline gap-1.5">
         <span className="font-display text-[26px] text-gold-dark">{format(rate.perNight)}</span>
         <span className="text-sm text-ink-60">/night</span>
       </div>
+      <p className="text-[11px] text-ink-60">11% VAT included</p>
+      {/* Cleaning fee: per-stay, real RON (charged as such) + ≈ display equivalent */}
+      <p className="mb-4 mt-0.5 text-[11px] text-ink-60">
+        Cleaning fee {property.cleaningRon} RON
+        {approx(property.cleaningRon) ? ` (${approx(property.cleaningRon)})` : ''} — not
+        included in the nightly rate
+      </p>
 
       {/* Mobile: clean "Book your stay" rows */}
       <div className="mb-2 lg:hidden">
@@ -409,10 +576,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
             startDate={startDate}
             endDate={endDate}
             priceByDate={availability}
-            onSelect={(s, e) => {
-              setStart(s);
-              setEnd(e);
-            }}
+            onSelect={selectRange}
             onClose={() => setShowCal(false)}
             onBack={() => setShowCal(false)}
           />
@@ -437,40 +601,27 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
             guests={guests}
             onChange={setGuests}
             onClose={() => setShowGuests(false)}
+            maxOccupants={property.maxGuests}
           />
         </div>
       )}
 
-      {/* Rate selector */}
-      <div className="mt-4 space-y-2">
-        {property.rates.map((r) => (
-          <button
-            key={r.id}
-            type="button"
-            onClick={() => setRateId(r.id)}
-            className={cn(
-              'w-full rounded-2xl border p-4 text-left transition',
-              rateId === r.id
-                ? 'border-gold bg-gold-pale'
-                : 'border-gray-line hover:border-ink',
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-semibold">{r.name}</span>
-              <span className="font-display text-lg">{format(r.perNight)}<span className="text-xs text-ink-60">/night</span></span>
-            </div>
-            <ul className="mt-2 space-y-1 text-xs text-ink-80">
-              {r.perks.map((p) => (
-                <li key={p} className="flex items-start gap-2">
-                  <Icon name="check" size={12} className="mt-0.5 text-gold-dark" />
-                  {p}
-                </li>
-              ))}
-            </ul>
-            {r.warn && <p className="mt-2 text-xs italic text-ink-60">{r.warn}</p>}
-            {r.highlight && <p className="mt-2 text-xs font-semibold text-gold-dark">{r.highlight}</p>}
-          </button>
-        ))}
+      {/* Cancellation — a membership right, not a rate tier (DX7). Copy from
+          lib/policies so it can never drift from the published policy. */}
+      <div className="mt-4 rounded-2xl border border-gray-line p-4">
+        <p className="font-mono-label mb-2 text-ink-60">Cancellation</p>
+        <ul className="space-y-1 text-xs text-ink-80">
+          {CANCELLATION_POLICY.memberTiers.map((tier) => (
+            <li key={tier} className="flex items-start gap-2">
+              <Icon name="check" size={12} className="mt-0.5 text-gold-dark" />
+              {tier}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-xs font-semibold text-gold-dark">
+          {CANCELLATION_POLICY.cityTax}
+        </p>
+        <p className="mt-1 text-xs text-ink-60">{CANCELLATION_POLICY.nonMember}</p>
       </div>
 
       {/* Upgrades (hidden at launch — UPGRADES_ENABLED) */}
@@ -655,6 +806,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                   value={format(pricing.breakfastTotal)}
                 />
               )}
+              <Row label="Cleaning fee" value={format(pricing.cleaning)} />
               <Row
                 label="City tax"
                 value={format(pricing.cityTax * roomCount)}
@@ -677,15 +829,35 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                 charged as {effectiveTotal.toLocaleString('en-US')} RON
               </p>
             )}
-            <p className="mt-1 text-right text-[11px] text-ink-60">VAT included</p>
+            <p className="mt-1 text-right text-[11px] text-ink-60">11% VAT included</p>
           </div>
         </div>
       )}
 
+      {/* Server (lib/booking/quote.ts) rejects stays over MAX_NIGHTS — flag it
+          here so a long range doesn't dead-end the guest at checkout. */}
+      {exceedsMaxNights && (
+        <p className="mt-4 rounded-2xl border border-gold bg-gold-pale px-4 py-3 text-xs text-ink-80">
+          Stays are limited to {MAX_NIGHTS} nights —{' '}
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="font-semibold underline underline-offset-[3px]"
+          >
+            contact us
+          </a>{' '}
+          for longer stays.
+        </p>
+      )}
+
       <button
+        ref={bookBtnRef}
         type="button"
         onClick={book}
-        className="mt-5 w-full rounded-full bg-ink py-3 text-center font-semibold text-cream transition hover:bg-gold hover:text-ink"
+        disabled={exceedsMaxNights}
+        className={cn(
+          'mt-5 w-full rounded-full bg-ink py-3 text-center font-semibold text-cream transition hover:bg-gold hover:text-ink',
+          exceedsMaxNights && 'cursor-not-allowed opacity-40 hover:bg-ink hover:text-cream',
+        )}
       >
         {ctaLabel}
       </button>
@@ -695,6 +867,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
       </p>
     </aside>
     {mobileBar}
+    {stickyBar}
     {desktopCalPortal}
     </>
   );

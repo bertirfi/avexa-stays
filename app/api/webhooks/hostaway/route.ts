@@ -2,6 +2,7 @@ import { NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { syncListingAvailability } from '@/lib/hostaway/sync';
+import { sendEmail } from '@/lib/email/brevo';
 import { timingSafeEqualStrings } from '@/lib/timing-safe';
 
 /**
@@ -111,9 +112,42 @@ async function reconcileBookingStatus(
     .update({ status: 'cancelled' })
     .eq('hostaway_reservation_id', String(reservationId))
     .neq('status', 'cancelled')
-    .select('property_id')
+    .select('id, property_id, check_in, check_out, rate_plan, total_ron, stripe_payment_intent_id')
     .maybeSingle();
   if (!booking) return; // not one of ours, or already cancelled
+
+  // A PAID direct booking was cancelled in the PMS (ops-side, not via the
+  // My Trips flow — that one flips status to cancelled BEFORE Hostaway, so it
+  // never reaches here). No auto-refund from this path: cancelling in the PMS
+  // must not silently move money (e.g. a non-refundable no-show cleanup).
+  // Instead, alert ops with the one-click Stripe link so no refund is missed.
+  if (booking.stripe_payment_intent_id) {
+    try {
+      await sendEmail({
+        to: 'office@avexastays.com',
+        subject: `[OPS] Paid booking cancelled in Hostaway — check refund (${booking.check_in})`,
+        html: `
+          <div style="font-family:Arial,Helvetica,sans-serif;color:#191919;line-height:1.6">
+            <p>Hostaway reservation <strong>${reservationId}</strong>
+            (${booking.check_in} → ${booking.check_out}, rate: ${booking.rate_plan},
+            paid: <strong>${Number(booking.total_ron).toFixed(0)} RON</strong>)
+            was cancelled in the PMS.</p>
+            <p>The guest paid via Stripe on the website. If a refund is due under the
+            member cancellation policy (100% ≥72h / 50% ≥24h before 15:00 check-in;
+            city tax always refunded in full), issue it here:</p>
+            <p><a href="https://dashboard.stripe.com/payments/${booking.stripe_payment_intent_id}"
+            style="color:#B08840">Open the payment in Stripe → Refund</a></p>
+            <p>Booking id: ${booking.id}</p>
+          </div>
+        `,
+      });
+    } catch (err) {
+      console.error(
+        '[hostaway-webhook] refund-check ops alert failed:',
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
 
   // Free the calendar even without a listingMapId in the payload — resolve the
   // listing from the booking's property. Best-effort: never block the cancel.

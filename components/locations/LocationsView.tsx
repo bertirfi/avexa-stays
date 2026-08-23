@@ -10,6 +10,7 @@ import { PropertyCard } from '@/components/locations/PropertyCard';
 import { dateRangeLabel } from '@/components/search/SearchPill';
 import { useSearch } from '@/components/search/SearchContext';
 import { ymd, parseYmd } from '@/lib/date';
+import { buildSearchQuery } from '@/lib/searchParams';
 import type { PropertyRangeAvailability } from '@/lib/data/availability';
 import { StylizedMap } from '@/components/locations/StylizedMap';
 import { LocationsMap } from '@/components/locations/LocationsMap';
@@ -115,14 +116,23 @@ export function LocationsView({ properties }: { properties: Property[] }) {
     [searchBase, availData],
   );
 
-  // Unavailable for the searched dates, but with a nearby free window.
-  const unavailableWithAlt = useMemo(
-    () =>
-      availData
-        ? searchBase.filter((p) => !availData[p.id]?.available && availData[p.id]?.alternative)
-        : [],
+  // Unavailable for the searched dates — kept visible (dimmed) rather than
+  // dropped, with the nearest free window surfaced when the cache found one.
+  const unavailable = useMemo(
+    () => (availData ? searchBase.filter((p) => !availData[p.id]?.available) : []),
     [searchBase, availData],
   );
+
+  const nights =
+    startDate && endDate
+      ? Math.round((endDate.getTime() - startDate.getTime()) / 86_400_000)
+      : 0;
+
+  /** Accommodation total for the searched range, or null (no dates / no data). */
+  const rangeFor = (id: string) => {
+    const totalRon = availData?.[id]?.totalRon;
+    return totalRon !== undefined && nights > 0 ? { nights, totalRon } : null;
+  };
 
   // Zone chip counts ignore the zone scope itself (so other zones stay visible)
   // but respect dates + amenity + guest filters.
@@ -136,25 +146,47 @@ export function LocationsView({ properties }: { properties: Property[] }) {
   }, [prefiltered, availData]);
 
   // Detail links carry the active search; alternative cards carry THEIR dates.
-  const guestsQuery = useMemo(
-    () => ({
-      adults: String(guests.adults),
-      children: String(guests.children),
-      infants: String(guests.infants),
-    }),
-    [guests],
-  );
+  // `where` is included so a zone-scoped link round-trips through the URL
+  // instead of silently losing its zone once dates hydrate (see sync effect below).
   const searchQuery = useMemo(() => {
     if (!checkIn || !checkOut) return undefined;
-    return new URLSearchParams({ checkIn, checkOut, ...guestsQuery }).toString();
-  }, [checkIn, checkOut, guestsQuery]);
+    return buildSearchQuery({ arrival: checkIn, departure: checkOut, guests, where: zoneFilter });
+  }, [checkIn, checkOut, guests, zoneFilter]);
   const altQueryFor = (alt: { checkIn: string; checkOut: string }) =>
-    new URLSearchParams({ checkIn: alt.checkIn, checkOut: alt.checkOut, ...guestsQuery }).toString();
+    buildSearchQuery({ arrival: alt.checkIn, departure: alt.checkOut, guests });
+
+  // Keep the URL in step with the picked dates so the page is shareable and
+  // Back/Forward work. replace + scroll:false = no history spam, no jump; the
+  // page stays client-side (nothing here reads searchParams during render).
+  //
+  // WRITE-ONLY: it never clears the URL. On mount the context hasn't hydrated
+  // yet (searchQuery is undefined for a tick), so a clearing branch here would
+  // race SearchParamsSync and wipe the very params it is still reading.
+  // Clearing is an explicit user action — see clearDates().
+  //
+  // HYDRATION GUARD (mirrors StayBookingSidebar's `mounted` flag): skip the
+  // render this component mounts on. SearchParamsSync + SearchProvider both
+  // hydrate SearchContext from their own effects, which — same as this
+  // component's own mount effect below — fire in the same initial passive-
+  // effect flush and batch into one re-render. Gating on `hydrated` (state,
+  // not a ref — a ref would already be mutated by the time this effect body
+  // runs in that same flush) means the first render where this effect is
+  // actually allowed to write is the same render where the context is fully
+  // hydrated. A direct interaction (dates/zone picked by the user) always
+  // happens on a later render, so it is never blocked by this guard.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!searchQuery) return;
+    if (window.location.search === `?${searchQuery}`) return;
+    router.replace(`/locations?${searchQuery}`, { scroll: false });
+  }, [hydrated, searchQuery, router]);
 
   const searchDatesLabel = dateRangeLabel(startDate, endDate);
   const clearDates = () => {
     setDates(null, null);
-    router.replace('/locations');
+    router.replace('/locations', { scroll: false });
   };
 
   // Lock body scroll while the full-screen mobile map is open
@@ -229,7 +261,7 @@ export function LocationsView({ properties }: { properties: Property[] }) {
               Stays in Bucharest City Center
             </h1>
             <p className="mt-1.5 max-w-[400px] text-[15px] font-semibold text-ink-60">
-              Member rates and fully digital check-in at every AVEXA address across the city.
+              Direct rates, AVEXA Coins and fully digital check-in at every AVEXA address across the city.
             </p>
           </header>
 
@@ -411,36 +443,41 @@ export function LocationsView({ properties }: { properties: Property[] }) {
                       onActivate={() => setActiveId(p.id)}
                       onClear={() => setActiveId(null)}
                       query={searchQuery}
+                      range={rangeFor(p.id)}
                     />
                   ))}
                 </div>
               </section>
             ))}
 
-            {/* Nearby free windows for suites unavailable on the searched dates */}
-            {unavailableWithAlt.length > 0 && (
+            {/* Suites unavailable on the searched dates — dimmed, still visible,
+                with the nearest free window when the cache found one. */}
+            {unavailable.length > 0 && (
               <section>
                 <div className="mb-5 flex items-center gap-3">
-                  <h2 className="font-display text-xl tracking-[-0.01em]">Close dates available</h2>
+                  <h2 className="font-display text-xl tracking-[-0.01em]">
+                    Not available for these dates
+                  </h2>
                   <span className="h-px flex-1 bg-gray-line" />
                 </div>
                 <div className="flex flex-col gap-5">
-                  {unavailableWithAlt.map((p, i) => {
+                  {unavailable.map((p, i) => {
                     const alt = availData?.[p.id]?.alternative;
-                    if (!alt) return null;
                     return (
                       <div key={p.id}>
-                        <span className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1.5 text-[12px] font-semibold text-ink">
-                          Free {dateRangeLabel(parseYmd(alt.checkIn), parseYmd(alt.checkOut))}
-                        </span>
+                        {alt && (
+                          <span className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1.5 text-[12px] font-semibold text-ink">
+                            Free {dateRangeLabel(parseYmd(alt.checkIn), parseYmd(alt.checkOut))}
+                          </span>
+                        )}
                         <PropertyCard
-                          key={p.id}
                           property={p}
                           index={i}
                           active={activeId === p.id}
                           onActivate={() => setActiveId(p.id)}
                           onClear={() => setActiveId(null)}
-                          query={altQueryFor(alt)}
+                          query={alt ? altQueryFor(alt) : searchQuery}
+                          unavailable
                         />
                       </div>
                     );

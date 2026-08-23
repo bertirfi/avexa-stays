@@ -51,47 +51,50 @@ export function Hero() {
 
       {/* Headline */}
       <div className="relative z-10 mx-auto max-w-[1200px] text-center">
-        <h1
+        {/* SEO: the page's single h1 carries the primary keyword (CLAUDE.md
+            non-negotiable); the display headline below is the client's brand
+            copy (Spec M1.5.5) as a styled paragraph. */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="font-mono-label mb-4 text-[11px] tracking-[0.25em] text-cream/50"
+        >
+          Bucharest City Center Apartments
+        </motion.h1>
+        <p
           className="font-display"
           style={{ fontSize: 'clamp(36px, 6vw, 52px)', lineHeight: 1.05, letterSpacing: '-0.02em' }}
         >
           <motion.span
             initial={{ opacity: 0, y: 46 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-block"
-          >
-            Bucharest City Center
-          </motion.span>{' '}
-          <motion.span
-            initial={{ opacity: 0, y: 46 }}
-            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.09, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-block"
+            className="block"
           >
-            apartments,
-          </motion.span>{' '}
+            Your Bucharest Solution.
+          </motion.span>
           <motion.span
             initial={{ opacity: 0, y: 46 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-block italic text-gold"
+            className="block italic text-gold"
           >
-            unlocked
+            Feel the modern way.
             <span
               aria-hidden
               className="ml-1 inline-block size-[0.14em] translate-y-[0.18em] rounded-full bg-gold pulse-dot"
             />
           </motion.span>
-        </h1>
+        </p>
         <motion.p
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
           className="mx-auto mt-5 max-w-[520px] text-[15px] leading-relaxed text-cream/60 md:text-base"
         >
-          Premium Bucharest city center apartments — steps from Old Town and
-          Calea Victoriei, with digital check-in and member rates.
+          Best rates are just the beginning. Become an AVEXIAN Traveller.
+          Experience MORE. Unwind completely.
         </motion.p>
       </div>
 

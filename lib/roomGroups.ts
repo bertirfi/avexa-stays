@@ -5,13 +5,13 @@
  * (The Golden Forest, at Calea Victoriei 2) intentionally belongs to BOTH
  * Old City Center and Calea Victoriei.
  *   Old City Center : 101, 201
- *   Calea Victoriei : 202, 301, 302, 303, 201
+ *   Calea Victoriei : 102, 202, 301, 302, 303, 201
  *   Universitate    : 203 (solo)
  *   Piața Romană    : 304 (solo)
  */
 const ROOM_GROUPS: string[][] = [
   ['101', '201'],
-  ['202', '301', '302', '303', '201'],
+  ['102', '202', '301', '302', '303', '201'],
 ];
 
 /** Other suite ids bookable alongside `propertyId` (union across its groups). */

@@ -1,11 +1,22 @@
 import type { Metadata } from 'next';
 import { requireUser } from '@/lib/auth/server';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
+import {
+  fullRefundDeadlineMs,
+  halfRefundDeadlineMs,
+  isSelfCancellable,
+  refundPercentFor,
+} from '@/lib/booking/cancellation';
 import { properties } from '@/lib/properties';
+import { computeProgress, tierMeta } from '@/lib/avx/tiers';
+import { getWallet } from '@/lib/avx/ledger';
 import { EmptyTripsState } from '@/components/trips/EmptyTripsState';
 import { TripsList, type Trip } from '@/components/trips/TripsList';
 import { MosaicSection } from '@/components/trips/MosaicSection';
 import { ContactSection } from '@/components/trips/ContactSection';
+import { AvxWallet } from '@/components/trips/AvxWallet';
+import { AvexianMeter } from '@/components/trips/AvexianMeter';
+import { VaultGrid } from '@/components/trips/VaultGrid';
 
 export const metadata: Metadata = {
   title: 'My Trips',
@@ -74,15 +85,35 @@ export default async function MyTripsPage() {
   const { data } = await supabase
     .from('bookings')
     .select(
-      'id, property_id, status, check_in, check_out, adults, children, infants, total_ron, display_currency, display_fx_rate, order_id',
+      'id, property_id, status, check_in, check_out, adults, children, infants, total_ron, display_currency, display_fx_rate, order_id, rate_plan, hostaway_reservation_id',
     )
     .order('check_in', { ascending: false });
 
   const rows = data ?? [];
 
+  // "Today" as a 'YYYY-MM-DD' string in Bucharest time (upcoming/past split +
+  // the "non-refundable now" gate below).
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Bucharest',
+  }).format(new Date());
+
+  const deadlineFormat = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Bucharest',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
   const trips: Trip[] = rows.map((b) => {
     const property = properties.find((p) => p.id === b.property_id);
     const totalRon = Math.round(Number(b.total_ron));
+    // The action re-checks this server-side at cancel time — here it only
+    // decides whether the button renders (and the page is SSR per-request,
+    // so "now" is honest, not a stale build-time value). Tiered DX7 policy:
+    // 100% ≥72h before 15:00 check-in, 50% ≥24h, 0% under 24h.
+    const refundPercent = refundPercentFor(b.check_in);
+    const cancellable = isSelfCancellable(b);
     return {
       id: b.id,
       orderId: b.order_id,
@@ -101,13 +132,23 @@ export default async function MyTripsPage() {
       totalLabel: `${totalRon.toLocaleString('en-US')} RON`,
       approxLabel: formatApproxLabel(totalRon, b.display_currency, b.display_fx_rate),
       status: b.status,
+      cancellable,
+      refundPercent,
+      fullDeadlineLabel: cancellable
+        ? deadlineFormat.format(new Date(fullRefundDeadlineMs(b.check_in)))
+        : null,
+      halfDeadlineLabel: cancellable
+        ? deadlineFormat.format(new Date(halfRefundDeadlineMs(b.check_in)))
+        : null,
+      // Confirmed stay inside 24h of check-in (not yet checked out): no
+      // self-cancel button — "Non-refundable now — contact us".
+      nonRefundableNow:
+        b.status === 'confirmed' &&
+        b.hostaway_reservation_id !== null &&
+        refundPercent === 0 &&
+        b.check_out >= today,
     };
   });
-
-  // "Today" as a 'YYYY-MM-DD' string in Bucharest time, for the upcoming/past split.
-  const today = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Bucharest',
-  }).format(new Date());
 
   const upcoming: Trip[] = [];
   const past: Trip[] = [];
@@ -122,8 +163,52 @@ export default async function MyTripsPage() {
     user.email?.split('@')[0] ||
     'there';
 
+  // AVEXIAN loyalty: tier progress from the raw booking rows (cancelled/
+  // pending filtered inside), wallet via the service-role ledger — null until
+  // the 004_avx migration runs, which renders the "being prepared" card.
+  const progress = computeProgress(rows);
+  const wallet = await getWallet(user.id);
+  const nextMeta = progress.next ? tierMeta(progress.next.tier) : null;
+
   return (
     <>
+      <section className="bg-ink pt-28 pb-[clamp(70px,8vw,110px)] text-white md:pt-36">
+        <div className="mx-auto max-w-5xl px-6 md:px-10">
+          <p className="font-mono-label text-gold-dark">— Membership</p>
+          <h2 className="font-display mt-3.5 text-[clamp(36px,5vw,60px)] leading-none">
+            Your AVEXIAN Journey
+            <span
+              aria-hidden
+              className="ml-[0.08em] inline-block size-[0.14em] translate-y-[0.04em] rounded-full bg-gold-dark align-baseline pulse-dot"
+            />
+          </h2>
+
+          <div className="mt-9 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <AvxWallet wallet={wallet} />
+            <AvexianMeter
+              tierName={tierMeta(progress.tier).name}
+              stays={progress.stays}
+              nights={progress.nights}
+              next={
+                progress.next && nextMeta
+                  ? {
+                      tierName: nextMeta.name,
+                      staysNeeded: progress.next.staysNeeded,
+                      nightsNeeded: progress.next.nightsNeeded,
+                      staysTarget: progress.next.staysTarget,
+                      nightsTarget: progress.next.nightsTarget,
+                    }
+                  : null
+              }
+            />
+          </div>
+
+          <div className="mt-14">
+            <VaultGrid userTier={progress.tier} />
+          </div>
+        </div>
+      </section>
+
       {trips.length === 0 ? (
         <EmptyTripsState name={firstName} />
       ) : (

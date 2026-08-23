@@ -21,11 +21,6 @@ import { getDisplayRates } from '@/lib/pricing';
 
 export const runtime = 'nodejs';
 
-const RATE_PLAN: Record<'saver' | 'flex', 'non_refundable' | 'flexible'> = {
-  saver: 'non_refundable',
-  flex: 'flexible',
-};
-
 /**
  * The origin used to build Stripe's success/cancel URLs, hardened against
  * Host-header spoofing: a forged Host must not steer Stripe's post-payment
@@ -76,7 +71,6 @@ export async function POST(req: Request) {
     adults: body.adults,
     children: body.children,
     infants: body.infants,
-    rateId: body.rateId,
     breakfast: body.breakfast,
   });
   if (!quote.ok) {
@@ -152,12 +146,21 @@ export async function POST(req: Request) {
       adults: quote.adults,
       children: quote.children,
       infants: quote.infants,
-      rate_plan: RATE_PLAN[body.rateId],
+      // Single flat rate since M1.1 — DX7 makes cancellation a membership right,
+      // and every site booking is a member booking, so 'flexible' is the truth
+      // (the bookings.rate_plan CHECK only allows non_refundable|flexible; a
+      // dedicated 'standard' value would need a migration — deferred).
+      rate_plan: 'flexible',
       accommodation_ron: quote.accommodationRon,
-      extras_ron: quote.extrasRon,
+      // Cleaning is stored inside `extras` jsonb + extras_ron for now (no schema
+      // migration — a dedicated cleaning_ron column is a flagged follow-up).
+      extras_ron: quote.extrasRon + quote.cleaningRon,
       city_tax_ron: quote.cityTaxRon,
       total_ron: quote.totalRon,
-      extras: quote.extras,
+      extras: [
+        ...quote.extras,
+        { id: 'cleaning', name: 'Cleaning fee', ron: quote.cleaningRon },
+      ],
       display_currency: body.displayCurrency,
       display_fx_rate: displayFxRate,
       currency: 'RON',
@@ -205,6 +208,14 @@ export async function POST(req: Request) {
         product_data: { name: `Extra service — ${extra.name}` },
       },
     })),
+    {
+      quantity: 1,
+      price_data: {
+        currency: 'ron',
+        unit_amount: Math.round(quote.cleaningRon * 100),
+        product_data: { name: 'Cleaning fee' },
+      },
+    },
     {
       quantity: 1,
       price_data: {

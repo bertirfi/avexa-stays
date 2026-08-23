@@ -4,11 +4,12 @@ import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSearch } from '@/components/search/SearchContext';
 import { readSearchPrefs, writeSearchPrefs } from '@/lib/searchPrefs';
+import { readGuestParams, readRangeParams } from '@/lib/searchParams';
 import { parseYmd } from '@/lib/date';
 
 /**
  * Hydrates SearchContext from the URL search params (URL wins over
- * localStorage) so a shared /locations?checkIn=... link shows the searched
+ * localStorage) so a shared /locations?arrival=... link shows the searched
  * values in the header pill on cold load.
  *
  * Rendered in its OWN <Suspense> boundary next to the page content — putting
@@ -29,32 +30,26 @@ export function SearchParamsSync() {
     if (applied.current === key) return;
     applied.current = key;
 
-    const checkIn = sp.get('checkIn');
-    const checkOut = sp.get('checkOut');
+    const { arrival, departure } = readRangeParams(sp);
     const where = sp.get('where');
-    const adults = sp.get('adults');
+    const urlGuests = readGuestParams(sp);
     // No search params at all → keep whatever localStorage hydration restores.
-    if (!checkIn && !checkOut && !where && !adults) return;
+    if (!arrival && !departure && !where && !urlGuests) return;
 
-    // SearchPill.go() omits `where` when 'all' — absence means "all".
+    // buildSearchQuery omits `where` when 'all' — absence means "all".
     const location = where ?? 'all';
-    const start = parseYmd(checkIn);
-    const end = parseYmd(checkOut);
-    const guests = {
-      adults: Math.min(10, Math.max(1, Number(adults) || 1)),
-      children: Math.min(10, Math.max(0, Number(sp.get('children')) || 0)),
-      infants: Math.min(10, Math.max(0, Number(sp.get('infants')) || 0)),
-    };
+    const start = parseYmd(arrival);
+    const end = parseYmd(departure);
 
     setLocation(location);
     setDates(start, end);
-    if (adults !== null) setGuests(guests);
+    if (urlGuests) setGuests(urlGuests);
     writeSearchPrefs({
       location,
-      checkIn: start && checkIn ? checkIn : null,
-      checkOut: end && checkOut ? checkOut : null,
+      checkIn: start && arrival ? arrival : null,
+      checkOut: end && departure ? departure : null,
       // A dates-only deep link must not clobber remembered guest counts.
-      guests: adults !== null ? guests : (readSearchPrefs()?.guests ?? guests),
+      guests: urlGuests ?? readSearchPrefs()?.guests ?? { adults: 1, children: 0, infants: 0 },
     });
   }, [sp, setLocation, setDates, setGuests]);
 

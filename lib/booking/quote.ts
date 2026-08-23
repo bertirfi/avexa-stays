@@ -20,7 +20,6 @@ export interface QuoteInput {
   adults: number;
   children: number;
   infants: number;
-  rateId: 'saver' | 'flex';
   breakfast: boolean;
 }
 
@@ -47,8 +46,12 @@ export type Quote =
       /** Taxable occupants (adults + children; infants stay free). */
       occupants: number;
       accommodationRon: number;
+      /** Per-night charged prices (RON) — surfaced for the checkout breakdown (M1.1.6). */
+      nightly: Array<{ date: string; ron: number }>;
       extras: QuoteExtra[];
       extrasRon: number;
+      /** Per-stay cleaning fee (RON) — from the property record, never the client. */
+      cleaningRon: number;
       cityTaxRon: number;
       totalRon: number;
     }
@@ -82,7 +85,7 @@ export async function quoteBooking(input: QuoteInput): Promise<Quote> {
   const adults = Math.floor(input.adults);
   const children = Math.floor(input.children);
   const infants = Math.floor(input.infants);
-  if (adults < 1 || children < 0 || infants < 0 || adults + children > 10) {
+  if (adults < 1 || children < 0 || infants < 0 || infants > 10 || adults + children > 10) {
     return { ok: false, reason: 'invalid' };
   }
   // "Today" in Europe/Bucharest — the server runs in UTC, and before 03:00
@@ -110,15 +113,9 @@ export async function quoteBooking(input: QuoteInput): Promise<Quote> {
   }
   const byDate = new Map(calendar.map((d) => [d.date, d]));
 
-  // Flex has no independent Hostaway price — it inherits the flex/saver ratio
-  // from the property catalog (same rule the sidebar display uses), applied to
-  // the live per-night price.
-  const saverRate = property.rates[0]?.perNight;
-  const flexRate = property.rates[1]?.perNight;
-  const rateFactor =
-    input.rateId === 'flex' && saverRate && flexRate ? flexRate / saverRate : 1;
-
-  let accommodationRon = 0;
+  // Single flat rate: per-night charged price = ceil(live base × markup) —
+  // the same lib/pricing math the sidebar's availability cache displays.
+  const nightly: Array<{ date: string; ron: number }> = [];
   for (let i = 0; i < nights; i += 1) {
     const [y, m, d] = checkIn.split('-').map(Number);
     const dt = new Date(Date.UTC(y, m - 1, d + i));
@@ -128,10 +125,9 @@ export async function quoteBooking(input: QuoteInput): Promise<Quote> {
     if (i === 0 && (day.minimumStay ?? 1) > nights) {
       return { ok: false, reason: 'unavailable' };
     }
-    accommodationRon += Math.round(
-      accommodationRonPerNight(day.price as number) * rateFactor,
-    );
+    nightly.push({ date: key, ron: accommodationRonPerNight(day.price as number) });
   }
+  const accommodationRon = nightly.reduce((sum, n) => sum + n.ron, 0);
 
   // ── Extras (v1: breakfast; DB `services` catalog plugs in here later) ───
   const occupants = adults + children;
@@ -149,8 +145,12 @@ export async function quoteBooking(input: QuoteInput): Promise<Quote> {
   const extrasRon = extras.reduce((sum, e) => sum + e.ron, 0);
 
   // ── Totals (RON — pass-through city tax, no markup/fee on it) ───────────
+  // Cleaning fee: per-stay, from the property record server-side (M1.1.3).
+  // ?? 0 guards a DB row whose id no longer has a static catalog entry — the
+  // overlay can't add cleaningRon there, and NaN must never reach a total.
+  const cleaningRon = property.cleaningRon ?? 0;
   const tax = cityTaxRon(nights, occupants);
-  const totalRon = accommodationRon + extrasRon + tax;
+  const totalRon = accommodationRon + extrasRon + cleaningRon + tax;
 
   return {
     ok: true,
@@ -165,8 +165,10 @@ export async function quoteBooking(input: QuoteInput): Promise<Quote> {
     infants,
     occupants,
     accommodationRon,
+    nightly,
     extras,
     extrasRon,
+    cleaningRon,
     cityTaxRon: tax,
     totalRon,
   };

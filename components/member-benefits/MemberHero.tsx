@@ -6,7 +6,7 @@ import { motion } from 'motion/react';
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const words = ['The', 'best', 'rate'];
+const words = ['Become', 'an'];
 
 export function MemberHero() {
   return (
@@ -63,7 +63,7 @@ export function MemberHero() {
             transition={{ duration: 0.9, delay: 0.59, ease }}
             className="inline-block italic text-gold"
           >
-            is yours
+            AVEXIAN Traveller
             <span
               aria-hidden
               className="ml-[0.04em] inline-block size-[0.14em] -translate-y-[0.03em] rounded-full bg-gold align-baseline pulse-dot"
@@ -77,7 +77,7 @@ export function MemberHero() {
           transition={{ duration: 0.9, delay: 0.85, ease }}
           className="mx-auto mt-10 max-w-[520px] text-[17px] font-light leading-[1.65] text-white/65"
         >
-          Free to join, free forever. Every AVEXA member gets the lowest price we offer — plus a set of perks that make every stay sharper, faster, and better value.
+          Unlock Exclusivity &amp; Elevate Every Stay. Free to join, free forever.
         </motion.p>
 
         <motion.div
