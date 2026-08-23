@@ -16,6 +16,9 @@ const config: NextConfig = {
   reactStrictMode: true,
   images: {
     formats: ['image/avif', 'image/webp'],
+    // quality={85} is used on hero/editorial imagery; Next 16 hard-errors on
+    // qualities missing from this allowlist (Next 15 only warns).
+    qualities: [75, 85],
   },
   // Ignore legacy HTML/JSX prototype files at project root from build
   pageExtensions: ['ts', 'tsx'],
