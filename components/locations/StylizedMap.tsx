@@ -1,7 +1,7 @@
 'use client';
 
 import { useCurrency } from '@/components/currency/CurrencyProvider';
-import type { Property } from '@/types';
+import type { LocationsProperty } from '@/types';
 import { cn } from '@/lib/cn';
 
 /** Decorative pin positions (% of map box), spread for legibility by zone. */
@@ -24,7 +24,7 @@ const ZONE_LABELS: Array<{ label: string; x: number; y: number }> = [
 ];
 
 interface StylizedMapProps {
-  properties: Property[];
+  properties: LocationsProperty[];
   /** When set, only these property ids render pins (search filtering). */
   visibleIds?: string[];
   activeId: string | null;

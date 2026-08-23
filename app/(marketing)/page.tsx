@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   // Absolute = bypass the "%s · AVEXA Stays" template; keyword leads.
   title: { absolute: 'Bucharest City Center Apartments | AVEXA Stays' },
   description:
-    'Book premium apartments in Bucharest city center — direct rates, digital check-in, no front desk. Old Town, Calea Victoriei, Universitate & Piața Romană.',
+    'Book premium apartments in Bucharest city center — direct rates, digital check-in, no front desk. Old Town, Calea Victoriei & Piața Romană.',
   alternates: { canonical: '/' },
   openGraph: {
     title: 'Bucharest City Center Apartments — AVEXA Stays',

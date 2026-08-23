@@ -10,6 +10,9 @@ interface MobileBookingBarProps {
   taxNote: string;
   ctaLabel: string;
   onBook: () => void;
+  /** True while the in-page booking box is on screen — the fixed bar fades out
+   *  so the guest never sees the same total + CTA twice. */
+  hidden?: boolean;
 }
 
 export function MobileBookingBar({
@@ -18,6 +21,7 @@ export function MobileBookingBar({
   taxNote,
   ctaLabel,
   onBook,
+  hidden = false,
 }: MobileBookingBarProps) {
   const { scrollingDown } = useChromeScroll();
 
@@ -25,8 +29,9 @@ export function MobileBookingBar({
     <div
       className={cn(
         // <md only — from 768px up, <StickyBookingBar> takes over (Spec M1.5.1).
-        'fixed inset-x-0 z-40 flex items-center justify-between gap-3 border-t border-gray-line bg-white px-5 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] transition-[bottom] duration-300 ease-[var(--ease-snap)] md:hidden',
+        'fixed inset-x-0 z-40 flex items-center justify-between gap-3 border-t border-gray-line bg-white px-5 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] transition-[bottom,opacity,transform] duration-300 ease-[var(--ease-snap)] motion-reduce:transition-none md:hidden',
         'bottom-0',
+        hidden && 'pointer-events-none translate-y-3 opacity-0',
         // Tab bar is visible below md when scrolling up / near top — lift the
         // booking bar to sit just above it. While scrolling down the tab bar
         // hides, so the bar drops flush to the bottom.
