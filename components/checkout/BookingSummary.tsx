@@ -96,7 +96,7 @@ export function BookingSummary({ hydrated, quoteState }: BookingSummaryProps) {
             {/* Factual label — every rate on the site is a member rate (login is
                 mandatory); no discount delta exists in the breakdown to claim. */}
             <span className="inline-flex w-fit items-center rounded-full bg-gold-pale px-2.5 py-1 text-[11px] font-semibold text-gold-dark">
-              Member rate
+              Direct rate
             </span>
             {quote.extrasRon > 0 && (
               <Row label="Extra services · Breakfast" value={format(quote.extrasRon)} />

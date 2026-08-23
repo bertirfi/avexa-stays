@@ -19,7 +19,7 @@ Formula (single entry point: `lib/pricing.ts`):
 
 ```
 accommodation_RON/night = ceil( base_RON × (1 + markup) × (1 + paymentFee) )   // flat 21% markup, 0% fee (Spec M1.1.1: Hostaway +21%, nothing else)
-cleaning_RON            = per-property flat fee (125/150/180) — own line, "cleaning not included" in the nightly rate
+cleaning_RON            = per-property flat fee (120/150/180) — own line, "cleaning not included" in the nightly rate
 city_tax_RON            = 10 × nights × persons                                 // pass-through: NO markup, NO fee
 charged                 = accommodation + extras + cleaning + city tax  — ALWAYS RON (Stripe currency 'ron')
 display                 = RON ÷ AVEXA_FX_RATE_EUR (5.25) | AVEXA_FX_RATE_USD (4.65)

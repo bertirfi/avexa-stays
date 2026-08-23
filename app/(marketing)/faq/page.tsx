@@ -130,7 +130,7 @@ const categories: { title: string; items: FaqItem[] }[] = [
         q: 'How can I request an early check-in or a late check-out?',
         a: [
           'Early check-in and late check-out are paid upsells you can book through My Trips, subject to availability on that specific day.',
-          'PLATINUM and DIAMOND HERO members can pay for these upsells with their AVX Coins instead.',
+          'AVEXIAN members at any tier can pay for these upsells with their AVX Coins instead.',
         ],
       },
       {

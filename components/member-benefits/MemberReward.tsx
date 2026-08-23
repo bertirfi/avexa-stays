@@ -12,42 +12,50 @@ interface Tier {
 
 const tiers: Tier[] = [
   {
+    name: 'BASIC',
+    progress: 'Just signed up',
+    earn: '—',
+    unlock: 'Your journey starts here — book your first stay to go BRONZE and start earning.',
+  },
+  {
     name: 'BRONZE',
     progress: 'Your first stay',
     earn: '5%',
-    unlock: 'Start building your AVEXIAN Vault — coins ready for your next visit',
+    unlock: 'Initiation: start building your AVEXIAN Vault. Your earned AVX Coins will be ready to use on your next visit.',
   },
   {
     name: 'SILVER',
     progress: '2 stays & 5 nights',
     earn: '8%',
-    unlock: 'Spend AVX on future stays',
+    unlock: 'Flexibility Unlocked: use your AVX Coins for Early Check-in, Late Check-out & more.',
   },
   {
     name: 'GOLD',
     progress: '3 stays & 10 nights',
     earn: '10%',
-    unlock: "Spend AVX on future stays — and you're one step from the full Vault",
+    unlock: 'Comfort Unlocked: Exclusive Welcome Box, Luggage Drop, Mid-stay Cleaning, Birthday & Anniversary Packages & many more.',
   },
   {
     name: 'PLATINUM',
     progress: '5 stays & 20 nights',
     earn: '12.5%',
-    unlock: 'Spend AVX on ANYTHING: stays, early check-in, late check-out, transfers & every upsell',
+    unlock: 'Executive Unlocked: 24/7 Free Parking access, Airport Transfer, Spa / Relaxation Kit & sessions — plus pay for accommodation with AVX (2 AVX = 1 RON).',
   },
   {
     name: 'DIAMOND HERO',
     progress: '7 stays & 35 nights',
     earn: '15%',
-    unlock: 'Top earn rate + all-access Vault. Our highest recognition',
+    unlock: 'All-Inclusive Access: all upsell options are FREE (subject to availability) + an exclusive physical gift upon arrival.',
     hero: true,
   },
 ];
 
 const footnotes = [
   'Coins are earned on the net accommodation value (excluding VAT, city tax, cleaning and upsells).',
-  'Coins become active 24 hours after check-out and can be used on future bookings — not the current stay.',
+  'Coins become active 24 hours after check-out.',
   'Coins expire 12 months after activation. We remind you 30 days before.',
+  'Spend AVX on upsells at any tier — 1 AVX = 1 RON.',
+  'From PLATINUM, coins can also cover accommodation at 2 AVX = 1 RON.',
   'Consecutive back-to-back bookings merge into a single stay for tier progress.',
   'Only completed stays count. Coins are personal, non-transferable and have no cash value.',
 ];
@@ -62,7 +70,7 @@ export function MemberTiers() {
             className="font-display mt-3.5 text-white"
             style={{ fontSize: 'clamp(44px,6.2vw,80px)', lineHeight: 1 }}
           >
-            Five tiers. One Vault
+            Six tiers. One Vault
             <span
               aria-hidden
               className="ml-[0.08em] inline-block size-[0.14em] translate-y-[0.04em] rounded-full bg-gold align-baseline pulse-dot"

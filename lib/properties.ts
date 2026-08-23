@@ -93,7 +93,7 @@ export const properties: Property[] = [
       { id: 11, label: 'Building Entrance', src: '/listings/101/25-building-entrance.jpeg' },
     ],
     rates: rates(415),
-    cleaningRon: 125,
+    cleaningRon: 120,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchenette', 'Elevator',
@@ -193,7 +193,7 @@ export const properties: Property[] = [
       { id: 12, label: 'Living Room — Alt', src: '/listings/102/13-living-room-alt.jpeg' },
     ],
     rates: rates(479),
-    cleaningRon: 125,
+    cleaningRon: 120,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchenette', 'Washer & Dryer',

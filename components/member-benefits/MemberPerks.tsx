@@ -34,15 +34,15 @@ const perks: Perk[] = [
   },
   {
     icon: '→',
-    title: 'Spend your coins on future stays',
-    desc: 'Redeem AVX against the cost of your next booking — no blackout dates, no complicated redemption rules.',
-    tag: 'Book, then redeem',
+    title: 'Spend AVX on every upsell',
+    desc: 'Late check-out, early check-in, transfers & more — 1 AVX = 1 RON, at any tier.',
+    tag: 'Every tier, every upsell',
   },
   {
     icon: '♢',
-    title: 'PLATINUM & DIAMOND: spend on any upsell',
-    desc: 'Our top tiers can put coins toward more than stays — early check-in, late check-out, airport transfers and every upsell in the AVEXIAN Vault.',
-    tag: 'PLATINUM & DIAMOND only',
+    title: 'PLATINUM+: pay your stay with coins',
+    desc: 'From PLATINUM, AVX also covers accommodation at 2 AVX = 1 RON.',
+    tag: 'PLATINUM & DIAMOND HERO',
   },
   {
     icon: '∞',

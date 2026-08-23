@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import type { HydratedBooking } from '@/lib/booking';
@@ -21,6 +21,11 @@ type PayState =
   | { status: 'redirecting' }
   | { status: 'error'; message: string; unavailable?: boolean };
 
+interface Consent {
+  terms: boolean;
+  rules: boolean;
+}
+
 /**
  * Final step before Stripe. No card fields here — Stripe Checkout hosts the
  * payment page (cards, Apple Pay, Google Pay, 3DS). This step only sends the
@@ -32,6 +37,9 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
   const isBiz = form.accountType === 'business';
   const { currency, format } = useCurrency();
   const [state, setState] = useState<PayState>({ status: 'idle' });
+  // M3.4: both consents are mandatory — unchecked by default, blocks payment.
+  const [consent, setConsent] = useState<Consent>({ terms: false, rules: false });
+  const [consentTouched, setConsentTouched] = useState(false);
 
   const raw = hydrated.raw;
   // Money shown MUST be the authoritative server quote (never the draft). Until
@@ -41,6 +49,10 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
   const totalDisplay = totalRon !== null ? format(totalRon) : null;
 
   async function pay() {
+    if (!consent.terms || !consent.rules) {
+      setConsentTouched(true);
+      return;
+    }
     setState({ status: 'redirecting' });
     try {
       const res = await fetch('/api/checkout', {
@@ -111,7 +123,11 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
   // error) and while redirecting — we never send the guest to Stripe on a price
   // we haven't confirmed server-side this session.
   const busy = state.status === 'redirecting';
-  const canPay = quote !== null && !busy;
+  const quoteReady = quote !== null && !busy;
+  const consentOk = consent.terms && consent.rules;
+  const canPay = quoteReady && consentOk;
+  const showTermsError = consentTouched && !consent.terms;
+  const showRulesError = consentTouched && !consent.rules;
 
   return (
     <div className="space-y-6">
@@ -187,6 +203,44 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
         </div>
       )}
 
+      <div className="space-y-2.5">
+        <ConsentCheckbox
+          checked={consent.terms}
+          onChange={(terms) => setConsent((c) => ({ ...c, terms }))}
+          showError={showTermsError}
+          label={
+            <>
+              I agree to the{' '}
+              <Link href="/terms" className="underline hover:text-gold-dark">
+                Terms &amp; Conditions
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="underline hover:text-gold-dark">
+                Privacy Policy
+              </Link>
+              .
+            </>
+          }
+        />
+        <ConsentCheckbox
+          checked={consent.rules}
+          onChange={(rules) => setConsent((c) => ({ ...c, rules }))}
+          showError={showRulesError}
+          label={
+            <>
+              I accept the Rental Agreement and{' '}
+              {/* TODO: point at the dedicated House Rules doc once the client sends it
+                  this week — for now /terms#6 (Guest responsibilities & House Rules) is
+                  the closest published copy. */}
+              <Link href="/terms" className="underline hover:text-gold-dark">
+                House Rules
+              </Link>{' '}
+              — The AVEXA Standard.
+            </>
+          }
+        />
+      </div>
+
       <div className="flex gap-3">
         <button
           type="button"
@@ -199,8 +253,9 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
         <button
           type="button"
           onClick={pay}
-          disabled={!canPay}
-          className="flex flex-1 items-center justify-center gap-2 rounded-full bg-ink py-3 font-semibold text-cream transition hover:bg-gold hover:text-ink disabled:cursor-wait disabled:opacity-70"
+          disabled={!quoteReady}
+          aria-disabled={!canPay}
+          className="flex flex-1 items-center justify-center gap-2 rounded-full bg-ink py-3 font-semibold text-cream transition hover:bg-gold hover:text-ink disabled:cursor-wait disabled:opacity-70 aria-disabled:cursor-not-allowed aria-disabled:opacity-70 aria-disabled:hover:bg-ink aria-disabled:hover:text-cream"
         >
           <Icon name="shield" size={16} />
           {busy
@@ -210,6 +265,34 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
               : `Pay ${totalDisplay}`}
         </button>
       </div>
+    </div>
+  );
+}
+
+function ConsentCheckbox({
+  checked,
+  onChange,
+  label,
+  showError,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: ReactNode;
+  showError: boolean;
+}) {
+  return (
+    <div>
+      <label className="flex cursor-pointer items-start gap-2.5 text-xs text-ink-80">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          aria-invalid={showError}
+          className="mt-0.5 size-4 shrink-0 rounded border-gray-line text-gold accent-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+        />
+        <span>{label}</span>
+      </label>
+      {showError && <p className="mt-1 pl-[26px] text-xs text-red-600">Please accept to continue</p>}
     </div>
   );
 }

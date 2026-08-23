@@ -41,19 +41,31 @@ function bucharestWallTimeMs(y: number, m: number, d: number, h: number): number
   return utcGuess - (rendered - utcGuess);
 }
 
-function checkInAnchorMs(checkIn: string): number {
+/**
+ * Deadline = 15:00 Bucharest WALL TIME on (check-in − N days), not a flat
+ * hour subtraction from one epoch — a DST switch between deadline and
+ * check-in would otherwise shift the real cutoff an hour off the published
+ * "until 15:00" framing.
+ */
+function wallDeadlineMs(checkIn: string, daysBefore: number): number {
   const [y, m, d] = checkIn.split('-').map(Number);
-  return bucharestWallTimeMs(y, m, d, CHECK_IN_HOUR_BUCHAREST);
+  const shifted = new Date(Date.UTC(y, m - 1, d - daysBefore));
+  return bucharestWallTimeMs(
+    shifted.getUTCFullYear(),
+    shifted.getUTCMonth() + 1,
+    shifted.getUTCDate(),
+    CHECK_IN_HOUR_BUCHAREST,
+  );
 }
 
-/** Epoch ms until which cancelling refunds 100% (check-in 15:00 − 72h). */
+/** Epoch ms until which cancelling refunds 100% (15:00, 3 days before check-in). */
 export function fullRefundDeadlineMs(checkIn: string): number {
-  return checkInAnchorMs(checkIn) - FULL_REFUND_HOURS * 3_600_000;
+  return wallDeadlineMs(checkIn, FULL_REFUND_HOURS / 24);
 }
 
-/** Epoch ms until which cancelling refunds 50% (check-in 15:00 − 24h). */
+/** Epoch ms until which cancelling refunds 50% (15:00, 1 day before check-in). */
 export function halfRefundDeadlineMs(checkIn: string): number {
-  return checkInAnchorMs(checkIn) - HALF_REFUND_HOURS * 3_600_000;
+  return wallDeadlineMs(checkIn, HALF_REFUND_HOURS / 24);
 }
 
 /** Refund percentage of the non-city-tax portion if cancelled at `nowMs`. */

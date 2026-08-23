@@ -85,7 +85,7 @@ export async function quoteBooking(input: QuoteInput): Promise<Quote> {
   const adults = Math.floor(input.adults);
   const children = Math.floor(input.children);
   const infants = Math.floor(input.infants);
-  if (adults < 1 || children < 0 || infants < 0 || adults + children > 10) {
+  if (adults < 1 || children < 0 || infants < 0 || infants > 10 || adults + children > 10) {
     return { ok: false, reason: 'invalid' };
   }
   // "Today" in Europe/Bucharest — the server runs in UTC, and before 03:00
@@ -146,7 +146,9 @@ export async function quoteBooking(input: QuoteInput): Promise<Quote> {
 
   // ── Totals (RON — pass-through city tax, no markup/fee on it) ───────────
   // Cleaning fee: per-stay, from the property record server-side (M1.1.3).
-  const cleaningRon = property.cleaningRon;
+  // ?? 0 guards a DB row whose id no longer has a static catalog entry — the
+  // overlay can't add cleaningRon there, and NaN must never reach a total.
+  const cleaningRon = property.cleaningRon ?? 0;
   const tax = cityTaxRon(nights, occupants);
   const totalRon = accommodationRon + extrasRon + cleaningRon + tax;
 
