@@ -19,10 +19,10 @@ type AvailabilityInsert = Database['public']['Tables']['availability']['Insert']
 // OTA bookings (a Booking.com reservation 200 days out never reached the cache).
 export const SYNC_WINDOW_DAYS = 380;
 
-// "From X/night" basis: the min over the NEXT 60 days only — an honest
-// near-term floor, not a promo price 11 months out (display decision to
-// confirm with Vlad; the sync window itself stays 380d for availability).
-export const FROM_PRICE_WINDOW_DAYS = 60;
+// "From X/night" basis: the min over the NEXT 30 days only — an honest
+// near-term floor, not a promo price 11 months out (30d confirmed by Robert
+// 23.08.2026; the sync window itself stays 380d for availability).
+export const FROM_PRICE_WINDOW_DAYS = 30;
 
 /**
  * Re-pull one listing's calendar and mirror it into the availability cache,
