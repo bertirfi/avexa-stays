@@ -8,6 +8,7 @@ import { Icon } from '@/components/Icon';
 import { CalendarPopup } from '@/components/search/CalendarPopup';
 import { GuestPopup } from '@/components/search/GuestPopup';
 import { MobileBookingBar } from '@/components/stay/MobileBookingBar';
+import { StickyBookingBar } from '@/components/stay/StickyBookingBar';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
 import type { Booking, GuestCounts, Property } from '@/types';
 import type { AvailabilityMap } from '@/lib/data/availability';
@@ -15,7 +16,9 @@ import { ymd, parseYmd } from '@/lib/date';
 import { CITY_TAX_RON_PER_PERSON_NIGHT } from '@/lib/currency';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 import { readSearchPrefs, writeSearchPrefs } from '@/lib/searchPrefs';
+import { buildSearchQuery, readGuestParams, readRangeParams } from '@/lib/searchParams';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { CONTACT_EMAIL } from '@/lib/contact';
 import { cn } from '@/lib/cn';
 
 interface Props {
@@ -37,6 +40,19 @@ const MULTI_ROOM_ENABLED = false;
 // sold yet — they return later via Stripe products or on-site upsells. Gates
 // ONLY the upgrades UI; state/pricing plumbing stays wired for the flip back.
 const UPGRADES_ENABLED = false;
+
+// Mirrors lib/booking/quote.ts MAX_NIGHTS — duplicated here (not imported)
+// because that module pulls in the server-only Hostaway client.
+const MAX_NIGHTS = 30;
+
+/** Clamp URL/localStorage-seeded guests to this property's capacity: drop
+ * children first, then adults down to a floor of 1. Infants are untouched. */
+function clampGuestsToMax(g: GuestCounts, maxGuests: number): GuestCounts {
+  let { adults, children } = g;
+  while (adults + children > maxGuests && children > 0) children -= 1;
+  while (adults + children > maxGuests && adults > 1) adults -= 1;
+  return { adults, children, infants: g.infants };
+}
 
 function formatDate(d: Date | null) {
   if (!d) return null;
@@ -81,17 +97,8 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     // window.location instead of useSearchParams keeps the sidebar in the
     // static (ISR) HTML — no Suspense/CSR bailout needed for a mount-only read.
     const q = new URLSearchParams(window.location.search);
-    const urlIn = q.get('checkIn');
-    const urlOut = q.get('checkOut');
-    const urlAdults = q.get('adults');
-    const urlGuests: GuestCounts | null =
-      urlAdults !== null
-        ? {
-            adults: Math.min(10, Math.max(1, Number(urlAdults) || 1)),
-            children: Math.min(10, Math.max(0, Number(q.get('children')) || 0)),
-            infants: Math.min(10, Math.max(0, Number(q.get('infants')) || 0)),
-          }
-        : null;
+    const { arrival: urlIn, departure: urlOut } = readRangeParams(q);
+    const urlGuests: GuestCounts | null = readGuestParams(q);
 
     const hasAvailData = availability && Object.keys(availability).length > 0;
     const everyNightFree = (s: Date, e: Date) => {
@@ -123,8 +130,8 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
       if (s) setStart(s);
       if (e) setEnd(e);
     }
-    if (urlGuests) setGuests(urlGuests);
-    else if (p?.guests) setGuests(p.guests);
+    if (urlGuests) setGuests(clampGuestsToMax(urlGuests, property.maxGuests));
+    else if (p?.guests) setGuests(clampGuestsToMax(p.guests, property.maxGuests));
 
     // Persist URL-seeded values so the header pill + /locations stay in sync
     // (this child effect runs before SearchProvider's localStorage hydration).
@@ -139,6 +146,22 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     // Mount-only seed — `availability` is a stable server prop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Mirror the picked dates into the URL so the stay page is shareable and the
+  // header pill / back-nav to /locations keep the same range. replace +
+  // scroll:false = no history spam, no jump, and the page stays static (the
+  // seed above reads window.location, never useSearchParams).
+  useEffect(() => {
+    if (!mounted) return; // don't clobber the URL before the seed has run
+    // No dates → keep the bare canonical URL, no guest-count noise.
+    const query =
+      startDate && endDate
+        ? buildSearchQuery({ start: startDate, end: endDate, guests })
+        : '';
+    const next = query ? `?${query}` : '';
+    if (window.location.search === next) return;
+    router.replace(`${window.location.pathname}${next}`, { scroll: false });
+  }, [mounted, startDate, endDate, guests, router]);
 
   // Anchor the desktop calendar popup to the dates input via fixed positioning,
   // so the sidebar's `overflow-y-auto` cannot clip it.
@@ -165,6 +188,9 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   // Single flat rate since M1.1 — rates[0] is the one direct rate.
   const rate = property.rates[0];
   const nights = nightsBetween(startDate, endDate);
+  // Server (lib/booking/quote.ts) rejects stays over MAX_NIGHTS — surface the
+  // limit here so the calendar doesn't dead-end the guest at checkout.
+  const exceedsMaxNights = nights > MAX_NIGHTS;
 
   // Breakfast per-day-per-person price from the property's own upgrades catalog
   // (RON, money of record) — never hardcoded. Mirrors lib/booking/quote so the
@@ -258,6 +284,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
       setShowCal(true);
       return;
     }
+    if (exceedsMaxNights) return;
     const booking: Booking = {
       propertyId: property.id,
       checkIn: ymd(startDate),
@@ -291,20 +318,73 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   const ctaLabel =
     nights === 0
       ? 'Select dates'
-      : !loggedIn
-        ? 'Sign up & book →'
-        : roomCount > 1 && MULTI_ROOM_ENABLED
-          ? `Book ${roomCount} rooms →`
-          : 'Book best rate →';
+      : exceedsMaxNights
+        ? `Max ${MAX_NIGHTS} nights`
+        : !loggedIn
+          ? 'Sign up & book →'
+          : roomCount > 1 && MULTI_ROOM_ENABLED
+            ? `Book ${roomCount} rooms →`
+            : 'Book best rate →';
 
   const mobileBar = mounted
     ? createPortal(
         <MobileBookingBar
           priceLabel={nights === 0 ? 'From' : 'Total'}
           priceValue={mobileBarPrice}
-          taxNote={nights === 0 ? '/night' : 'Taxes & charges incl.'}
+          taxNote={
+            nights === 0
+              ? '/night · Select dates'
+              : `${nights} night${nights === 1 ? '' : 's'} · taxes & charges incl.`
+          }
           ctaLabel={ctaLabel}
           onBook={book}
+        />,
+        document.body,
+      )
+    : null;
+
+  // Tablet/desktop (≥768px): slim top bar once the sidebar's Book button has
+  // scrolled out of view (Spec M1.5.1). Same numbers as the sidebar — it reads
+  // the values computed above rather than recomputing any pricing.
+  const bookBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [bookBtnVisible, setBookBtnVisible] = useState(true);
+  useEffect(() => {
+    const el = bookBtnRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setBookBtnVisible(entry.isIntersecting),
+      { threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const stickyBar = mounted
+    ? createPortal(
+        <StickyBookingBar
+          show={!bookBtnVisible}
+          propertyName={property.name}
+          datesLabel={
+            startDate && endDate
+              ? `${formatDate(startDate)} – ${formatDate(endDate)}`
+              : 'Select dates'
+          }
+          priceLabel={nights === 0 ? 'From' : 'Total'}
+          priceValue={mobileBarPrice}
+          note={
+            nights === 0
+              ? 'per night'
+              : `${nights} night${nights === 1 ? '' : 's'} · taxes & charges incl.`
+          }
+          ctaLabel={ctaLabel}
+          onBook={() => {
+            // No dates yet → send the guest to the sidebar to pick them;
+            // otherwise go straight to checkout like the sidebar button.
+            if (nights === 0) {
+              bookBtnRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }
+            book();
+          }}
         />,
         document.body,
       )
@@ -439,6 +519,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
             guests={guests}
             onChange={setGuests}
             onClose={() => setShowGuests(false)}
+            maxOccupants={property.maxGuests}
           />
         </div>
       )}
@@ -671,10 +752,30 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
         </div>
       )}
 
+      {/* Server (lib/booking/quote.ts) rejects stays over MAX_NIGHTS — flag it
+          here so a long range doesn't dead-end the guest at checkout. */}
+      {exceedsMaxNights && (
+        <p className="mt-4 rounded-2xl border border-gold bg-gold-pale px-4 py-3 text-xs text-ink-80">
+          Stays are limited to {MAX_NIGHTS} nights —{' '}
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="font-semibold underline underline-offset-[3px]"
+          >
+            contact us
+          </a>{' '}
+          for longer stays.
+        </p>
+      )}
+
       <button
+        ref={bookBtnRef}
         type="button"
         onClick={book}
-        className="mt-5 w-full rounded-full bg-ink py-3 text-center font-semibold text-cream transition hover:bg-gold hover:text-ink"
+        disabled={exceedsMaxNights}
+        className={cn(
+          'mt-5 w-full rounded-full bg-ink py-3 text-center font-semibold text-cream transition hover:bg-gold hover:text-ink',
+          exceedsMaxNights && 'cursor-not-allowed opacity-40 hover:bg-ink hover:text-cream',
+        )}
       >
         {ctaLabel}
       </button>
@@ -684,6 +785,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
       </p>
     </aside>
     {mobileBar}
+    {stickyBar}
     {desktopCalPortal}
     </>
   );

@@ -4,6 +4,7 @@ import { Editorial } from '@/components/sections/Editorial';
 import { LocationsCarousel } from '@/components/sections/LocationsCarousel';
 import { HowItWorks } from '@/components/sections/HowItWorks';
 import { Benefits } from '@/components/sections/Benefits';
+import { StickyBookNow } from '@/components/sections/StickyBookNow';
 import { JsonLd } from '@/components/seo/JsonLd';
 
 const SITE_URL = 'https://avexastays.com';
@@ -71,6 +72,7 @@ export default function HomePage() {
       <LocationsCarousel />
       <HowItWorks />
       <Benefits />
+      <StickyBookNow />
     </>
   );
 }

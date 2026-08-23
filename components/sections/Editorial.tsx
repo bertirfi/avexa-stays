@@ -19,17 +19,21 @@ function BatteryGlyph() {
     >
       <span className="absolute inset-0 rounded-[3px] border-[1.5px] border-current opacity-70" />
       <span className="absolute top-1/2 -right-[0.16em] h-[0.26em] w-[0.09em] -translate-y-1/2 rounded-r-[1px] bg-current opacity-70" />
-      <motion.span
-        initial={reduceMotion ? false : { scaleX: 0 }}
-        whileInView={reduceMotion ? undefined : { scaleX: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 1.6, ease: 'easeOut' }}
-        style={{ transformOrigin: 'left' }}
-        className={cn(
-          'absolute inset-[2.5px] rounded-[1px] bg-[#7fae7a]',
-          reduceMotion && 'scale-x-100',
-        )}
-      />
+      {/* Branch on element type: useReducedMotion flips from null→true AFTER
+          mount, and a motion element mounted at scaleX:0 would keep its inline
+          transform forever (whileInView never fires) — a plain span can't. */}
+      {reduceMotion ? (
+        <span className="absolute inset-[2.5px] rounded-[1px] bg-[#7fae7a]" />
+      ) : (
+        <motion.span
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.6, ease: 'easeOut' }}
+          style={{ transformOrigin: 'left' }}
+          className="absolute inset-[2.5px] rounded-[1px] bg-[#7fae7a]"
+        />
+      )}
     </span>
   );
 }

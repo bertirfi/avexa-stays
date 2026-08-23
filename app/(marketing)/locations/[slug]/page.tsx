@@ -175,7 +175,7 @@ export default async function StayPage(props: { params: Promise<Params> }) {
   const fxRateEur = getFxRateEur();
 
   return (
-    <div className="bg-cream pt-24 md:pt-32 pb-[150px] lg:pb-0">
+    <div className="bg-cream pt-24 md:pt-32 pb-[150px] md:pb-0">
       <JsonLd data={buildLodgingSchema(property, fxRateEur)} />
       <JsonLd data={buildBreadcrumbSchema(property)} />
       <div className="mx-auto max-w-[1200px] px-6 md:px-10">

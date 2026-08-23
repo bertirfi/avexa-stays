@@ -33,8 +33,16 @@ interface PropertyCardProps {
   active?: boolean;
   onActivate?: () => void;
   onClear?: () => void;
-  /** Prebuilt query string (checkIn/checkOut/guests) carried into the detail link. */
+  /** Prebuilt query string (arrival/departure/guests) carried into the detail link. */
   query?: string;
+  /**
+   * Accommodation total for the searched range, straight from
+   * /api/availability (already markup-applied, RON). Null/absent → the card
+   * falls back to the flat "from €X /night" listing price.
+   */
+  range?: { nights: number; totalRon: number } | null;
+  /** No free window for the searched dates — card stays visible but dimmed. */
+  unavailable?: boolean;
 }
 
 export function PropertyCard({
@@ -44,6 +52,8 @@ export function PropertyCard({
   onActivate,
   onClear,
   query,
+  range = null,
+  unavailable = false,
 }: PropertyCardProps) {
   const card = getLocationCard(property.id);
   const photos = property.photos.slice(0, 5);
@@ -84,6 +94,7 @@ export function PropertyCard({
         active
           ? 'border-gold shadow-[0_18px_40px_-20px_rgba(25,25,25,0.22)]'
           : 'border-transparent shadow-[0_1px_2px_rgba(25,25,25,0.04)]',
+        unavailable && 'opacity-60 hover:opacity-100',
       )}
     >
       {/* Media carousel */}
@@ -184,11 +195,33 @@ export function PropertyCard({
         </div>
 
         <div className="text-left sm:text-right">
-          <span className="inline-flex items-baseline gap-1 rounded-full bg-gold px-3.5 py-2.5 font-bold text-ink">
-            <span className="font-display text-[22px]">{format(saver.perNight)}</span>
-            <span className="text-[11.5px] font-medium opacity-70">/night</span>
-          </span>
-          <span className="mt-1.5 block text-[11px] text-ink-60">Member rate · incl. taxes</span>
+          {unavailable ? (
+            <>
+              <span className="inline-flex items-center rounded-full border border-gray-line bg-cream px-3.5 py-2.5 text-[13px] font-semibold text-ink-60">
+                Not available for these dates
+              </span>
+              <span className="mt-1.5 block text-[11px] text-ink-60">Change dates</span>
+            </>
+          ) : range ? (
+            <>
+              <span className="inline-flex items-baseline gap-1 rounded-full bg-gold px-3.5 py-2.5 font-bold text-ink">
+                <span className="font-display text-[22px]">{format(range.totalRon)}</span>
+                <span className="text-[11.5px] font-medium opacity-70">total</span>
+              </span>
+              <span className="mt-1.5 block text-[11px] text-ink-60">
+                {range.nights} night{range.nights === 1 ? '' : 's'} ·{' '}
+                {format(Math.round(range.totalRon / range.nights))}/night
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="inline-flex items-baseline gap-1 rounded-full bg-gold px-3.5 py-2.5 font-bold text-ink">
+                <span className="font-display text-[22px]">{format(saver.perNight)}</span>
+                <span className="text-[11.5px] font-medium opacity-70">/night</span>
+              </span>
+              <span className="mt-1.5 block text-[11px] text-ink-60">Direct rate · 11% VAT included</span>
+            </>
+          )}
         </div>
 
         <div className="sm:col-span-2">

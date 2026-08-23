@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   // Primary keyword leads (SEO hard rule: home + locations carry it).
   title: 'Bucharest City Center Apartments — Locations',
   description:
-    'Member rates and fully digital check-in at every AVEXA apartment in Bucharest City Center — Old Town, Calea Victoriei, Universitate & Piața Romană.',
+    'Direct rates and fully digital check-in at every AVEXA apartment in Bucharest City Center — Old Town, Calea Victoriei, Universitate & Piața Romană.',
   alternates: { canonical: '/locations' },
 };
 

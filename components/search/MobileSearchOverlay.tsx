@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { neighborhoods } from '@/lib/neighborhoods';
-import { ymd } from '@/lib/date';
+import { buildSearchQuery } from '@/lib/searchParams';
 import { cn } from '@/lib/cn';
 
 type CardKey = 'where' | 'when' | 'who';
@@ -197,17 +197,14 @@ export function MobileSearchOverlay({ open, onClose }: Props) {
   }
 
   function runSearch() {
-    const params = new URLSearchParams();
-    if (location) params.set('where', location);
-    // Local 'YYYY-MM-DD' (lib/date) — toISOString would shift the day in
-    // negative-offset timezones, sending the wrong check-in to /locations.
-    if (startDate) params.set('checkIn', ymd(startDate));
-    if (endDate) params.set('checkOut', ymd(endDate));
-    params.set('adults', String(guests.adults));
-    params.set('children', String(guests.children));
-    params.set('infants', String(guests.infants));
+    const query = buildSearchQuery({
+      where: location,
+      start: startDate,
+      end: endDate,
+      guests,
+    });
     onClose();
-    router.push(`/locations?${params.toString()}`);
+    router.push(`/locations?${query}`);
   }
 
   const whereValue = location
