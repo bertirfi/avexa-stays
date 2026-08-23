@@ -23,6 +23,9 @@ export const metadata: Metadata = {
     siteName: 'AVEXA Stays',
     type: 'website',
     locale: 'en_US',
+    // Defining `openGraph` here suppresses the app/opengraph-image.tsx
+    // file convention, so the image must be re-declared explicitly.
+    images: [`${SITE_URL}/opengraph-image`],
   },
 };
 
