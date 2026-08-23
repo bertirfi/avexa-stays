@@ -67,17 +67,27 @@ export function cancellationConfirmedEmail(booking: {
   check_in: string;
   check_out: string;
   total_ron: number;
+  /** Actual refunded amount (city tax always in full + tiered remainder). */
+  refund_ron: number;
+  /** Tier applied to the non-city-tax portion: 100 or 50. */
+  refund_percent: number;
 }): { subject: string; html: string } {
   const first = escapeHtml(booking.guest_name.split(' ')[0] || 'there');
+  const full = booking.refund_ron >= Number(booking.total_ron);
   return {
-    subject: 'Your AVEXA booking is cancelled — full refund on the way',
+    subject: full
+      ? 'Your AVEXA booking is cancelled — full refund on the way'
+      : 'Your AVEXA booking is cancelled — refund on the way',
     html: `
       <div style="font-family:Arial,Helvetica,sans-serif;color:#191919;line-height:1.6;max-width:520px">
         <p>Hi ${first},</p>
         <p>Your stay <strong>${booking.check_in} → ${booking.check_out}</strong> has been
         cancelled, as requested.</p>
-        <p><strong>Your payment of ${Number(booking.total_ron).toFixed(0)} RON has been refunded
-        in full.</strong> Depending on your bank, the refund appears within 5–10 business days.</p>
+        <p><strong>A refund of ${Number(booking.refund_ron).toFixed(0)} RON${
+          full
+            ? ' (your full payment)'
+            : ` (${booking.refund_percent}% of your stay under the member cancellation policy — city tax refunded in full)`
+        } has been issued.</strong> Depending on your bank, the refund appears within 5–10 business days.</p>
         <p>Plans change — the city stays. Whenever you're ready, your suite is at
         <a href="https://avexastays.com" style="color:#B08840">avexastays.com</a>.</p>
         <p>— AVEXA Stays</p>

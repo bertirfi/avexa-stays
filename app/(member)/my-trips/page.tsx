@@ -1,7 +1,12 @@
 import type { Metadata } from 'next';
 import { requireUser } from '@/lib/auth/server';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
-import { freeCancelDeadlineMs, isFreeCancellable } from '@/lib/booking/cancellation';
+import {
+  fullRefundDeadlineMs,
+  halfRefundDeadlineMs,
+  isSelfCancellable,
+  refundPercentFor,
+} from '@/lib/booking/cancellation';
 import { properties } from '@/lib/properties';
 import { EmptyTripsState } from '@/components/trips/EmptyTripsState';
 import { TripsList, type Trip } from '@/components/trips/TripsList';
@@ -81,13 +86,29 @@ export default async function MyTripsPage() {
 
   const rows = data ?? [];
 
+  // "Today" as a 'YYYY-MM-DD' string in Bucharest time (upcoming/past split +
+  // the "non-refundable now" gate below).
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Bucharest',
+  }).format(new Date());
+
+  const deadlineFormat = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Bucharest',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
   const trips: Trip[] = rows.map((b) => {
     const property = properties.find((p) => p.id === b.property_id);
     const totalRon = Math.round(Number(b.total_ron));
     // The action re-checks this server-side at cancel time — here it only
     // decides whether the button renders (and the page is SSR per-request,
-    // so "now" is honest, not a stale build-time value).
-    const cancellable = isFreeCancellable(b);
+    // so "now" is honest, not a stale build-time value). Tiered DX7 policy:
+    // 100% ≥72h before 15:00 check-in, 50% ≥24h, 0% under 24h.
+    const refundPercent = refundPercentFor(b.check_in);
+    const cancellable = isSelfCancellable(b);
     return {
       id: b.id,
       orderId: b.order_id,
@@ -107,22 +128,22 @@ export default async function MyTripsPage() {
       approxLabel: formatApproxLabel(totalRon, b.display_currency, b.display_fx_rate),
       status: b.status,
       cancellable,
-      cancelDeadlineLabel: cancellable
-        ? new Intl.DateTimeFormat('en-US', {
-            timeZone: 'Europe/Bucharest',
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-          }).format(new Date(freeCancelDeadlineMs(b.check_in)))
+      refundPercent,
+      fullDeadlineLabel: cancellable
+        ? deadlineFormat.format(new Date(fullRefundDeadlineMs(b.check_in)))
         : null,
+      halfDeadlineLabel: cancellable
+        ? deadlineFormat.format(new Date(halfRefundDeadlineMs(b.check_in)))
+        : null,
+      // Confirmed stay inside 24h of check-in (not yet checked out): no
+      // self-cancel button — "Non-refundable now — contact us".
+      nonRefundableNow:
+        b.status === 'confirmed' &&
+        b.hostaway_reservation_id !== null &&
+        refundPercent === 0 &&
+        b.check_out >= today,
     };
   });
-
-  // "Today" as a 'YYYY-MM-DD' string in Bucharest time, for the upcoming/past split.
-  const today = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Bucharest',
-  }).format(new Date());
 
   const upcoming: Trip[] = [];
   const past: Trip[] = [];

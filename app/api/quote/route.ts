@@ -41,7 +41,6 @@ export async function POST(req: Request) {
     adults: body.adults,
     children: body.children,
     infants: body.infants,
-    rateId: body.rateId,
     breakfast: body.breakfast,
   });
   if (!quote.ok) {
@@ -53,7 +52,9 @@ export async function POST(req: Request) {
   // Expose exactly what BookingSummary needs — all RON integers.
   return NextResponse.json({
     accommodationRon: quote.accommodationRon,
+    nightly: quote.nightly,
     extrasRon: quote.extrasRon,
+    cleaningRon: quote.cleaningRon,
     cityTaxRon: quote.cityTaxRon,
     totalRon: quote.totalRon,
     nights: quote.nights,

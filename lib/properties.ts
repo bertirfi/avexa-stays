@@ -1,4 +1,5 @@
 import type { NeighborhoodId, Property, PropertyRate, PropertyUpgrade } from '@/types';
+import { CANCELLATION_POLICY } from '@/lib/policies';
 
 /**
  * AVEXA properties — ported verbatim from stay-data-*.jsx files
@@ -12,37 +13,23 @@ const baseUpgrades: PropertyUpgrade[] = [
   { id: 'early_checkin', name: 'Early check-in', price: 105, unit: '', free: true },
 ];
 
-// Static-fallback nightly rates in RON (used only when Supabase is down;
-// live prices overlay from Hostaway via applyLivePricing).
-function rates(saverRon: number, flexRon: number): PropertyRate[] {
+// Static-fallback nightly rate in RON (used only when Supabase is down;
+// live prices overlay from Hostaway via applyLivePricing). ONE rate per suite —
+// cancellation is a membership right (DX7), never a rate tier (M1.1.1).
+function rates(ron: number): PropertyRate[] {
   return [
     {
-      id: 'saver',
-      name: 'Member Saver',
-      perNight: saverRon,
-      discount: 15,
-      refundable: false,
-      perks: [
-        'Non-refundable rate',
-        'Best price: 15% off',
-        'Free early check-in & late check-out',
-        'Free welcome drinks & snacks',
-      ],
-      warn: 'No refund in the event of cancellation',
-    },
-    {
-      id: 'flex',
-      name: 'Member Flex',
-      perNight: flexRon,
-      discount: 5,
+      id: 'standard',
+      name: 'Direct rate',
+      perNight: ron,
+      discount: 0,
       refundable: true,
       perks: [
-        'Best price: 5% off',
-        'Free early check-in & late check-out',
-        'Free welcome drinks & snacks',
+        'Earn AVEXA Coins on this stay',
+        'Flexible cancellation for members',
+        'Digital check-in, no front desk',
       ],
-      highlight: 'Free cancellation until 4:00pm, one day before arrival',
-      cancelNote: 'Cancellation time shown is based on the location of the property',
+      highlight: CANCELLATION_POLICY.summary,
     },
   ];
 }
@@ -105,7 +92,8 @@ export const properties: Property[] = [
       { id: 10, label: 'Exterior View', src: '/listings/101/23-exterior.jpeg' },
       { id: 11, label: 'Building Entrance', src: '/listings/101/25-building-entrance.jpeg' },
     ],
-    rates: rates(415, 467),
+    rates: rates(415),
+    cleaningRon: 125,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchenette', 'Elevator',
@@ -165,6 +153,98 @@ export const properties: Property[] = [
 
   // ─────────────────────────────────────────────────────────────
   {
+    id: '102',
+    slug: 'the-modern-beige-deluxe',
+    name: 'The Modern Beige Deluxe',
+    subtitle: 'AVEXA Suite 102',
+    tagline: sharedTagline,
+    neighborhood: 'calea-victoriei',
+    neighborhoodLabel: nbh['calea-victoriei'].label,
+    neighborhoodColor: nbh['calea-victoriei'].color,
+    address: 'Calea Victoriei 142-148, Sector 1, Bucharest',
+    stats: [
+      { icon: 'users', label: '2 Guests' },
+      { icon: 'bed', label: 'Studio' },
+      { icon: 'sofa', label: '1 Double Bed' },
+      { icon: 'bath', label: '1 Bathroom' },
+    ],
+    maxGuests: 2,
+    metaDescription:
+      'A quiet garden-view studio on Calea Victoriei with digital check-in and a compact kitchenette — a peaceful Bucharest city center apartment, sleeps 2.',
+    description:
+      'Experience Bucharest from its most prestigious vantage point. Situated directly on Calea Victoriei, this sophisticated residence places you in the vibrant epicenter of the city\'s culture, fashion, and gastronomy.\n\nFrom world-class restaurants and artisanal coffee shops to high-end shopping and major landmarks, everything is within reach — while this quiet, garden-facing studio stays insulated from the boulevard\'s bustle.\n\nInside, you\'ll find a botanical retreat: lush green installations and a peaceful garden view create a supremely quiet studio, featuring a comfortable double bed and premium linens for a restorative night\'s sleep.\n\nA compact spa-style bathroom is fitted with a high-end shower cabin and modern fixtures. The fully equipped kitchenette includes a washing machine with dryer, a medium fridge, coffee maker, toaster, microwave, induction cooktop, and kettle — everything needed for easy self-catering.\n\nToiletries, coffee, tea, and condiments are provided so you can settle in from the moment you arrive.\n\nGuest access: the whole apartment is yours for the stay.\n\nHouse notes: quiet hours run 22:00–08:00. Parties are strictly prohibited and result in immediate cancellation. The apartment is smoke-free — smoking indoors or on the balcony incurs a €500 ozone cleaning fee — and is fitted with smart smoke detectors.',
+    pitch:
+      'Zero Friction Access — Bypass the front desk completely. Secure digital entry allows you to arrive on your own schedule.\n\nA Botanical Retreat — The studio is uniquely crafted with lush green installations and a peaceful garden view, designed to induce the serenity of nature in the heart of the urban center.\n\nEngineered for Rest — A supremely quiet studio featuring a double bed and premium linens, guaranteeing a restorative night\'s sleep.\n\nThe Spa Experience — A contemporary compact yet sophisticated bathroom featuring a high-end shower cabin, modern fixtures, and a refreshing ambiance.\n\nExecutive Ready — High-speed Wi-Fi, dedicated climate control, and a gourmet kitchenette complete with a coffee machine to start your mornings focused and refreshed.',
+    checkin: sharedCheckin,
+    checkout: sharedCheckout,
+    cover: '/listings/102/00-cover.jpeg',
+    photos: [
+      { id: 1, label: 'Cover', src: '/listings/102/00-cover.jpeg' },
+      { id: 2, label: 'Living Room', src: '/listings/102/01-living-room.jpeg' },
+      { id: 3, label: 'Living Room — Wide', src: '/listings/102/01a-living-room-wide.jpeg' },
+      { id: 4, label: 'Green Wall Desk', src: '/listings/102/02-green-wall-desk.jpeg' },
+      { id: 5, label: 'Bedroom', src: '/listings/102/08-bedroom.jpeg' },
+      { id: 6, label: 'Kitchen', src: '/listings/102/07-kitchen.jpeg' },
+      { id: 7, label: 'Bathroom', src: '/listings/102/06-bathroom.jpeg' },
+      { id: 8, label: 'Decor Shelf', src: '/listings/102/05-decor-shelf.jpeg' },
+      { id: 9, label: 'Green Wall Detail', src: '/listings/102/09-green-wall-detail.jpeg' },
+      { id: 10, label: 'Window View', src: '/listings/102/11-window-view.jpeg' },
+      { id: 11, label: 'Wall Art Detail', src: '/listings/102/12-wall-art-detail.jpeg' },
+      { id: 12, label: 'Living Room — Alt', src: '/listings/102/13-living-room-alt.jpeg' },
+    ],
+    rates: rates(479),
+    cleaningRon: 125,
+    upgrades: baseUpgrades,
+    amenitiesTop: [
+      'Free Wi-Fi', 'Air conditioning', 'Kitchenette', 'Washer & Dryer',
+      'Garden view', 'Hair dryer', 'Heating', 'Smart TV with Netflix',
+      'Elevator', 'Self check-in',
+    ],
+    amenitiesProperty: {
+      'Internet & Office': ['Wi-Fi', 'Dedicated workspace'],
+      'Parking & Facilities': ['Elevator', 'Paid street parking off premises', 'Single level home', 'No stairs in home'],
+      'Services': ['Luggage dropoff allowed', 'Long term stays allowed', 'Self check-in (Lockbox)', 'Housekeeping — available at extra cost'],
+      'Not Included': ['Pets not allowed', 'Full kitchen', 'Private entrance', 'Carbon monoxide alarm'],
+    },
+    amenitiesRoom: {
+      'Bathroom': ['Hair dryer', 'Shampoo', 'Body soap', 'Hot water', 'Shower gel'],
+      'Bedroom & Laundry': ['Washer', 'Free dryer — In unit', 'Essentials (towels, bed sheets, soap, toilet paper)', 'Hangers', 'Bed linens', 'Cotton linens', 'Iron', 'Clothing storage: closet and wardrobe'],
+      'Entertainment': ['Ethernet connection', 'Smart TV with Netflix, premium cable'],
+      'Heating & Cooling': ['Air conditioning', 'Central heating'],
+      'Home Safety': ['Smoke alarm', 'Fire extinguisher'],
+      'Kitchen & Dining': ['Microwave', 'Cooking basics (pots, pans, oil, salt & pepper)', 'Dishes and silverware', 'Mini fridge', 'Freezer', 'Hot water kettle', 'Coffee maker (drip)', 'Wine glasses', 'Toaster', 'Induction stove', 'Kitchenette', 'Coffee'],
+    },
+    faqs: [
+      { q: 'Can I park there?', a: 'Free street parking is available nearby on Calea Victoriei. Paid street parking off premises is also available. No reservation needed.' },
+      { q: 'Is the apartment quiet?', a: 'Yes — the studio faces the building\'s interior garden rather than the boulevard, making it one of the quietest units on Calea Victoriei.' },
+      { q: 'Is the apartment suitable for longer stays?', a: 'Yes, long-term stays of 28 days or more are welcome. The kitchenette is fully equipped for self-catering, with an in-unit washer and dryer, and housekeeping is available at extra cost.' },
+    ],
+    nearby: [
+      { category: 'Top Attractions', name: 'Museum of Art Collections', distance: '100 m' },
+      { category: 'Top Attractions', name: 'Revolution Square', distance: '800 m' },
+      { category: 'Top Attractions', name: 'National Museum of Art of Romania', distance: '850 m' },
+      { category: 'Top Attractions', name: 'Cismigiu Gardens', distance: '1.2 km' },
+      { category: 'Top Attractions', name: 'Grigore Antipa National Museum', distance: '1.6 km' },
+      { category: 'Top Attractions', name: 'Museum of Romanian Peasant', distance: '1.7 km' },
+      { category: 'Top Attractions', name: 'Bucharest Arch of Triumph', distance: '3.2 km' },
+      { category: 'Top Attractions', name: 'Ceausescu Mansion', distance: '3.4 km' },
+      { category: 'Top Attractions', name: 'National Museum Cotroceni', distance: '3.5 km' },
+      { category: 'Top Attractions', name: 'Carol Park', distance: '3.7 km' },
+      { category: 'Restaurants & Cafés', name: 'French Bakery', distance: '50 m' },
+      { category: 'Restaurants & Cafés', name: 'Cascara Coffee Roaster', distance: '50 m' },
+      { category: 'Restaurants & Cafés', name: 'Eden Bistro', distance: '50 m' },
+      { category: 'Public Transit', name: 'Piata Romana Metro Station', distance: '600 m' },
+      { category: 'Public Transit', name: 'Piața Victoriei 1', distance: '1.2 km' },
+      { category: 'Public Transit', name: 'Bucharest North Railway Station', distance: '1.7 km' },
+      { category: 'Public Transit', name: 'Gara Basarab', distance: '2.5 km' },
+      { category: 'Closest Airports', name: 'Băneasa Airport', distance: '7 km' },
+      { category: 'Closest Airports', name: 'Henri Coandă International Airport', distance: '15 km' },
+    ],
+    reviews: [],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  {
     id: '201',
     slug: 'the-golden-forest',
     name: 'The Golden Forest',
@@ -203,7 +283,8 @@ export const properties: Property[] = [
       { id: 10, label: 'Living Room', src: '/listings/201/32-apartment-view.jpeg' },
       { id: 11, label: 'Staircase', src: '/listings/201/34-staircase.jpeg' },
     ],
-    rates: rates(572, 656),
+    rates: rates(572),
+    cleaningRon: 150,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -299,7 +380,8 @@ export const properties: Property[] = [
       { id: 8, label: 'Open Streets Festival', src: '/listings/202/33-open-streets.jpeg' },
       { id: 9, label: 'Restaurant Nearby', src: '/listings/202/37-restaurant.jpeg' },
     ],
-    rates: rates(730, 835),
+    rates: rates(730),
+    cleaningRon: 150,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -396,7 +478,8 @@ export const properties: Property[] = [
       { id: 9, label: 'Bathroom 1 — Vanity', src: '/listings/203/06-bathroom1-basins.jpeg' },
       { id: 10, label: 'Bathroom 2', src: '/listings/203/07-bathroom2.jpeg' },
     ],
-    rates: rates(677, 761),
+    rates: rates(677),
+    cleaningRon: 150,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -500,7 +583,8 @@ export const properties: Property[] = [
       { id: 14, label: 'Open Streets Festival', src: '/listings/301/33-open-streets.jpeg' },
       { id: 15, label: 'Restaurant Nearby', src: '/listings/301/37-restaurant.jpeg' },
     ],
-    rates: rates(782, 872),
+    rates: rates(782),
+    cleaningRon: 180,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Parking', 'Free Wi-Fi', 'Family rooms', 'Non-smoking rooms',
@@ -590,7 +674,8 @@ export const properties: Property[] = [
       { id: 8, label: 'Open Streets Festival', src: '/listings/302/33-open-streets.jpeg' },
       { id: 9, label: 'Restaurant Nearby', src: '/listings/302/37-restaurant.jpeg' },
     ],
-    rates: rates(730, 835),
+    rates: rates(730),
+    cleaningRon: 180,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -683,7 +768,8 @@ export const properties: Property[] = [
       { id: 7, label: 'Bathroom', src: '/listings/303/08-bathroom.jpeg' },
       { id: 8, label: 'Living Room', src: '/listings/303/09-living-room.jpeg' },
     ],
-    rates: rates(782, 887),
+    rates: rates(782),
+    cleaningRon: 180,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
@@ -785,7 +871,8 @@ export const properties: Property[] = [
       { id: 14, label: 'Terrace', src: '/listings/304/12-terrace.jpeg' },
       { id: 15, label: 'Street View', src: '/listings/304/13-street-view.jpeg' },
     ],
-    rates: rates(625, 709),
+    rates: rates(625),
+    cleaningRon: 180,
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',

@@ -13,6 +13,7 @@ import type { Booking, GuestCounts, Property } from '@/types';
 import type { AvailabilityMap } from '@/lib/data/availability';
 import { ymd, parseYmd } from '@/lib/date';
 import { CITY_TAX_RON_PER_PERSON_NIGHT } from '@/lib/currency';
+import { CANCELLATION_POLICY } from '@/lib/policies';
 import { readSearchPrefs, writeSearchPrefs } from '@/lib/searchPrefs';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { cn } from '@/lib/cn';
@@ -60,7 +61,6 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   const [showCal, setShowCal] = useState(false);
   const [guests, setGuests] = useState<GuestCounts>({ adults: 2, children: 0, infants: 0 });
   const [showGuests, setShowGuests] = useState(false);
-  const [rateId, setRateId] = useState<'saver' | 'flex'>('saver');
   const [upgrades, setUpgrades] = useState<Record<string, boolean>>({
     breakfast: false,
     late_checkout: UPGRADES_ENABLED,
@@ -162,7 +162,8 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     };
   }, [showCal]);
 
-  const rate = property.rates.find((r) => r.id === rateId)!;
+  // Single flat rate since M1.1 — rates[0] is the one direct rate.
+  const rate = property.rates[0];
   const nights = nightsBetween(startDate, endDate);
 
   // Breakfast per-day-per-person price from the property's own upgrades catalog
@@ -170,29 +171,19 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   // sidebar estimate lines up with the authoritative checkout quote.
   const breakfastPrice = property.upgrades.find((u) => u.id === 'breakfast')?.price ?? 0;
 
-  // Flex has no independent per-night calendar price — it inherits the catalog
-  // flex/saver ratio on top of the live (saver-based) availability prices.
-  // MUST mirror lib/booking/quote.ts so the displayed total equals the charge.
-  const rateFactor = useMemo(() => {
-    const saver = property.rates[0]?.perNight;
-    const flex = property.rates[1]?.perNight;
-    return rateId === 'flex' && saver && flex ? flex / saver : 1;
-  }, [property.rates, rateId]);
-
-  // Per-night member prices for the selected range: real prices from availability
-  // where present, else the flat listing rate. Sum drives the total.
+  // Per-night prices for the selected range: real prices from availability
+  // (already markup-applied by lib/data/availability — the SAME lib/pricing
+  // math /api/quote charges), else the flat listing rate. Sum drives the total.
   const stayNightPrices = useMemo(() => {
     if (!startDate || nights === 0) return [] as number[];
     const out: number[] = [];
     const cur = new Date(startDate);
     for (let i = 0; i < nights; i += 1) {
-      const baseNight =
-        availability?.[ymd(cur)]?.ron ?? property.rates[0]?.perNight ?? rate.perNight;
-      out.push(Math.round(baseNight * rateFactor));
+      out.push(availability?.[ymd(cur)]?.ron ?? rate.perNight);
       cur.setDate(cur.getDate() + 1);
     }
     return out;
-  }, [availability, startDate, nights, property.rates, rate.perNight, rateFactor]);
+  }, [availability, startDate, nights, rate.perNight]);
 
   const staySubtotal = stayNightPrices.reduce((a, b) => a + b, 0);
   const isVariablePricing = new Set(stayNightPrices).size > 1;
@@ -231,14 +222,18 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     // per-day-per-person price — no hardcoded figure).
     const breakfastTotal = upgrades.breakfast ? breakfastPrice * nights * occupants : 0;
     const mainCityTax = CITY_TAX_PER_PERSON * nights * occupants;
+    // Per-stay cleaning fee (RON) — mirrors lib/booking/quote so the displayed
+    // total equals the server charge. Breakdown order: accommodation →
+    // extra services → cleaning → city tax (M1.1.5).
+    const cleaning = property.cleaningRon;
     // Member stay price = sum of per-night prices (variable from availability,
     // else flat rate.perNight × nights).
-    const mainRoomTotal = staySubtotal + breakfastTotal + mainCityTax;
+    const mainRoomTotal = staySubtotal + breakfastTotal + cleaning + mainCityTax;
 
-    // Added rooms keep the flat saver rate × nights + city tax (no per-room calendar).
+    // Added rooms keep the flat rate × nights + cleaning + city tax (no per-room calendar).
     const addedRoomsTotal = addedRooms.reduce((sum, sib) => {
       const pn = siblingPerNight(sib)!;
-      return sum + pn * nights + CITY_TAX_PER_PERSON * nights * occupants;
+      return sum + pn * nights + sib.cleaningRon + CITY_TAX_PER_PERSON * nights * occupants;
     }, 0);
 
     const combinedTotal = mainRoomTotal + addedRoomsTotal;
@@ -246,12 +241,13 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     return {
       staySubtotal,
       breakfastTotal,
+      cleaning,
       cityTax: mainCityTax,
       total: mainRoomTotal,
       combinedTotal,
       occupants,
     };
-  }, [staySubtotal, nights, guests, upgrades, addedRooms, breakfastPrice]);
+  }, [staySubtotal, nights, guests, upgrades, addedRooms, breakfastPrice, property.cleaningRon]);
 
   // RON total actually charged — combinedTotal only applies once multi-room
   // re-enables (roomCount stays 1 in practice while MULTI_ROOM_ENABLED is false).
@@ -268,7 +264,6 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
       checkOut: ymd(endDate),
       nights,
       guests,
-      rateId,
       upgrades,
       // Persist the MEMBER price (no rack / no struck framing) — matches the
       // sidebar and the no-struck-price decision; checkout shows this directly.
@@ -349,10 +344,17 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   return (
     <>
     <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto rounded-card border border-gray-line bg-white p-6 shadow-[var(--shadow-pill)]">
-      <div className="mb-4 flex items-baseline gap-1.5">
+      <div className="mb-1 flex items-baseline gap-1.5">
         <span className="font-display text-[26px] text-gold-dark">{format(rate.perNight)}</span>
         <span className="text-sm text-ink-60">/night</span>
       </div>
+      <p className="text-[11px] text-ink-60">11% VAT included</p>
+      {/* Cleaning fee: per-stay, real RON (charged as such) + ≈ display equivalent */}
+      <p className="mb-4 mt-0.5 text-[11px] text-ink-60">
+        Cleaning fee {property.cleaningRon} RON
+        {approx(property.cleaningRon) ? ` (${approx(property.cleaningRon)})` : ''} — not
+        included in the nightly rate
+      </p>
 
       {/* Mobile: clean "Book your stay" rows */}
       <div className="mb-2 lg:hidden">
@@ -441,36 +443,22 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
         </div>
       )}
 
-      {/* Rate selector */}
-      <div className="mt-4 space-y-2">
-        {property.rates.map((r) => (
-          <button
-            key={r.id}
-            type="button"
-            onClick={() => setRateId(r.id)}
-            className={cn(
-              'w-full rounded-2xl border p-4 text-left transition',
-              rateId === r.id
-                ? 'border-gold bg-gold-pale'
-                : 'border-gray-line hover:border-ink',
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-semibold">{r.name}</span>
-              <span className="font-display text-lg">{format(r.perNight)}<span className="text-xs text-ink-60">/night</span></span>
-            </div>
-            <ul className="mt-2 space-y-1 text-xs text-ink-80">
-              {r.perks.map((p) => (
-                <li key={p} className="flex items-start gap-2">
-                  <Icon name="check" size={12} className="mt-0.5 text-gold-dark" />
-                  {p}
-                </li>
-              ))}
-            </ul>
-            {r.warn && <p className="mt-2 text-xs italic text-ink-60">{r.warn}</p>}
-            {r.highlight && <p className="mt-2 text-xs font-semibold text-gold-dark">{r.highlight}</p>}
-          </button>
-        ))}
+      {/* Cancellation — a membership right, not a rate tier (DX7). Copy from
+          lib/policies so it can never drift from the published policy. */}
+      <div className="mt-4 rounded-2xl border border-gray-line p-4">
+        <p className="font-mono-label mb-2 text-ink-60">Cancellation</p>
+        <ul className="space-y-1 text-xs text-ink-80">
+          {CANCELLATION_POLICY.memberTiers.map((tier) => (
+            <li key={tier} className="flex items-start gap-2">
+              <Icon name="check" size={12} className="mt-0.5 text-gold-dark" />
+              {tier}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-xs font-semibold text-gold-dark">
+          {CANCELLATION_POLICY.cityTax}
+        </p>
+        <p className="mt-1 text-xs text-ink-60">{CANCELLATION_POLICY.nonMember}</p>
       </div>
 
       {/* Upgrades (hidden at launch — UPGRADES_ENABLED) */}
@@ -655,6 +643,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                   value={format(pricing.breakfastTotal)}
                 />
               )}
+              <Row label="Cleaning fee" value={format(pricing.cleaning)} />
               <Row
                 label="City tax"
                 value={format(pricing.cityTax * roomCount)}
@@ -677,7 +666,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                 charged as {effectiveTotal.toLocaleString('en-US')} RON
               </p>
             )}
-            <p className="mt-1 text-right text-[11px] text-ink-60">VAT included</p>
+            <p className="mt-1 text-right text-[11px] text-ink-60">11% VAT included</p>
           </div>
         </div>
       )}

@@ -41,9 +41,8 @@ function absoluteUrl(path: string): string {
  * display currency (EUR), so the offer/priceRange prices are converted here.
  */
 function buildLodgingSchema(property: Property, fxRateEur: number) {
-  const saverRate =
-    property.rates.find((r) => r.id === 'saver') ?? property.rates[0];
-  const saverPriceEur = Math.round(saverRate.perNight / fxRateEur);
+  const rate = property.rates[0];
+  const priceEur = Math.round(rate.perNight / fxRateEur);
 
   const ratings = property.reviews
     .map((r) => r.rating)
@@ -69,10 +68,10 @@ function buildLodgingSchema(property: Property, fxRateEur: number) {
       addressLocality: 'Bucharest',
       addressCountry: 'RO',
     },
-    priceRange: `From €${saverPriceEur} / night`,
+    priceRange: `From €${priceEur} / night`,
     offers: {
       '@type': 'Offer',
-      price: saverPriceEur,
+      price: priceEur,
       priceCurrency: 'EUR',
       availability: 'https://schema.org/InStock',
       url: `${SITE_URL}/locations/${property.slug}`,

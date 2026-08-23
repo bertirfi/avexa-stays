@@ -53,7 +53,6 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
           adults: raw.guests.adults,
           children: raw.guests.children,
           infants: raw.guests.infants,
-          rateId: raw.rateId,
           breakfast: Boolean(raw.upgrades?.breakfast),
           displayCurrency: currency,
           contact: {
@@ -129,7 +128,7 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
                   charged as {totalRon.toLocaleString('en-US')} RON
                 </p>
               )}
-              <p className="mt-0.5 text-xs text-ink-60">VAT included</p>
+              <p className="mt-0.5 text-xs text-ink-60">11% VAT included</p>
             </>
           ) : (
             <span className="mt-1 block h-10 w-40 animate-pulse rounded-lg bg-gray-light" />

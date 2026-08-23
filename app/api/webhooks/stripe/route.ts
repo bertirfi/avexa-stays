@@ -199,6 +199,16 @@ export async function POST(req: Request) {
     const accommodationRon = Number(booking.accommodation_ron);
     const extrasRon = Number(booking.extras_ron);
     const cityTaxRon = Number(booking.city_tax_ron);
+    // Cleaning lives inside `extras` jsonb (id 'cleaning') until it gets its own
+    // column — split it out as its own finance line, like city tax.
+    const cleaningRon = Array.isArray(booking.extras)
+      ? Number(
+          (booking.extras as Array<{ id?: string; ron?: number }>).find(
+            (e) => e.id === 'cleaning',
+          )?.ron ?? 0,
+        )
+      : 0;
+    const otherExtrasRon = extrasRon - cleaningRon;
     const financeField: HostawayFinanceField[] = [
       {
         type: 'price',
@@ -209,14 +219,27 @@ export async function POST(req: Request) {
         isIncludedInTotalPrice: 1,
         isOverriddenByUser: 1,
       },
-      ...(extrasRon > 0
+      ...(otherExtrasRon > 0
         ? [
             {
               type: 'fee',
               name: 'otherFees',
               title: 'Extra services',
-              value: extrasRon,
-              total: extrasRon,
+              value: otherExtrasRon,
+              total: otherExtrasRon,
+              isIncludedInTotalPrice: 1,
+              isOverriddenByUser: 1,
+            } satisfies HostawayFinanceField,
+          ]
+        : []),
+      ...(cleaningRon > 0
+        ? [
+            {
+              type: 'fee',
+              name: 'cleaningFee',
+              title: 'Cleaning fee',
+              value: cleaningRon,
+              total: cleaningRon,
               isIncludedInTotalPrice: 1,
               isOverriddenByUser: 1,
             } satisfies HostawayFinanceField,

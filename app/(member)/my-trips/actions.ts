@@ -7,7 +7,7 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { cancelReservation } from '@/lib/hostaway/client';
 import { cancellationConfirmedEmail, sendEmail } from '@/lib/email/brevo';
-import { isFreeCancellable } from '@/lib/booking/cancellation';
+import { isSelfCancellable, refundPercentFor } from '@/lib/booking/cancellation';
 
 export interface CancelBookingResult {
   ok: boolean;
@@ -18,14 +18,14 @@ export interface CancelBookingResult {
 const BookingIdSchema = z.string().uuid();
 
 /**
- * Guest self-cancellation (Flexible rate, ≥48h before 15:00 check-in — the
- * PUBLISHED policy, re-checked server-side; the button's visibility is UI
- * convenience, never the gate).
+ * Guest self-cancellation — tiered policy (DX7 / M1.3), re-checked server-side;
+ * the button's visibility is UI convenience, never the gate.
+ *   refund = city tax × 100% (always) + (total − city tax) × tier (100/50/0).
  *
  * Money-safe ordering — the refund runs FIRST:
- *   1. Stripe full refund, idempotency-keyed on the booking id. A double
- *      click, a retry after a crash, or a concurrent submit all collapse onto
- *      the same refund — Stripe never pays out twice.
+ *   1. Stripe refund (full or partial via `amount`), idempotency-keyed on the
+ *      booking id. A double click, a retry after a crash, or a concurrent
+ *      submit all collapse onto the same refund — Stripe never pays out twice.
  *   2. Booking row → cancelled (the calendar frees via webhook/sync).
  *   3. Hostaway cancel — best-effort: money is already back with the guest,
  *      so a PMS failure alerts ops instead of failing the guest.
@@ -47,22 +47,40 @@ export async function cancelBooking(bookingId: string): Promise<CancelBookingRes
   const { data: booking } = await supabase
     .from('bookings')
     .select(
-      'id, status, rate_plan, check_in, check_out, total_ron, guest_name, guest_email, hostaway_reservation_id, stripe_payment_intent_id',
+      'id, status, check_in, check_out, total_ron, city_tax_ron, guest_name, guest_email, hostaway_reservation_id, stripe_payment_intent_id',
     )
     .eq('id', parsed.data)
     .maybeSingle();
   if (!booking) return { ok: false, error: 'not_found' };
 
-  if (!isFreeCancellable(booking) || !booking.stripe_payment_intent_id) {
+  if (!isSelfCancellable(booking) || !booking.stripe_payment_intent_id) {
     return { ok: false, error: 'not_cancellable' };
   }
 
+  // Tier at THIS moment (server clock — the UI label is convenience only).
+  // City tax is ALWAYS refunded in full; the tier grades the remainder.
+  const pct = refundPercentFor(booking.check_in);
+  const totalRon = Number(booking.total_ron);
+  const cityTaxRon = Number(booking.city_tax_ron);
+  const refundRon = Math.round(cityTaxRon + ((totalRon - cityTaxRon) * pct) / 100);
+  if (refundRon <= 0) return { ok: false, error: 'not_cancellable' };
+
   // 1 — Refund first. Idempotency key on the BOOKING id: every path that
-  // cancels this booking converges on one single refund.
+  // cancels this booking converges on one single refund. Partial (50%) tiers
+  // pass an explicit amount in bani; the 100% tier refunds the full charge.
   try {
     await getStripe().refunds.create(
-      { payment_intent: booking.stripe_payment_intent_id },
+      {
+        payment_intent: booking.stripe_payment_intent_id,
+        ...(refundRon < totalRon ? { amount: refundRon * 100 } : {}),
+      },
+      // ponytail: a retry that crosses the 72h→24h tier boundary reuses this key
+      // with a different amount — Stripe rejects it (idempotency conflict), so
+      // the rare race surfaces refund_failed rather than a double/mixed refund.
       { idempotencyKey: `cancel_${booking.id}` },
+    );
+    console.log(
+      `[cancel] booking ${booking.id} self-cancelled by user ${user.id} at ${new Date().toISOString()} — tier ${pct}%, refunded ${refundRon} RON of ${totalRon} RON (city tax ${cityTaxRon} RON in full)`,
     );
   } catch (err) {
     console.error(
@@ -105,7 +123,7 @@ export async function cancelBooking(bookingId: string): Promise<CancelBookingRes
   }
 
   // Guest notice — best-effort, never blocks the outcome.
-  const notice = cancellationConfirmedEmail(booking);
+  const notice = cancellationConfirmedEmail({ ...booking, refund_ron: refundRon, refund_percent: pct });
   await sendEmail({ to: booking.guest_email, ...notice });
 
   revalidatePath('/my-trips');

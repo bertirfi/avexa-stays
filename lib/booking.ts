@@ -49,7 +49,8 @@ export function clearBooking() {
 export function hydrate(b: Booking): HydratedBooking | null {
   const property = getProperty(b.propertyId);
   if (!property) return null;
-  const rate = property.rates.find((r) => r.id === b.rateId) ?? property.rates[0];
+  // Single flat rate since M1.1 (legacy drafts carried a rateId — ignored).
+  const rate = property.rates[0];
   if (!rate) return null;
   // Parse 'YYYY-MM-DD' at LOCAL midnight (lib/date) — `new Date(str)` reads it as
   // UTC midnight, which shows the previous day for western (negative-offset) zones.

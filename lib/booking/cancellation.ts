@@ -1,16 +1,22 @@
 /**
- * Free-cancellation policy — single source of truth, shared by the My Trips
- * page (shows/hides the cancel button) and the cancel server action (enforces
- * it). Mirrors the PUBLISHED policy (/cancellation) exactly:
+ * Tiered cancellation policy (DX7 / M1.3) — single source of truth, shared by
+ * the My Trips page (shows the applicable refund) and the cancel server action
+ * (enforces it). Cancellation is a MEMBERSHIP right, not a rate tier — every
+ * site booking qualifies, regardless of the historical rate_plan value
+ * ('flexible', 'non_refundable', legacy 'saver'/'flex', or future 'standard').
  *
- *   "Flexible Rate: free cancellation up to 48 hours before your scheduled
- *    arrival date (by 3:00 PM, local time)."
- *
- * Deadline = (check-in day at 15:00 Europe/Bucharest) − 48h.
+ * Anchor = check-in day 15:00 Europe/Bucharest. From `now`:
+ *   ≥ 72h before the anchor → 100% refund
+ *   ≥ 24h before the anchor →  50% refund
+ *   under 24h / no-show     →   0%
+ * City tax is ALWAYS refunded in full on any cancellation (handled by the
+ * caller — this module only grades the accommodation+extras portion).
+ * Copy lives in lib/policies.ts (CANCELLATION_POLICY) — keep them in lockstep.
  */
 
 const CHECK_IN_HOUR_BUCHAREST = 15;
-const FREE_CANCEL_HOURS = 48;
+const FULL_REFUND_HOURS = 72;
+const HALF_REFUND_HOURS = 24;
 
 /**
  * Epoch ms of `y-m-d h:00` interpreted as Europe/Bucharest wall time.
@@ -35,23 +41,36 @@ function bucharestWallTimeMs(y: number, m: number, d: number, h: number): number
   return utcGuess - (rendered - utcGuess);
 }
 
-/** Epoch ms after which a Flexible booking is no longer freely cancellable. */
-export function freeCancelDeadlineMs(checkIn: string): number {
+function checkInAnchorMs(checkIn: string): number {
   const [y, m, d] = checkIn.split('-').map(Number);
-  return (
-    bucharestWallTimeMs(y, m, d, CHECK_IN_HOUR_BUCHAREST) - FREE_CANCEL_HOURS * 3_600_000
-  );
+  return bucharestWallTimeMs(y, m, d, CHECK_IN_HOUR_BUCHAREST);
+}
+
+/** Epoch ms until which cancelling refunds 100% (check-in 15:00 − 72h). */
+export function fullRefundDeadlineMs(checkIn: string): number {
+  return checkInAnchorMs(checkIn) - FULL_REFUND_HOURS * 3_600_000;
+}
+
+/** Epoch ms until which cancelling refunds 50% (check-in 15:00 − 24h). */
+export function halfRefundDeadlineMs(checkIn: string): number {
+  return checkInAnchorMs(checkIn) - HALF_REFUND_HOURS * 3_600_000;
+}
+
+/** Refund percentage of the non-city-tax portion if cancelled at `nowMs`. */
+export function refundPercentFor(checkIn: string, nowMs: number = Date.now()): 100 | 50 | 0 {
+  if (nowMs <= fullRefundDeadlineMs(checkIn)) return 100;
+  if (nowMs <= halfRefundDeadlineMs(checkIn)) return 50;
+  return 0;
 }
 
 /**
- * Whether the guest can self-cancel with a full refund right now.
- * Requires: a confirmed booking, the Flexible rate, a PMS reservation to
- * cancel, and the published 48h/15:00 deadline not yet passed.
+ * Whether the guest can self-cancel with SOME refund right now.
+ * Requires: a confirmed booking, a PMS reservation to cancel, and a refund
+ * tier > 0. No rate_plan gate — cancellation is a membership right (DX7).
  */
-export function isFreeCancellable(
+export function isSelfCancellable(
   booking: {
     status: string;
-    rate_plan: string;
     check_in: string;
     hostaway_reservation_id: string | null;
   },
@@ -59,8 +78,7 @@ export function isFreeCancellable(
 ): boolean {
   return (
     booking.status === 'confirmed' &&
-    booking.rate_plan === 'flexible' &&
     booking.hostaway_reservation_id !== null &&
-    nowMs < freeCancelDeadlineMs(booking.check_in)
+    refundPercentFor(booking.check_in, nowMs) > 0
   );
 }

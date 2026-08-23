@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { CancelTripButton } from '@/components/trips/CancelTripButton';
+import { CANCELLATION_POLICY } from '@/lib/policies';
 
 /**
  * View model for a single trip card. Built server-side in
@@ -26,10 +27,16 @@ export interface Trip {
   approxLabel: string | null;
   /** Raw booking status: 'confirmed' | 'cancelled' | 'pending' | … */
   status: string;
-  /** Flexible rate + inside the published free-cancellation window. */
+  /** Confirmed + PMS reservation + refund tier > 0 (DX7 tiered policy). */
   cancellable: boolean;
-  /** "Aug 15, 3:00 PM" — the free-cancellation deadline, when cancellable. */
-  cancelDeadlineLabel: string | null;
+  /** Refund tier applying RIGHT NOW to the non-city-tax portion: 100 | 50 | 0. */
+  refundPercent: 100 | 50 | 0;
+  /** "Aug 15, 3:00 PM" — 100%-refund deadline (check-in 15:00 − 72h), when cancellable. */
+  fullDeadlineLabel: string | null;
+  /** "Aug 17, 3:00 PM" — 50%-refund deadline (check-in 15:00 − 24h), when cancellable. */
+  halfDeadlineLabel: string | null;
+  /** Confirmed upcoming stay inside the final 24h — no self-cancel, contact us. */
+  nonRefundableNow: boolean;
 }
 
 export function TripsList({
@@ -130,14 +137,22 @@ function TripCard({ trip }: { trip: Trip }) {
             View apartment
           </Link>
           {trip.cancellable ? (
-            <CancelTripButton bookingId={trip.id} />
+            <CancelTripButton
+              bookingId={trip.id}
+              refundPercent={trip.refundPercent}
+              halfDeadlineLabel={trip.halfDeadlineLabel}
+            />
+          ) : trip.nonRefundableNow ? (
+            <p className="text-sm text-ink-60">Non-refundable now — contact us.</p>
           ) : (
             <p className="text-sm text-ink-60">Need changes? Contact us below.</p>
           )}
         </div>
-        {trip.cancellable && trip.cancelDeadlineLabel && (
+        {trip.cancellable && trip.halfDeadlineLabel && (
           <p className="mt-3 text-xs text-ink-60">
-            Free cancellation (Flexible rate) until {trip.cancelDeadlineLabel}, Bucharest time.
+            {trip.refundPercent === 100 && trip.fullDeadlineLabel
+              ? `100% refund until ${trip.fullDeadlineLabel}, then 50% until ${trip.halfDeadlineLabel}, Bucharest time. ${CANCELLATION_POLICY.cityTax}`
+              : `50% refund until ${trip.halfDeadlineLabel}, Bucharest time. ${CANCELLATION_POLICY.cityTax}`}
           </p>
         )}
       </div>

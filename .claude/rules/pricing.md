@@ -18,13 +18,14 @@ Every stored, computed, and charged amount is **RON**. EUR/USD are display-only.
 Formula (single entry point: `lib/pricing.ts`):
 
 ```
-accommodation_RON/night = ceil( base_RON × (1 + markup) × (1 + paymentFee) )   // 18% margin, 3% card fee
+accommodation_RON/night = ceil( base_RON × (1 + markup) × (1 + paymentFee) )   // flat 21% markup, 0% fee (Spec M1.1.1: Hostaway +21%, nothing else)
+cleaning_RON            = per-property flat fee (125/150/180) — own line, "cleaning not included" in the nightly rate
 city_tax_RON            = 10 × nights × persons                                 // pass-through: NO markup, NO fee
-charged                 = accommodation + extras + city tax  — ALWAYS RON (Stripe currency 'ron')
+charged                 = accommodation + extras + cleaning + city tax  — ALWAYS RON (Stripe currency 'ron')
 display                 = RON ÷ AVEXA_FX_RATE_EUR (5.25) | AVEXA_FX_RATE_USD (4.65)
 ```
 
-- Guests see ONE "total price" line for accommodation — never break out the 18%/3%. City tax is its own line (real RON + "≈ equivalent"). Extras are their own line. "VAT included" — VAT is in the price, never added on top.
+- Guests see ONE "total price" line for accommodation — never break out the markup. Cleaning fee and city tax are their own lines (city tax: real RON + "≈ equivalent"). Extras are their own line. "11% VAT included" — VAT is in the price, never added on top. No percentage discounts anywhere; cancellation rights come from membership (DX7: member 100% ≥72h / 50% 72–24h / 0% <24h; city tax always refunded), single rate — no saver/flex split.
 - Knobs are **server-only env** (`AVEXA_MARKUP_PERCENT`, `AVEXA_PAYMENT_FEE_PERCENT`, `AVEXA_FX_RATE_EUR`, `AVEXA_FX_RATE_USD`), configured in ONE place, never per-listing. Never import `lib/pricing` in a client component — display rates reach the client only via `<CurrencyProvider>` props; use `lib/currency` (client-safe) for formatting.
 - Base price + availability come from **Hostaway** (source of truth, cached in Supabase). See the Hostaway rule.
 - Before creating a Stripe Checkout Session, **re-derive the price server-side** (live Hostaway check + this formula). Never trust a price, total, or currency sent from the client — the client sends only ids/dates/guests.

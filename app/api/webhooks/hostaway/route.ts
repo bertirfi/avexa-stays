@@ -133,8 +133,8 @@ async function reconcileBookingStatus(
             paid: <strong>${Number(booking.total_ron).toFixed(0)} RON</strong>)
             was cancelled in the PMS.</p>
             <p>The guest paid via Stripe on the website. If a refund is due under the
-            ${booking.rate_plan === 'flexible' ? 'Flexible' : 'Non-Refundable'} rate,
-            issue it here:</p>
+            member cancellation policy (100% ≥72h / 50% ≥24h before 15:00 check-in;
+            city tax always refunded in full), issue it here:</p>
             <p><a href="https://dashboard.stripe.com/payments/${booking.stripe_payment_intent_id}"
             style="color:#B08840">Open the payment in Stripe → Refund</a></p>
             <p>Booking id: ${booking.id}</p>
