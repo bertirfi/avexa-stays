@@ -69,6 +69,65 @@ function siblingPerNight(sib: Property): number | null {
   return sib.rates[0]?.perNight ?? null;
 }
 
+/** Today in Europe/Bucharest — the guest may sit in any timezone, the calendar
+ *  is the property's. en-CA formats as YYYY-MM-DD. */
+function todayInBucharest(): Date {
+  const s = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Bucharest' });
+  return parseYmd(s) ?? new Date();
+}
+
+function addDays(d: Date, n: number): Date {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+}
+
+/**
+ * Default range so the total is on screen the moment the page loads (Numa
+ * parity) instead of an empty "Add dates" box:
+ *   1. first free day of NEXT calendar month, min_stay honoured;
+ *   2. else the first free day from today+7 onwards;
+ *   3. else — availability cache offline — the 15th of next month, 1 night.
+ * Returns null when the cache IS loaded but holds no bookable window at all,
+ * in which case the box keeps its "Add dates" empty state.
+ */
+function pickDefaultRange(availability: AvailabilityMap | undefined): [Date, Date] | null {
+  const today = todayInBucharest();
+
+  if (!availability || Object.keys(availability).length === 0) {
+    const start = new Date(today.getFullYear(), today.getMonth() + 1, 15);
+    return [start, addDays(start, 1)];
+  }
+
+  /** Nights to book starting on `d` (= its min_stay), or null when not bookable. */
+  const nightsFrom = (d: Date): number | null => {
+    const day = availability[ymd(d)];
+    if (!day?.available) return null;
+    const n = Math.max(1, day.minStay);
+    // Seeding a range the server would reject dead-ends the guest at checkout.
+    if (n > MAX_NIGHTS) return null;
+    for (let i = 1; i < n; i += 1) {
+      if (!availability[ymd(addDays(d, i))]?.available) return null;
+    }
+    return n;
+  };
+
+  const scan = (from: Date, until: Date): [Date, Date] | null => {
+    for (let d = from; d <= until; d = addDays(d, 1)) {
+      const n = nightsFrom(d);
+      if (n !== null) return [d, addDays(d, n)];
+    }
+    return null;
+  };
+
+  const firstOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+  // Day 0 of month+2 = last day of month+1.
+  const lastOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+
+  // The cache covers ~180 days; scanning a year just runs off its end harmlessly.
+  return scan(firstOfNextMonth, lastOfNextMonth) ?? scan(addDays(today, 7), addDays(today, 365));
+}
+
 export function StayBookingSidebar({ property, siblings = [], availability }: Props) {
   const router = useRouter();
   const { currency, format, approx } = useCurrency();
@@ -83,6 +142,16 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     early_checkin: UPGRADES_ENABLED,
   });
   const [priceOpen, setPriceOpen] = useState(false);
+  /** True while the range on screen came from pickDefaultRange, not the guest. */
+  const [autoPicked, setAutoPicked] = useState(false);
+
+  /** Every calendar edit goes through here so an auto-seeded range stops being
+   *  "auto" the moment the guest touches it (and starts mirroring to the URL). */
+  function selectRange(s: Date | null, e: Date | null) {
+    setAutoPicked(false);
+    setStart(s);
+    setEnd(e);
+  }
 
   // Multi-room state
   const [addedRoomIds, setAddedRoomIds] = useState<string[]>([]);
@@ -147,12 +216,31 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Numa parity: with no URL params and no saved prefs the box would open on
+  // "Add dates" with no total. Fill the VOID ONLY — this runs after the seed
+  // above has committed, so a URL/prefs range is already in state and wins.
+  useEffect(() => {
+    if (!mounted || startDate || endDate) return;
+    const range = pickDefaultRange(availability);
+    if (!range) return;
+    setStart(range[0]);
+    setEnd(range[1]);
+    setAutoPicked(true);
+    // Runs once, right after the mount seed — re-running on date changes would
+    // re-seed the moment the guest clears the calendar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted]);
+
   // Mirror the picked dates into the URL so the stay page is shareable and the
   // header pill / back-nav to /locations keep the same range. replace +
   // scroll:false = no history spam, no jump, and the page stays static (the
   // seed above reads window.location, never useSearchParams).
   useEffect(() => {
     if (!mounted) return; // don't clobber the URL before the seed has run
+    // An auto-seeded range is a convenience, not a guest choice — never put it
+    // in the URL (nor in searchPrefs), or it would leak into shared links, the
+    // header pill and /locations as if the guest had searched for it.
+    if (autoPicked) return;
     // No dates → keep the bare canonical URL, no guest-count noise.
     const query =
       startDate && endDate
@@ -161,7 +249,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     const next = query ? `?${query}` : '';
     if (window.location.search === next) return;
     router.replace(`${window.location.pathname}${next}`, { scroll: false });
-  }, [mounted, startDate, endDate, guests, router]);
+  }, [mounted, autoPicked, startDate, endDate, guests, router]);
 
   // Anchor the desktop calendar popup to the dates input via fixed positioning,
   // so the sidebar's `overflow-y-auto` cannot clip it.
@@ -409,10 +497,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                 startDate={startDate}
                 endDate={endDate}
                 priceByDate={availability}
-                onSelect={(s, e) => {
-                  setStart(s);
-                  setEnd(e);
-                }}
+                onSelect={selectRange}
                 onClose={() => setShowCal(false)}
               />
             </div>
@@ -491,10 +576,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
             startDate={startDate}
             endDate={endDate}
             priceByDate={availability}
-            onSelect={(s, e) => {
-              setStart(s);
-              setEnd(e);
-            }}
+            onSelect={selectRange}
             onClose={() => setShowCal(false)}
             onBack={() => setShowCal(false)}
           />

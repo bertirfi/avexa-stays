@@ -216,6 +216,7 @@ export function PropertyCard({
           ) : (
             <>
               <span className="inline-flex items-baseline gap-1 rounded-full bg-gold px-3.5 py-2.5 font-bold text-ink">
+                <span className="text-[11.5px] font-medium opacity-70">from</span>
                 <span className="font-display text-[22px]">{format(saver.perNight)}</span>
                 <span className="text-[11.5px] font-medium opacity-70">/night</span>
               </span>

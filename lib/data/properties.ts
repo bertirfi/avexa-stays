@@ -52,19 +52,24 @@ function withCoordinates(property: Property): Property {
 }
 
 /**
- * SEO copy (SERP title/description) is code-owned editorial content, same as
- * coordinates: the static catalog always wins over the `content` JSON cached
- * in Supabase. The cached blob predates these fields (`as Property` hid the
- * gap), which shipped property pages without any meta description.
+ * Editorial copy (SERP title/description, the on-page description, and the
+ * Good-to-know notes) is code-owned content, same as coordinates: the static
+ * catalog always wins over the `content` JSON cached in Supabase, so rewrites
+ * ship without re-seeding. The cached blob may also still hold the removed
+ * `pitch` field — strip it so the stale key never leaks past this overlay.
  */
-function withSeoFields(property: Property): Property {
+function withEditorialContent(property: Property): Property {
   const source = staticProperties.find((p) => p.id === property.id);
   if (!source) return property;
-  return {
+  const merged: Property = {
     ...property,
+    description: source.description,
+    goodToKnow: source.goodToKnow,
     metaDescription: source.metaDescription,
     metaTitle: source.metaTitle,
   };
+  delete (merged as unknown as Record<string, unknown>).pitch;
+  return merged;
 }
 
 export async function getAllPropertiesData(): Promise<Property[]> {
@@ -78,7 +83,7 @@ export async function getAllPropertiesData(): Promise<Property[]> {
       throw new Error(error?.message ?? 'no property rows');
     }
     return data.map((row) =>
-      withCoordinates(withSeoFields(withCatalogRate(applyLivePricing(row.content as unknown as Property, row.price_from_ron)))),
+      withCoordinates(withEditorialContent(withCatalogRate(applyLivePricing(row.content as unknown as Property, row.price_from_ron)))),
     );
   } catch {
     return staticProperties.map(withCoordinates);
@@ -94,7 +99,7 @@ export async function getPropertyData(idOrSlug: string): Promise<Property | null
       .or(`id.eq.${safe},slug.eq.${safe}`)
       .maybeSingle();
     if (error || !data) throw new Error(error?.message ?? 'not found');
-    return withCoordinates(withSeoFields(withCatalogRate(applyLivePricing(data.content as unknown as Property, data.price_from_ron))));
+    return withCoordinates(withEditorialContent(withCatalogRate(applyLivePricing(data.content as unknown as Property, data.price_from_ron))));
   } catch {
     const fallback = staticProperties.find((p) => p.id === safe || p.slug === safe);
     return fallback ? withCoordinates(fallback) : null;

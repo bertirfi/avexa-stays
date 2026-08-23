@@ -14,7 +14,7 @@ const rows: Row[] = [
     member: 'Flexible: 100% refund ≥72h before check-in · 50% between 72h and 24h',
   },
   { feature: 'AVX Coins', guest: '—', member: '5%–15% of every stay, 1 AVX = 1 RON' },
-  { feature: 'Upsells', guest: 'Pay full price', member: 'Pay with AVX Coins — 1 AVX = 1 RON' },
+  { feature: 'Upsells', guest: 'Pay full price', member: 'PLATINUM & DIAMOND pay with AVX Coins' },
   { feature: 'Cost to join', guest: '—', member: 'Free, forever' },
 ];
 

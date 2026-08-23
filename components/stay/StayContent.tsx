@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
+import { StaySection } from '@/components/stay/StaySection';
 import type { Property } from '@/types';
 
 function Paragraphs({ text }: { text: string }) {
@@ -21,51 +22,22 @@ export function StayDescription({ property }: { property: Property }) {
       <div className="space-y-4">
         <Paragraphs text={property.description} />
       </div>
-
-      {property.pitch && (
-        <div className="mt-10 rounded-card bg-cream p-6">
-          <h3 className="font-display mb-4 text-xl">The pitch</h3>
-          <div className="space-y-4">
-            <Paragraphs text={property.pitch} />
-          </div>
-        </div>
-      )}
     </section>
   );
 }
 
 export function StayGoodToKnow({ property }: { property: Property }) {
   return (
-    <section className="border-b border-gray-line py-10">
-      {/* Desktop: always-visible heading + grid */}
-      <div className="hidden md:block">
-        <h2 className="font-display mb-6 text-2xl">Good to know</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <Card icon="key" title="Check-in" body={property.checkin} />
-          <Card icon="clock" title="Check-out" body={property.checkout} />
-          <Card icon="shield" title="House rules" body={`Up to ${property.maxGuests} guests. No pets. No parties.`} />
-        </div>
-        {property.goodToKnow && (
-          <p className="mt-6 rounded-card bg-cream p-5 text-sm text-ink-80">{property.goodToKnow}</p>
-        )}
+    <StaySection title="Good to know">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card icon="key" title="Check-in" body={property.checkin} />
+        <Card icon="clock" title="Check-out" body={property.checkout} />
+        <Card icon="shield" title="House rules" body={`Up to ${property.maxGuests} guests. No pets. No parties.`} />
       </div>
-
-      {/* Mobile: collapsible accordion */}
-      <details className="group md:hidden">
-        <summary className="flex cursor-pointer items-center justify-between border-b border-gray-line pb-4">
-          <h2 className="font-display text-xl font-bold">Good to know</h2>
-          <Icon name="chevDown" size={20} className="shrink-0 transition group-open:rotate-180" />
-        </summary>
-        <div className="mt-4 grid grid-cols-1 gap-4">
-          <Card icon="key" title="Check-in" body={property.checkin} />
-          <Card icon="clock" title="Check-out" body={property.checkout} />
-          <Card icon="shield" title="House rules" body={`Up to ${property.maxGuests} guests. No pets. No parties.`} />
-        </div>
-        {property.goodToKnow && (
-          <p className="mt-6 rounded-card bg-cream p-5 text-sm text-ink-80">{property.goodToKnow}</p>
-        )}
-      </details>
-    </section>
+      {property.goodToKnow && (
+        <p className="mt-6 rounded-card bg-cream p-5 text-sm text-ink-80">{property.goodToKnow}</p>
+      )}
+    </StaySection>
   );
 }
 
@@ -82,20 +54,19 @@ function Card({ icon, title, body }: { icon: 'key' | 'clock' | 'shield'; title: 
 export function StayFAQ({ property }: { property: Property }) {
   if (property.faqs.length === 0) return null;
   return (
-    <section className="border-b border-gray-line py-10">
-      <h2 className="font-display mb-6 text-2xl">Frequently asked</h2>
+    <StaySection title="Frequently asked">
       <div className="space-y-3">
         {property.faqs.map((faq, i) => (
-          <details key={i} className="group rounded-card border border-gray-line p-5 open:bg-cream">
+          <details key={i} className="group/faq rounded-card border border-gray-line p-5 open:bg-cream">
             <summary className="flex cursor-pointer items-center justify-between gap-3 font-semibold text-ink">
               {faq.q}
-              <Icon name="chevDown" size={16} className="transition group-open:rotate-180" />
+              <Icon name="chevDown" size={16} className="transition group-open/faq:rotate-180" />
             </summary>
             <p className="mt-3 text-sm text-ink-80">{faq.a}</p>
           </details>
         ))}
       </div>
-    </section>
+    </StaySection>
   );
 }
 
@@ -108,8 +79,7 @@ export function StayLocation({ property }: { property: Property }) {
     ? `https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=${mapsQuery}&zoom=15`
     : `https://www.google.com/maps?q=${mapsQuery}&output=embed`;
   return (
-    <section className="border-b border-gray-line py-10">
-      <h2 className="font-display mb-6 text-2xl">Where you&apos;ll be</h2>
+    <StaySection title="Where you'll be">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="flex items-center gap-2 text-ink-80">
           <Icon name="pin" size={18} className="text-gold-dark" />
@@ -153,7 +123,7 @@ export function StayLocation({ property }: { property: Property }) {
           </div>
         ))}
       </div>
-    </section>
+    </StaySection>
   );
 }
 
@@ -170,22 +140,22 @@ function groupNearby(items: Property['nearby']): Array<[string, Property['nearby
 export function StayTestimonials({ property }: { property: Property }) {
   if (property.reviews.length === 0) {
     return (
-      <section className="border-b border-gray-line py-10">
-        <h2 className="font-display mb-2 text-2xl">Guest reviews</h2>
+      <StaySection title="Guest reviews">
         <p className="text-sm text-ink-60">No reviews yet. Be the first to stay.</p>
-      </section>
+      </StaySection>
     );
   }
   const avg = property.reviews.reduce((s, r) => s + r.rating, 0) / property.reviews.length;
   return (
-    <section className="border-b border-gray-line py-10">
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <h2 className="font-display text-2xl">Guest reviews</h2>
-        <span className="flex items-center gap-2 text-sm font-semibold">
+    <StaySection
+      title="Guest reviews"
+      meta={
+        <span className="flex items-center gap-1.5 text-sm font-semibold">
           <Icon name="star" size={16} className="fill-gold text-gold" />
-          {avg.toFixed(1)} · {property.reviews.length} reviews
+          {avg.toFixed(1)} · {property.reviews.length}
         </span>
-      </div>
+      }
+    >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {property.reviews.slice(0, 4).map((r, i) => (
           <article key={i} className="rounded-card border border-gray-line p-5">
@@ -217,6 +187,6 @@ export function StayTestimonials({ property }: { property: Property }) {
           </div>
         </details>
       )}
-    </section>
+    </StaySection>
   );
 }

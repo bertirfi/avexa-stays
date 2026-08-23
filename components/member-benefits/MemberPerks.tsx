@@ -34,14 +34,14 @@ const perks: Perk[] = [
   },
   {
     icon: '→',
-    title: 'Spend AVX on every upsell',
-    desc: 'Late check-out, early check-in, transfers & more — 1 AVX = 1 RON, at any tier.',
-    tag: 'Every tier, every upsell',
+    title: 'Spend AVX on future stays',
+    desc: 'Put your coins toward the next booking — 1 AVX = 1 RON, from your very first tier.',
+    tag: 'Every tier',
   },
   {
     icon: '♢',
     title: 'PLATINUM+: pay your stay with coins',
-    desc: 'From PLATINUM, AVX also covers accommodation at 2 AVX = 1 RON.',
+    desc: 'From PLATINUM, AVX pays for anything — early check-in, late check-out, transfers & every upsell.',
     tag: 'PLATINUM & DIAMOND HERO',
   },
   {

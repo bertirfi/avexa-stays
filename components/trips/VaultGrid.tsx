@@ -3,8 +3,8 @@ import { TIERS, tierRank, type TierId } from '@/lib/avx/tiers';
 /**
  * The Vault (M2.5.3) — every AVEXIAN experience, grouped by the tier that
  * introduces it. Items above the member's tier are locked (greyed + lock +
- * "Reach {TIER} to unlock this experience"). Upsells are payable with AVX at
- * ANY tier (1:1) — the Vault gates which experiences exist for you.
+ * "Reach {TIER} to unlock this experience"). AVX pays for future stays at any
+ * tier; from PLATINUM coins pay for anything, upsells included (Master DX2).
  */
 export function VaultGrid({ userTier }: { userTier: TierId }) {
   const userRank = tierRank(userTier);
@@ -43,8 +43,8 @@ export function VaultGrid({ userTier }: { userTier: TierId }) {
       </div>
 
       <p className="mt-8 max-w-[640px] text-xs leading-relaxed text-white/35">
-        Upsells are payable with AVX Coins at every tier — 1 AVX = 1 RON. From
-        Platinum, AVX can also cover your accommodation at 2 AVX = 1 RON.
+        AVX Coins pay for future stays at every tier — 1 AVX = 1 RON. From
+        Platinum, coins pay for anything, every upsell included.
         Diamond Heroes enjoy every upsell free, subject to availability. AVX
         Coins are non-transferable and hold no cash value.
       </p>

@@ -67,7 +67,7 @@ export function AvxWallet({ wallet }: { wallet: AvxWalletData | null }) {
       </div>
 
       <p className="mt-auto pt-6 text-xs text-white/35">
-        1 AVX = 1 RON on upsells. Non-transferable, no cash value.
+        1 AVX = 1 RON. Non-transferable, no cash value.
       </p>
     </div>
   );

@@ -74,7 +74,7 @@ export const TIERS: TierMeta[] = [
     minNights: 20,
     percent: 12.5,
     vaultItems: ['24/7 Parking', 'Airport Transfer', 'Spa & Relaxation Kit'],
-    spendNote: 'Pay accommodation with AVX at 2 AVX = 1 RON',
+    spendNote: 'Spend AVX on anything — every upsell included',
   },
   {
     id: 'DIAMOND',

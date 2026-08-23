@@ -100,7 +100,6 @@ export interface Property {
   metaDescription: string;
   /** SERP title override for names that would push the title past 60 chars. */
   metaTitle?: string;
-  pitch?: string;
   goodToKnow?: string;
   checkin: string;
   checkout: string;

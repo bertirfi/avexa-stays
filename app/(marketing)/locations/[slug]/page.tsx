@@ -196,22 +196,27 @@ export default async function StayPage(props: { params: Promise<Params> }) {
         {/* Gallery */}
         <StayGallery photos={property.photos} name={property.name} />
 
-        {/* Two-column layout */}
-        <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_380px]">
-          {/* Main */}
+        {/* Header · booking box · content.
+            Mobile (1 col): DOM order = header → booking box → sections, so
+            price + dates land right under the gallery (Numa-style).
+            lg (2 cols): auto-placement puts the header at col1/row1, the
+            booking box at col2 spanning BOTH rows (so `sticky` has the full
+            column to travel in), and the sections at col1/row2 — i.e. the
+            two-column layout is unchanged. */}
+        <div className="mt-10 grid gap-x-10 gap-y-8 lg:grid-cols-[1fr_380px] lg:gap-y-0">
+          <StayHeader property={property} />
+
+          <div className="lg:row-span-2 lg:min-w-0">
+            <StayBookingSidebar property={property} siblings={siblings} availability={availability} />
+          </div>
+
           <div>
-            <StayHeader property={property} />
             <StayDescription property={property} />
             <StayAmenities property={property} />
             <StayGoodToKnow property={property} />
             <StayFAQ property={property} />
             <StayLocation property={property} />
             <StayTestimonials property={property} />
-          </div>
-
-          {/* Sticky right sidebar */}
-          <div className="lg:min-w-0">
-            <StayBookingSidebar property={property} siblings={siblings} availability={availability} />
           </div>
         </div>
 
