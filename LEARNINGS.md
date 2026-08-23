@@ -199,6 +199,15 @@ separate, email precompletat) → 4242 → **BOOKING CONFIRMED** (≈ €164.57)
 
 ## ⏯ Session Resume Notes (newest first)
 
+### 2026-08-23 — M1 live: AVX copy + flat 1.21 + cleaning fee + DX7 + Suite 102 (multi-agent, 14 agenți)
+- **Sursa cerințelor s-a schimbat:** `AVEXA_IT_Specificatie_Berty_v1.docx` (Drive, folder 1Xp9SS9Rax6nvQAgFmPwoeUqv7sd1yUo8) înlocuiește Minuta 03; Master v3 = registrul de decizii. Textele de marketing vin din Minuta (M1.5.5), CIFRELE din Spec (AVX 5/8/10/12,5/15 cu praguri duale sejururi+nopți; DX7 100/50/0 la 72h/24h; curățenie 125/150/180).
+- **Livrat în 3 commit-uri pe feat/nextjs-platform:** (1) copy AVX pe tot site-ul (hero „Your Bucharest Solution" cu H1 SEO separat — h1 mic cu keyword-ul, display-ul e <p>; T1–T4 cu baterie animată; Member Benefits rescris cu tabelul de tiers; lib/policies.ts sursă unică DX7); (2) Suite 102 / CV142-B34 → Hostaway 571073, 12 poze în public/listings/102; (3) pricing flat ×1,21 (markup 21/fee 0 ca DEFAULTS în cod + .env.local), rată unică (saver/flex + rateFactor ELIMINATE), cleaning fee prin quote→Stripe→extras jsonb {id:'cleaning'}→financeField cleaningFee, „11% VAT included", breakdown per noapte la checkout, from-price pe 60 zile, refund-uri tiered cu city tax mereu integral.
+- **Audit live dovedit:** script `price-audit.ts` (scratchpad sesiune) — after-fix deviația = doar ceil (<1 RON) pe toate listing-urile; cache 0/248 zile stale; sync-ul de 5 min funcționează.
+- **⚠ SEED PENDING:** proprietatea 102 NU e încă în Supabase — /locations n-o afișează până nu rulează seed-ul (script pregătit: scratchpad/seed-102.ts sau POST /api/admin/seed). De rulat DUPĂ ce deploy-ul cu pozele ajunge în producție, altfel imagini 404 pe live.
+- **Gotcha:** `npm run build` al unui agent șterge manifests din `.next` al dev serverului care rulează → 500-uri; nu rula build + dev simultan.
+- **Decizii de confirmat cu Vlad:** baza „from €X" = min pe 60 zile; amenity-uri 102 nesigure (Smart TV/Netflix, Elevator — scoase dacă nu există); numele public Hostaway „The Modern Beige" vs site „The Modern Beige Deluxe".
+- **rate_plan rămâne 'flexible'** la insert (CHECK-ul din migrația 001 permite doar non_refundable|flexible; migrare 'standard' = follow-up, la fel coloana dedicată cleaning_ron).
+
 ### 2026-07-03 — VALIDARE FINALĂ POST-SWEEP: mock E2E + 2 teste REALE, totul verde
 - **Mock E2E (Feb 8–10 2027, 708 RON):** fluxul NOU cap-coadă — quote server pe checkout
   (bannerul „Prices were refreshed" a apărut live = protecția anti-divergență funcționează),
