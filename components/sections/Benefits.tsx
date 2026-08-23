@@ -44,8 +44,13 @@ export function Benefits() {
               </h2>
             </div>
             <div>
-              <p className="max-w-md text-base text-ink-80">
-                <Sentences text="The smartest way to experience Bucharest is just a click away. Claim your first AVEXA Coins and instantly upgrade your next trip." />
+              <p className="text-base leading-relaxed text-ink-80">
+                <span className="block">
+                  The smartest way to experience Bucharest is just a click away.
+                </span>
+                <span className="mt-2.5 block">
+                  Claim your first AVEXA Coins and instantly upgrade your next trip.
+                </span>
               </p>
               <Link
                 href="/login"
