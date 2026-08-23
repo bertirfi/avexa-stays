@@ -220,7 +220,7 @@ export function PropertyCard({
                 <span className="font-display text-[22px]">{format(saver.perNight)}</span>
                 <span className="text-[11.5px] font-medium opacity-70">/night</span>
               </span>
-              <span className="mt-1.5 block text-[11px] text-ink-60">Direct rate · 11% VAT included</span>
+              <span className="mt-1.5 block text-[11px] text-ink-60">11% VAT included</span>
             </>
           )}
         </div>
