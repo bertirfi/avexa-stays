@@ -11,6 +11,7 @@ import type { Property } from '@/types';
  */
 export const PROPERTY_COORDINATES: Record<string, NonNullable<Property['coordinates']>> = {
   '101': { lat: 44.43032102, lng: 26.09698512 }, // Calea Victoriei 2 (Adriatica)
+  '102': { lat: 44.44466396, lng: 26.09288435 }, // Calea Victoriei 142-148 — Bldg B, ap 34
   '201': { lat: 44.43035046, lng: 26.09692946 }, // Calea Victoriei 2 (Adriatica)
   '202': { lat: 44.44467593, lng: 26.09223928 }, // Calea Victoriei 142-148 — Bldg C
   '203': { lat: 44.43484180, lng: 26.10637440 }, // Strada Colței 25 (Universitate)

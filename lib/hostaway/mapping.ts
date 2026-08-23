@@ -4,12 +4,10 @@
  * Confirmed 2026-06-16 against the owner's Drive folder names (building/apartment
  * codes: D2, C5, C7, B35 ...) cross-checked with Hostaway "internal listing
  * name". Names differ across systems; the building/apartment code is the anchor.
- *
- * Note: a 9th unit — Suite 102 (CV142-B34) — is under renovation and not listed
- * on the site, so it is intentionally absent here.
  */
 export const HOSTAWAY_LISTING_BY_PROPERTY: Record<string, number> = {
   '101': 473889, // The Little Gem            — CV 2, ap 2b (studio, 2g)
+  '102': 571073, // The Modern Beige Deluxe    — CV142 Building B, ap 34, floor 4
   '201': 473898, // The Golden Forest         — CV 2, ap 2a
   '202': 473904, // The Modern Green Gem       — CV 142, Building C, ap 5
   '203': 502511, // The Modern Quartz Gem      — Colței 25

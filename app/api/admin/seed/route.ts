@@ -8,7 +8,7 @@ import type { Json } from '@/types/database.types';
 export const dynamic = 'force-dynamic';
 
 /**
- * One-time / idempotent seed: pushes the 8 curated AVEXA properties from
+ * One-time / idempotent seed: pushes the curated AVEXA properties from
  * lib/properties.ts into Supabase, including the full editorial content (as
  * JSONB) and the Hostaway listing id. Re-runnable — upserts by id.
  *
