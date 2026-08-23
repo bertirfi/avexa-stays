@@ -7,7 +7,7 @@ import { motion } from 'motion/react';
 import { Icon } from '@/components/Icon';
 import { getLocationCard } from '@/lib/locationCards';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
-import type { Property } from '@/types';
+import type { LocationsProperty } from '@/types';
 import { cn } from '@/lib/cn';
 
 const MOBILE_QUERY = '(max-width: 767px)';
@@ -28,7 +28,7 @@ function useIsMobile() {
 }
 
 interface PropertyCardProps {
-  property: Property;
+  property: LocationsProperty;
   index?: number;
   active?: boolean;
   onActivate?: () => void;

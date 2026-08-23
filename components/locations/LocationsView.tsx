@@ -21,9 +21,9 @@ import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { neighborhoods } from '@/lib/neighborhoods';
 import { BUILDINGS } from '@/lib/properties';
 import { cn } from '@/lib/cn';
-import type { Property } from '@/types';
+import type { LocationsProperty } from '@/types';
 
-export function LocationsView({ properties }: { properties: Property[] }) {
+export function LocationsView({ properties }: { properties: LocationsProperty[] }) {
   const { format } = useCurrency();
   const router = useRouter();
   const { location, startDate, endDate, guests, setLocation, setDates } = useSearch();

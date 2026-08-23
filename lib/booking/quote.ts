@@ -127,6 +127,9 @@ export async function quoteBooking(input: QuoteInput): Promise<Quote> {
     }
     nightly.push({ date: key, ron: accommodationRonPerNight(day.price as number) });
   }
+  // The charged accommodation total IS the sum of the per-night lines (each
+  // already ceil'd per night) — never derived independently, so the M1.1.6
+  // breakdown can never drift from the total by a rounding leu.
   const accommodationRon = nightly.reduce((sum, n) => sum + n.ron, 0);
 
   // ── Extras (v1: breakfast; DB `services` catalog plugs in here later) ───

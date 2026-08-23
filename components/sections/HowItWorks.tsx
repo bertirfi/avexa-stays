@@ -40,7 +40,10 @@ export function HowItWorks() {
           </h2>
         </Reveal>
 
-        <div className="mt-16 flex h-[480px] gap-3 overflow-hidden rounded-card">
+        {/* max-md:mb-20 keeps the collapsed right panel clear of the floating
+            "Book now" pill (StickyBookNow, fixed bottom-right) when the strip
+            rests fully in view on small screens. */}
+        <div className="mt-16 flex h-[480px] gap-3 overflow-hidden rounded-card max-md:mb-20">
           {panels.map((p, i) => {
             const isActive = i === active;
             return (

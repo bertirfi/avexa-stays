@@ -5,7 +5,7 @@ import { SearchParamsSync } from '@/components/search/SearchParamsSync';
 import { getAllPropertiesData } from '@/lib/data/properties';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getFxRateEur } from '@/lib/pricing';
-import type { Property } from '@/types';
+import type { LocationsProperty, Property } from '@/types';
 
 const SITE_URL = 'https://avexastays.com';
 
@@ -22,6 +22,35 @@ export const revalidate = 900;
 
 function absoluteUrl(path: string): string {
   return path.startsWith('http') ? path : `${SITE_URL}${path}`;
+}
+
+/**
+ * Slim card DTO — the client view only renders name/photos/price/filters, so
+ * the heavy editorial content (description, FAQs, reviews, nearby, photos
+ * beyond the card's 5-slide carousel) never reaches the ISR HTML or the
+ * hydration payload (~5KB saved per suite). The full `properties` array stays
+ * server-side for the JSON-LD schema above.
+ */
+function toLocationsProperty(p: Property): LocationsProperty {
+  return {
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    tagline: p.tagline,
+    neighborhood: p.neighborhood,
+    neighborhoodLabel: p.neighborhoodLabel,
+    neighborhoodColor: p.neighborhoodColor,
+    building: p.building,
+    coordinates: p.coordinates,
+    stats: p.stats,
+    maxGuests: p.maxGuests,
+    cover: p.cover,
+    photos: p.photos.slice(0, 5),
+    rates: p.rates.map((r) => ({ perNight: r.perNight })),
+    amenitiesTop: p.amenitiesTop,
+    amenitiesProperty: p.amenitiesProperty,
+    amenitiesRoom: p.amenitiesRoom,
+  };
 }
 
 /**
@@ -85,7 +114,7 @@ export default async function LocationsPage() {
       <Suspense fallback={null}>
         <SearchParamsSync />
       </Suspense>
-      <LocationsView properties={properties} />
+      <LocationsView properties={properties.map(toLocationsProperty)} />
     </div>
   );
 }

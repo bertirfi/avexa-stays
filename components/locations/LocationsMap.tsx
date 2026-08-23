@@ -6,10 +6,10 @@ import { loadGoogleMaps, subscribeMapsAuthFailure, isMapsAuthFailed } from '@/li
 import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { cn } from '@/lib/cn';
 import { BUCHAREST_LANDMARKS, type Landmark } from '@/lib/maps/landmarks';
-import type { Property } from '@/types';
+import type { LocationsProperty } from '@/types';
 
 interface LocationsMapProps {
-  properties: Property[];
+  properties: LocationsProperty[];
   /**
    * When set, only these property ids show pins (dated-search filtering).
    * Markers are built once from `properties`; this just toggles visibility,
@@ -129,8 +129,8 @@ function pinAriaLabel(priceLabel: string, name?: string, count?: number): string
  * running centroid (same building/complex). Distance-based, so suites ~15m
  * apart never split across a coordinate grid boundary.
  */
-function clusterByProximity(items: Property[], thresholdM: number): Property[][] {
-  const clusters: { lat: number; lng: number; items: Property[] }[] = [];
+function clusterByProximity(items: LocationsProperty[], thresholdM: number): LocationsProperty[][] {
+  const clusters: { lat: number; lng: number; items: LocationsProperty[] }[] = [];
   for (const p of items) {
     const c = p.coordinates!;
     let placed = false;
@@ -337,7 +337,7 @@ export function LocationsMap(props: LocationsMapProps) {
 
           const bounds = new maps.LatLngBounds();
 
-          const individualMarker = (p: Property, position: google.maps.LatLngLiteral, grouped: boolean) => {
+          const individualMarker = (p: LocationsProperty, position: google.maps.LatLngLiteral, grouped: boolean) => {
             const priceRon = p.rates[0].perNight;
             const label = formatRef.current(priceRon);
             const html = pinInnerHTML(p.neighborhoodColor, label);

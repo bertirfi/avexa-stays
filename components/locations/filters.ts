@@ -1,4 +1,4 @@
-import type { Property } from '@/types';
+import type { LocationsProperty } from '@/types';
 
 // ── Amenity filters ────────────────────────────────────────────
 // Catalog labels are inconsistent ("Kitchen" vs "Kitchenette", "Washer" vs
@@ -49,7 +49,7 @@ export const BEDROOM_OPTIONS: BedroomOption[] = [
 // amenities, EXCLUDING any "Not Included" section — those list what the stay
 // lacks (e.g. "Washer" under Not Included means there is no washer), so
 // matching them would wrongly flag the property as having the amenity.
-function amenityText(property: Property): string {
+function amenityText(property: LocationsProperty): string {
   const flatten = (groups: Record<string, string[]>) =>
     Object.entries(groups)
       .filter(([section]) => !/not included/i.test(section))
@@ -64,14 +64,14 @@ function amenityText(property: Property): string {
 
 // Bedrooms derived from the stat label ("1 Bedroom" / "2 Bedrooms"); a Studio
 // has no separate bedroom → 0.
-export function propertyBedrooms(property: Property): number {
+export function propertyBedrooms(property: LocationsProperty): number {
   const label = property.stats.find((s) => s.icon === 'bed')?.label ?? '';
   const match = label.match(/(\d+)\s*bedroom/i);
   return match ? Number(match[1]) : 0;
 }
 
 export function matchesFilters(
-  property: Property,
+  property: LocationsProperty,
   activeAmenities: Set<string>,
   minBedrooms: number,
 ): boolean {

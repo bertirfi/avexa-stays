@@ -7,7 +7,7 @@ import { CONTACT_EMAIL, WHATSAPP_URL } from '@/lib/contact';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 
 export const metadata: Metadata = {
-  title: 'FAQ',
+  title: 'Bucharest Apartment FAQ',
   description:
     'Answers about online check-in and PIN codes, check-in times, our 24/7 online reception, cleaning, trip changes, and extra services at AVEXA Stays.',
   alternates: { canonical: '/faq' },

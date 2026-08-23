@@ -130,6 +130,33 @@ export interface Property {
   reviews: PropertyReview[];
 }
 
+/**
+ * Slim card DTO for the /locations list, filters and map — only what they
+ * render. Mapped server-side (app/(marketing)/locations/page.tsx) so the heavy
+ * editorial content (description, FAQs, reviews, nearby, full photo set) stays
+ * out of the ISR HTML + hydration payload. A full `Property` is structurally
+ * assignable, so detail-page callers need no mapping.
+ */
+export type LocationsProperty = Pick<
+  Property,
+  | 'id'
+  | 'slug'
+  | 'name'
+  | 'tagline'
+  | 'neighborhood'
+  | 'neighborhoodLabel'
+  | 'neighborhoodColor'
+  | 'building'
+  | 'coordinates'
+  | 'stats'
+  | 'maxGuests'
+  | 'cover'
+  | 'photos'
+  | 'amenitiesTop'
+  | 'amenitiesProperty'
+  | 'amenitiesRoom'
+> & { rates: Array<Pick<PropertyRate, 'perNight'>> };
+
 // ── Search state (URL-driven) ──────────────────────────────────
 export interface GuestCounts {
   adults: number;

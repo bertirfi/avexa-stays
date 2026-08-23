@@ -173,10 +173,13 @@ export function Editorial() {
                   <div
                     key={s.title}
                     className={cn(
-                      'flex flex-col items-center justify-center transition-all duration-[550ms] ease-[var(--ease-snap)]',
+                      // Sequenced, not simultaneous: the outgoing step drops out
+                      // fast (200ms) and the incoming one starts after 150ms, so
+                      // two headlines are never legible at once (no ghosting).
+                      'flex flex-col items-center justify-center transition-all ease-[var(--ease-snap)]',
                       i === current
-                        ? 'relative translate-y-0 opacity-100'
-                        : 'pointer-events-none absolute inset-0 translate-y-6 opacity-0',
+                        ? 'relative translate-y-0 opacity-100 duration-[450ms] delay-150'
+                        : 'pointer-events-none absolute inset-0 translate-y-6 opacity-0 duration-200 delay-0',
                     )}
                   >
                     <h2

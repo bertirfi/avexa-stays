@@ -287,20 +287,28 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
 
   // Per-night prices for the selected range: real prices from availability
   // (already markup-applied by lib/data/availability — the SAME lib/pricing
-  // math /api/quote charges), else the flat listing rate. Sum drives the total.
-  const stayNightPrices = useMemo(() => {
-    if (!startDate || nights === 0) return [] as number[];
-    const out: number[] = [];
+  // math /api/quote charges), else the flat listing rate. Sum drives the total,
+  // so the per-night lines in the price-details popup add up to it EXACTLY —
+  // they ARE the numbers the subtotal is built from, not a re-derivation.
+  // Checkout re-quotes live Hostaway and flags any cache drift (M1.1.6).
+  const stayNights = useMemo(() => {
+    if (!startDate || nights === 0) return [] as Array<{ key: string; label: string; ron: number }>;
+    const out: Array<{ key: string; label: string; ron: number }> = [];
     const cur = new Date(startDate);
     for (let i = 0; i < nights; i += 1) {
-      out.push(availability?.[ymd(cur)]?.ron ?? rate.perNight);
+      const key = ymd(cur);
+      out.push({
+        key,
+        label: cur.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        ron: availability?.[key]?.ron ?? rate.perNight,
+      });
       cur.setDate(cur.getDate() + 1);
     }
     return out;
   }, [availability, startDate, nights, rate.perNight]);
 
-  const staySubtotal = stayNightPrices.reduce((a, b) => a + b, 0);
-  const isVariablePricing = new Set(stayNightPrices).size > 1;
+  const staySubtotal = stayNights.reduce((a, n) => a + n.ron, 0);
+  const isVariablePricing = new Set(stayNights.map((n) => n.ron)).size > 1;
 
   // Siblings that have valid pricing (guard against missing rates[0])
   const validSiblings = useMemo(
@@ -414,9 +422,32 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
             ? `Book ${roomCount} rooms →`
             : 'Book best rate →';
 
+  // Mobile (<768px): the fixed bar duplicates the booking box's total + CTA,
+  // so hide it while the box itself is on screen. Hysteresis: hide once ≥15%
+  // of the box is visible, show again only when it is fully gone — the dead
+  // zone between the two thresholds stops flicker at the boundary. The
+  // negative bottom rootMargin discounts the strip the fixed bar itself
+  // covers, so "visible" means visible ABOVE the bar.
+  const boxRef = useRef<HTMLElement | null>(null);
+  const [boxOnScreen, setBoxOnScreen] = useState(false);
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.intersectionRatio >= 0.15) setBoxOnScreen(true);
+        else if (!entry.isIntersecting) setBoxOnScreen(false);
+      },
+      { threshold: [0, 0.15], rootMargin: '0px 0px -96px 0px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const mobileBar = mounted
     ? createPortal(
         <MobileBookingBar
+          hidden={boxOnScreen}
           priceLabel={nights === 0 ? 'From' : 'Total'}
           priceValue={mobileBarPrice}
           taxNote={
@@ -508,7 +539,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
 
   return (
     <>
-    <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto rounded-card border border-gray-line bg-white p-6 shadow-[var(--shadow-pill)]">
+    <aside ref={boxRef} className="lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto rounded-card border border-gray-line bg-white p-6 shadow-[var(--shadow-pill)]">
       <div className="mb-1 flex items-baseline gap-1.5">
         <span className="font-display text-[26px] text-gold-dark">{format(rate.perNight)}</span>
         <span className="text-sm text-ink-60">/night</span>
@@ -784,11 +815,36 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
           </button>
           {priceOpen && (
             <ul className="mt-3 space-y-1.5 text-sm">
-              {/* Accommodation — ONE total-price line, never the 18%/3% split */}
-              <Row
-                label={`Accommodation · ${nights} night${nights === 1 ? '' : 's'}`}
-                value={format(pricing.staySubtotal)}
-              />
+              {/* Accommodation — ONE total-price line, never the 18%/3% split —
+                  expandable into per-night prices (M1.1.6). The lines are the
+                  exact numbers staySubtotal is summed from (same lib/pricing
+                  math as /api/quote); checkout re-quotes live and flags drift.
+                  RON-real per line (the charged money) + ≈ display equivalent,
+                  mirroring the checkout BookingSummary breakdown. */}
+              <li>
+                <details className="group">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                    <span>
+                      Accommodation · {nights} night{nights === 1 ? '' : 's'}
+                      <span className="ml-1 text-xs text-ink-60 underline decoration-dotted group-open:hidden">
+                        per night
+                      </span>
+                    </span>
+                    <span>{format(pricing.staySubtotal)}</span>
+                  </summary>
+                  <ul className="mt-2 space-y-1 border-l border-gray-line pl-3 text-xs text-ink-60">
+                    {stayNights.map((n) => (
+                      <li key={n.key} className="flex items-center justify-between gap-3">
+                        <span>{n.label}</span>
+                        <span>
+                          {n.ron.toLocaleString('en-US')} RON
+                          {approx(n.ron) && <span className="ml-1">({approx(n.ron)})</span>}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              </li>
               {MULTI_ROOM_ENABLED &&
                 addedRooms.map((sib) => {
                   const pn = siblingPerNight(sib)!;
