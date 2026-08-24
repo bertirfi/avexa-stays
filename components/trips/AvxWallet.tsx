@@ -17,7 +17,7 @@ export function AvxWallet({ wallet }: { wallet: AvxWalletData | null }) {
   if (wallet === null) {
     return (
       <div className="flex h-full flex-col justify-center rounded-[20px] border border-white/10 bg-white/5 px-8 py-9">
-        <p className="font-mono-label text-white/40">AVX Wallet</p>
+        <p className="font-mono-label text-white/55">AVX Wallet</p>
         <p className="font-display mt-3 text-2xl leading-tight text-white">
           Your AVEXIAN Wallet is being prepared
           <span
@@ -67,7 +67,7 @@ export function AvxWallet({ wallet }: { wallet: AvxWalletData | null }) {
         )}
       </div>
 
-      <p className="mt-auto pt-6 text-xs text-white/35">
+      <p className="mt-auto pt-6 text-xs text-white/55">
         <Sentences text="1 AVX = 1 RON. Non-transferable, no cash value." />
       </p>
     </div>

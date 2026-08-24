@@ -43,7 +43,7 @@ export function AvexianMeter({ tierName, stays, nights, next }: AvexianMeterProp
   return (
     <div className="flex h-full flex-col rounded-[20px] border border-white/10 bg-white/5 px-8 py-9">
       <div className="flex items-center justify-between gap-4">
-        <p className="font-mono-label text-white/40">AVEXIAN Meter</p>
+        <p className="font-mono-label text-white/55">AVEXIAN Meter</p>
         <span className="rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-gold">
           {tierName}
         </span>
@@ -82,12 +82,12 @@ export function AvexianMeter({ tierName, stays, nights, next }: AvexianMeterProp
             />
           </p>
           <p className="mt-3 text-sm leading-relaxed text-white/55">
-            Diamond Hero — every experience in the Vault is yours, on the house.
+            Diamond Hero — spend your AVX on absolutely anything, bookings included.
           </p>
         </>
       )}
 
-      <p className="mt-auto pt-6 text-xs text-white/35">
+      <p className="mt-auto pt-6 text-xs text-white/55">
         {stays} {stays === 1 ? 'stay' : 'stays'} · {nights}{' '}
         {nights === 1 ? 'night' : 'nights'} in the last 12 months
       </p>
@@ -113,9 +113,9 @@ function MeterBar({
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between text-xs">
-        <span className="font-mono-label text-white/40">{label}</span>
+        <span className="font-mono-label text-white/55">{label}</span>
         <span className="font-semibold tabular-nums text-white/70">
-          {value} <span className="text-white/35">/ {target}</span>
+          {value} <span className="text-white/55">/ {target}</span>
         </span>
       </div>
       <div
