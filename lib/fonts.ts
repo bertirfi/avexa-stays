@@ -7,9 +7,10 @@ export const jakarta = Plus_Jakarta_Sans({
   display: 'swap',
 });
 
+// Variable font (no weight list) so body copy can sit at 450 — halfway
+// between regular and medium, per the client's readability request 24.08.
 export const manrope = Manrope({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
   variable: '--font-manrope',
   display: 'swap',
 });
