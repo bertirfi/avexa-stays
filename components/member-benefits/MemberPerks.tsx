@@ -88,7 +88,7 @@ export function MemberPerks() {
 function PerkCard({ perk }: { perk: Perk }) {
   if (perk.featured) {
     return (
-      <article className="group grid grid-cols-1 items-center gap-5 overflow-hidden rounded-[20px] border border-ink bg-ink text-white transition duration-[400ms] ease-[var(--ease-snap)] hover:border-gold hover:shadow-[0_20px_48px_-20px_rgba(25,25,25,.35)] md:grid-cols-[64px_1fr_minmax(180px,260px)] md:gap-5 lg:grid-cols-[72px_1fr_minmax(200px,300px)] lg:gap-7 lg:pr-0">
+      <article className="group grid grid-cols-1 items-center gap-5 overflow-hidden rounded-[20px] border border-ink bg-ink text-white transition duration-[400ms] ease-[var(--ease-snap)] hover:border-gold hover:shadow-[0_20px_48px_-20px_rgba(25,25,25,.35)] md:grid-cols-[auto_1fr_minmax(180px,260px)] md:gap-5 lg:grid-cols-[auto_1fr_minmax(200px,300px)] lg:gap-7 lg:pr-0">
         <div className="px-5 pt-6 md:pl-7 md:pr-0 md:py-9 lg:pl-10">
           <PerkIcon glyph={perk.icon} featured />
         </div>
