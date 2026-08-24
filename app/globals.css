@@ -5,7 +5,9 @@
   /* Brand palette */
   --color-ink: #191919;
   --color-ink-80: rgba(25, 25, 25, 0.82);
-  --color-ink-60: rgba(25, 25, 25, 0.6);
+  /* 0.65, not 0.6 — at 0.6 small text on cream sits at 4.47:1, a hair under
+     WCAG AA's 4.5:1; 0.65 clears it (~5.2:1) without visibly changing tone. */
+  --color-ink-60: rgba(25, 25, 25, 0.65);
   --color-gold: #DDB97A;
   --color-gold-dark: #B08840;
   --color-gold-pale: #F7EDDB;

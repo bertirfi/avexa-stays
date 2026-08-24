@@ -141,7 +141,7 @@ export function MemberTiers() {
             {footnotes.map((note) => (
               <li
                 key={note}
-                className="flex gap-2.5 text-xs leading-[1.6] text-white/40 md:text-[13px]"
+                className="flex gap-2.5 text-xs leading-[1.6] text-white/55 md:text-[13px]"
               >
                 <span aria-hidden className="mt-[3px] flex-none text-white/25">
                   —

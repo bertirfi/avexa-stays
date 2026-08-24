@@ -14,7 +14,7 @@ export function VaultGrid({ userTier }: { userTier: TierId }) {
 
   return (
     <div>
-      <p className="font-mono-label text-white/40">— The Vault</p>
+      <p className="font-mono-label text-white/55">— The Vault</p>
       <div className="mt-5 space-y-8">
         {groups.map((tier) => {
           const locked = tierRank(tier.id) > userRank;
@@ -44,7 +44,7 @@ export function VaultGrid({ userTier }: { userTier: TierId }) {
         })}
       </div>
 
-      <p className="mt-8 max-w-[640px] text-xs leading-relaxed text-white/35">
+      <p className="mt-8 max-w-[640px] text-xs leading-relaxed text-white/55">
         <Sentences text="AVX Coins pay for your unlocked upsells at every tier — 1 AVX = 1 RON. PLATINUM and DIAMOND HERO exclusively can also pay for the stay itself — 2 AVX = 1 RON. AVX Coins are non-transferable and hold no cash value." />
       </p>
     </div>

@@ -69,7 +69,7 @@ export function MemberCompare() {
                 <div className="px-4 py-3.5 text-xs font-medium text-white/70 md:px-7 md:py-[18px] md:text-sm">
                   {row.feature}
                 </div>
-                <div className="px-3 py-3.5 text-center text-xs text-white/45 md:px-7 md:py-[18px] md:text-sm">
+                <div className="px-3 py-3.5 text-center text-xs text-white/55 md:px-7 md:py-[18px] md:text-sm">
                   {row.guest}
                 </div>
                 <div className="px-3 py-3.5 text-left text-xs leading-[1.5] text-white md:px-7 md:py-[18px] md:text-sm">
