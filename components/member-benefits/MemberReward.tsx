@@ -40,13 +40,13 @@ const tiers: Tier[] = [
     name: 'PLATINUM',
     progress: '5 stays & 20 nights',
     earn: '12.5%',
-    unlock: 'Executive Unlocked: 24/7 Free Parking access, Airport Transfer, Spa / Relaxation Kit & sessions — plus spend your AVX on anything, every upsell included.',
+    unlock: 'Executive Unlocked: 24/7 Parking access, Airport Transfer, Spa & Relaxation — plus the exclusive power to pay for your stay with AVX (2 AVX = 1 RON).',
   },
   {
     name: 'DIAMOND HERO',
     progress: '7 stays & 35 nights',
     earn: '15%',
-    unlock: 'All-Inclusive Access: all upsell options are FREE (subject to availability) + an exclusive physical gift upon arrival.',
+    unlock: 'All-Inclusive Power: spend your AVX on absolutely anything — every upsell included, and the exclusive right to pay for bookings (2 AVX = 1 RON) — plus an exclusive physical gift upon arrival.',
     hero: true,
   },
 ];
@@ -55,8 +55,8 @@ const footnotes = [
   'Coins are earned on the net accommodation value (excluding VAT, city tax, cleaning and upsells).',
   'Coins become active 24 hours after check-out.',
   'Coins expire 12 months after activation. We remind you 30 days before.',
-  'Spend AVX on future stays at any tier — 1 AVX = 1 RON.',
-  'From PLATINUM, coins pay for anything — every upsell included.',
+  'Spend AVX on your unlocked upsells at every earning tier — 1 AVX = 1 RON.',
+  'PLATINUM & DIAMOND HERO exclusive: pay for the stay itself with AVX — 2 AVX = 1 RON.',
   'Consecutive back-to-back bookings merge into a single stay for tier progress.',
   'Only completed stays count. Coins are personal, non-transferable and have no cash value.',
 ];

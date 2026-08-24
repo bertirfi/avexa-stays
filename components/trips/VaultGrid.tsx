@@ -4,8 +4,9 @@ import { Sentences } from '@/components/shared/Sentences';
 /**
  * The Vault (M2.5.3) — every AVEXIAN experience, grouped by the tier that
  * introduces it. Items above the member's tier are locked (greyed + lock +
- * "Reach {TIER} to unlock this experience"). AVX pays for future stays at any
- * tier; from PLATINUM coins pay for anything, upsells included (Master DX2).
+ * "Reach {TIER} to unlock this experience"). AVX pays for unlocked upsells at
+ * every earning tier (1 AVX = 1 RON); PLATINUM & DIAMOND exclusively can also
+ * pay for the stay itself (2 AVX = 1 RON) — client decision 24.08.
  */
 export function VaultGrid({ userTier }: { userTier: TierId }) {
   const userRank = tierRank(userTier);
@@ -44,7 +45,7 @@ export function VaultGrid({ userTier }: { userTier: TierId }) {
       </div>
 
       <p className="mt-8 max-w-[640px] text-xs leading-relaxed text-white/35">
-        <Sentences text="AVX Coins pay for future stays at every tier — 1 AVX = 1 RON. From Platinum, coins pay for anything, every upsell included. Diamond Heroes enjoy every upsell free, subject to availability. AVX Coins are non-transferable and hold no cash value." />
+        <Sentences text="AVX Coins pay for your unlocked upsells at every tier — 1 AVX = 1 RON. PLATINUM and DIAMOND HERO exclusively can also pay for the stay itself — 2 AVX = 1 RON. AVX Coins are non-transferable and hold no cash value." />
       </p>
     </div>
   );

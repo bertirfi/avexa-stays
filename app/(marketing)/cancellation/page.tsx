@@ -25,11 +25,6 @@ export default function CancellationPage() {
           </div>
         ))}
       </div>
-      <p>
-        <strong>Payment:</strong> We may pre-authorize your credit card before
-        arrival to guarantee your booking.
-      </p>
-
       <h2>2. Non-member bookings</h2>
       <p>{CANCELLATION_POLICY.nonMember}</p>
       <p>

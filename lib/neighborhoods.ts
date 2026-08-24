@@ -47,7 +47,9 @@ export const neighborhoods: Neighborhood[] = [
     color: '#1565C0',
     // The National Theatre at sunset — the Universitate square itself.
     coverImage: '/cartiere/universitate.jpg',
-    description: 'Central transit hub — Universitate metro, walkable everywhere.',
+    // Don't repeat the card's own title in the copy — reads as duplicated text
+    // under the heading (client review 24.08).
+    description: 'Central transit hub — metro at the door, walkable everywhere.',
     propertyCount: countIn('universitate'),
   },
   {
@@ -59,7 +61,8 @@ export const neighborhoods: Neighborhood[] = [
     // upward to keep the green canopy in frame instead of the asphalt.
     coverImage: '/cartiere/piata-romana.jpg',
     coverPosition: 'center 40%',
-    description: 'Quiet residential pocket near Calea Victoriei and Romană metro.',
+    // Same rule: no "Romană" in the copy right under the "Piața Romană" title.
+    description: 'Quiet residential pocket near Calea Victoriei, steps from the metro.',
     propertyCount: countIn('piata-romana'),
   },
 ];

@@ -5,7 +5,8 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { createReservation, findRecentDirectReservation } from '@/lib/hostaway/client';
 import { sendBookingConfirmation } from '@/lib/hostaway/confirmation';
 import type { HostawayFinanceField } from '@/lib/hostaway/types';
-import { refundNoticeEmail, sendEmail } from '@/lib/email/brevo';
+import { bookingConfirmationEmail, refundNoticeEmail, sendEmail } from '@/lib/email/brevo';
+import { properties as propertyCatalog } from '@/lib/properties';
 import type { Database } from '@/types/database.types';
 
 /**
@@ -179,10 +180,38 @@ export async function POST(req: Request) {
       .gte('date', confirmedBooking.check_in)
       .lt('date', confirmedBooking.check_out);
 
-    // The ONE guest email, AFTER the response (never holds Stripe's
-    // delivery): wait for ChargeAutomation's check-in link, then post the
-    // CA-template message on the Hostaway conversation (client rule: no
-    // other email, ever).
+    // Guest comms, AFTER the response (never holds Stripe's delivery — a
+    // failure here can never fail the webhook, so Stripe won't retry/double-
+    // process). Idempotent via the booking-row lock above (status /
+    // hostaway_reservation_id): confirmBooking runs at most once per booking
+    // across redeliveries, so no extra sent-flag column is needed.
+    //
+    // 1) Reservation-details email via Brevo, immediately (client decision
+    //    24.08: all transactional mail via Brevo from office@avexastays.com).
+    after(async () => {
+      try {
+        const prop = propertyCatalog.find((p) => p.id === confirmedBooking.property_id);
+        const confirmation = bookingConfirmationEmail({
+          booking: confirmedBooking,
+          property: prop
+            ? { name: prop.name, address: prop.address, checkin: prop.checkin, checkout: prop.checkout }
+            : {
+                name: `AVEXA Suite ${confirmedBooking.property_id}`,
+                address: 'Bucharest City Center',
+                checkin: '3:00 PM',
+                checkout: '11:00 AM',
+              },
+        });
+        await sendEmail({ to: confirmedBooking.guest_email, ...confirmation });
+      } catch (emailErr) {
+        console.error(
+          'webhook: booking-confirmation email failed (booking is confirmed regardless):',
+          emailErr instanceof Error ? emailErr.message : emailErr,
+        );
+      }
+    });
+    // 2) The check-in message: wait for ChargeAutomation's check-in link, then
+    //    post the CA-template message on the Hostaway conversation.
     after(() =>
       sendBookingConfirmation({
         reservationId,

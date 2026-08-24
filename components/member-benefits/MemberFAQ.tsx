@@ -9,11 +9,11 @@ export interface QA {
 export const faqs: QA[] = [
   {
     q: 'What are AVEXA Coins (AVX)?',
-    a: 'Our loyalty currency: 1 AVX = 1 RON. You earn a percentage of the net accommodation value of every completed stay — from 5% as BRONZE up to 15% as DIAMOND HERO — and spend them on future stays; from PLATINUM, on anything, upsells included.',
+    a: 'Our loyalty currency: 1 AVX = 1 RON. You earn a percentage of the net accommodation value of every completed stay — from 5% as BRONZE up to 15% as DIAMOND HERO — and spend them on your unlocked upsells at any earning tier. PLATINUM and DIAMOND HERO members exclusively can also pay for the stay itself — 2 AVX = 1 RON.',
   },
   {
     q: 'When can I use my coins?',
-    a: 'Coins become active 24 hours after check-out and stay valid for 12 months. Spend them on your future bookings at every tier; PLATINUM and DIAMOND HERO members can spend them on anything, including upsells.',
+    a: 'Coins become active 24 hours after check-out and stay valid for 12 months. Spend them on your unlocked upsells at every tier — 1 AVX = 1 RON. PLATINUM and DIAMOND HERO members can spend them on anything, including the stay itself at 2 AVX = 1 RON.',
   },
   {
     q: 'How do I level up?',
@@ -25,7 +25,7 @@ export const faqs: QA[] = [
   },
   {
     q: 'Is early check-in or late check-out included?',
-    a: 'They are bookable upsells, subject to availability — pay with money or, at PLATINUM and DIAMOND HERO, with your AVX Coins.',
+    a: 'They are bookable upsells, subject to availability — pay with money or, once your tier unlocks them (SILVER and up), with your AVX Coins at 1 AVX = 1 RON.',
   },
   {
     q: 'How much does membership cost?',
