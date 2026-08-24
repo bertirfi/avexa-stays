@@ -14,7 +14,12 @@ const rows: Row[] = [
     member: 'Flexible: 100% refund ≥72h before check-in · 50% between 72h and 24h',
   },
   { feature: 'AVX Coins', guest: '—', member: '5%–15% of every stay, 1 AVX = 1 RON' },
-  { feature: 'Upsells', guest: 'Pay full price', member: 'PLATINUM & DIAMOND pay with AVX Coins' },
+  { feature: 'Upsells', guest: 'Pay full price', member: 'Pay with AVX Coins at every tier — 1 AVX = 1 RON' },
+  {
+    feature: 'Pay the stay with AVX',
+    guest: '—',
+    member: 'PLATINUM & DIAMOND HERO exclusive — 2 AVX = 1 RON',
+  },
   { feature: 'Cost to join', guest: '—', member: 'Free, forever' },
 ];
 

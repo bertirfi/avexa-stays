@@ -12,7 +12,7 @@ import { safeNext } from '@/lib/safeNext';
 const perks = [
   'Earn AVEXA Coins on every stay',
   'Flexible cancellation — members only',
-  'Spend coins on stays and experiences',
+  'Spend coins on upsells and experiences',
 ];
 
 const BG_1 =

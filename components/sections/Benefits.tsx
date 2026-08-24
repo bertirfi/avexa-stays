@@ -16,7 +16,7 @@ const benefits: Benefit[] = [
   { index: '03', title: 'Flexible cancellation, exclusively for members', glyph: '✕' },
   { index: '04', title: 'Digital check-in. No front desk, no waiting.', glyph: '◱' },
   { index: '05', title: 'Spend your coins: late check-out, transfers & more', glyph: 'AVX' },
-  { index: '06', title: '24/7 human support on WhatsApp', glyph: '24/7', variant: 'large' },
+  { index: '06', title: 'Fast human support on WhatsApp', glyph: 'WA', variant: 'large' },
 ];
 
 export function Benefits() {

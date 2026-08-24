@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { NewsletterForm } from '@/components/chrome/NewsletterForm';
 import { Logo } from '@/components/chrome/Logo';
 import { CONTACT_EMAIL, PHONE_DISPLAY, PHONE_TEL, WHATSAPP_URL } from '@/lib/contact';
 
@@ -18,28 +17,10 @@ const discoverLinks = [
   { label: 'Member benefits', href: '/member-benefits' },
 ];
 
-const socials = [
-  {
-    label: 'Instagram',
-    href: 'https://instagram.com/avexastays',
-    path: 'M12 2.2c3.2 0 3.6 0 4.9.07 3.3.15 4.8 1.7 5 5 .06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.2 3.3-1.7 4.8-5 5-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-3.3-.2-4.8-1.7-5-5C2.07 15.6 2 15.2 2 12s0-3.6.07-4.9c.2-3.3 1.7-4.8 5-5C8.4 2.07 8.8 2.07 12 2.07zm0 3.3a6.5 6.5 0 100 13 6.5 6.5 0 000-13zm0 10.7a4.2 4.2 0 110-8.4 4.2 4.2 0 010 8.4zm6.7-10.9a1.5 1.5 0 100 3 1.5 1.5 0 000-3z',
-  },
-  {
-    label: 'TikTok',
-    href: 'https://tiktok.com/@avexastays',
-    path: 'M19.3 6.2a4.8 4.8 0 01-3-1.1 4.8 4.8 0 01-1.5-2.6h-3.2v12.6a2.7 2.7 0 11-2-2.6V9.2a5.9 5.9 0 105.3 5.9V9.5a8 8 0 004.4 1.3V7.6a4.8 4.8 0 01-0-1.4z',
-  },
-  {
-    label: 'Facebook',
-    href: 'https://facebook.com/avexastays',
-    path: 'M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z',
-  },
-  {
-    label: 'LinkedIn',
-    href: 'https://linkedin.com/company/avexa',
-    path: 'M4.98 3.5a2.5 2.5 0 11.02 5 2.5 2.5 0 01-.02-5zM3 9h4v12H3V9zm7 0h3.8v1.7h.05c.53-1 1.83-2.05 3.76-2.05 4 0 4.75 2.64 4.75 6.07V21h-4v-5.37c0-1.28-.02-2.92-1.78-2.92-1.79 0-2.07 1.4-2.07 2.83V21h-4V9z',
-  },
-];
+// Social links removed 24.08 (client review): none of the accounts exist yet —
+// Instagram/TikTok/Facebook @avexastays are unregistered and
+// linkedin.com/company/avexa belongs to an unrelated company.
+// Re-add the "Stay social" icon list here once real profiles are created.
 
 export function Footer() {
   return (
@@ -50,28 +31,9 @@ export function Footer() {
           <Column title="Contact & Help" links={contactLinks} />
           <Column title="Discover" links={discoverLinks} />
 
-          {/* Stay social + pay-with */}
+          {/* Pay-with */}
           <div>
-            <h4 className="font-mono-label mb-5 text-gold">Stay social</h4>
-            <ul className="flex gap-3">
-              {socials.map((s) => (
-                <li key={s.label}>
-                  <a
-                    href={s.href}
-                    aria-label={s.label}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="grid size-9 place-items-center rounded-full border border-cream/15 transition hover:border-gold hover:text-gold"
-                  >
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                      <path d={s.path} />
-                    </svg>
-                  </a>
-                </li>
-              ))}
-            </ul>
-
-            <h4 className="font-mono-label mb-3 mt-8 text-gold">Pay with</h4>
+            <h4 className="font-mono-label mb-3 text-gold">Pay with</h4>
             <ul className="flex flex-wrap gap-2">
               {['VISA', 'Mastercard', 'AMEX', 'Apple Pay', 'G Pay'].map((p) => (
                 <li
@@ -85,7 +47,10 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Newsletter */}
+        {/* Brand statement.
+            Newsletter form hidden until Brevo double opt-in ships — client decision 24.08.
+            The /api/newsletter route and NewsletterForm component stay intact; restore
+            <NewsletterForm /> (+ the subscribe consent copy) here when it launches. */}
         <div className="mt-16 grid items-end gap-10 border-t border-cream/10 pt-12 md:grid-cols-2">
           <div>
             <Logo size={56} wordmarkSize={28} className="mb-5" />
@@ -102,25 +67,6 @@ export function Footer() {
               Stay close,&nbsp;
               <em className="not-italic text-gold">travel often.</em>
             </h3>
-            <div className="mt-6">
-              <NewsletterForm />
-            </div>
-            <p className="mt-4 text-xs text-cream/60">
-              <span className="block">
-                By subscribing, you agree to receive promotional emails from AVEXA.
-              </span>
-              <span className="block">
-                We&apos;ll use your data in accordance with our{' '}
-                <Link href="/privacy" className="underline hover:text-gold">
-                  Privacy Policy
-                </Link>{' '}
-                and{' '}
-                <Link href="/terms" className="underline hover:text-gold">
-                  Terms &amp; Conditions
-                </Link>
-                .
-              </span>
-            </p>
           </div>
         </div>
 

@@ -30,9 +30,8 @@ export const viewport: Viewport = {
   themeColor: '#191919',
   width: 'device-width',
   initialScale: 1,
-  // App-like, stable mobile: no accidental zoom on input focus / double-tap.
-  maximumScale: 1,
-  userScalable: false,
+  // Pinch-zoom stays enabled (accessibility + client decision 24.08) — never
+  // set maximumScale/userScalable here.
   viewportFit: 'cover',
 };
 

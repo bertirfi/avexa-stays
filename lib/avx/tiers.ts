@@ -20,7 +20,13 @@ export interface TierMeta {
   percent: number;
   /** Vault experiences INTRODUCED at this tier (cumulative up the ladder). */
   vaultItems: string[];
-  /** Extra spending/benefit rule unlocked at this tier, if any. */
+  /**
+   * Extra spending/benefit rule unlocked at this tier, if any.
+   * Baseline (client decision 24.08): every earning tier spends AVX on its
+   * unlocked upsells only, 1 AVX = 1 RON. PLATINUM & DIAMOND exclusively can
+   * also pay for the accommodation itself at 2 AVX = 1 RON. Upsells are never
+   * free at any tier.
+   */
   spendNote: string | null;
 }
 
@@ -74,7 +80,7 @@ export const TIERS: TierMeta[] = [
     minNights: 20,
     percent: 12.5,
     vaultItems: ['24/7 Parking', 'Airport Transfer', 'Spa & Relaxation Kit'],
-    spendNote: 'Spend AVX on anything — every upsell included',
+    spendNote: 'Pay for your stay with AVX — 2 AVX = 1 RON',
   },
   {
     id: 'DIAMOND',
@@ -82,8 +88,8 @@ export const TIERS: TierMeta[] = [
     minStays: 7,
     minNights: 35,
     percent: 15,
-    vaultItems: ['All upsells free (subject to availability)', 'Physical gift'],
-    spendNote: 'Every upsell on the house, subject to availability',
+    vaultItems: ['Exclusive physical gift upon arrival'],
+    spendNote: 'Spend AVX on absolutely anything — upsells at 1 AVX = 1 RON, bookings at 2 AVX = 1 RON',
   },
 ];
 
