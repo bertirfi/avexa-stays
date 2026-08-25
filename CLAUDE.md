@@ -66,9 +66,9 @@ Steering is split by load-timing and authority. Full rationale: `thoughts/steeri
 
 - **Hard guardrails — deterministic, `.claude/settings.json` + `.claude/hooks/`:** block edits to `coming-soon.html`; block `vercel.json` on `main`; run lint+typecheck before any code commit and block on failure.
 - **Path-scoped rules — `.claude/rules/` (load when you touch matching files):** `pricing.md`, `hostaway.md`, `api-validation.md`.
-- **Skills — `.claude/skills/` (load when invoked):** `seo-audit`, `verify-frontend`, `deploy`, plus the registered `efficient-fable`. Workflow commands in `.claude/commands/`: `research`, `plan`, `implement`, `validate`.
+- **Skills — `.claude/skills/` (load when invoked):** `seo-audit`, `verify-frontend`, `deploy`, `adversarial-review` (review pe zone înainte de merge), `stage-validate` (poarta de calitate a fiecărei etape), plus the registered `efficient-fable`. Workflow commands in `.claude/commands/`: `research`, `plan`, `implement`, `validate`.
 - **Subagents — `.claude/agents/` (isolated, return a summary):** `code-reviewer` (sonnet), `build-log-analyzer` (sonnet), `dependency-auditor` (sonnet).
-- **Docs:** `BRAND.md` (brand/voice/colors/fonts) · `INTEGRATIONS.md` (setup + all env vars) · `ARCHITECTURE.md` (the WHY) · `PLAN.md` (phase/roadmap) · `thoughts/client-meeting-checklist.md` (client setup steps) · `LEARNINGS.md` (read at session start, update at end).
+- **Docs:** `ZONES.md` (harta zonelor: unde modifici, invarianți, stadiu — punctul de plecare al oricărei schimbări) · `BRAND.md` (brand/voice/colors/fonts) · `INTEGRATIONS.md` (setup + all env vars) · `ARCHITECTURE.md` (the WHY) · `PLAN.md` (phase/roadmap) · `thoughts/client-meeting-checklist.md` (client setup steps) · `LEARNINGS.md` (read at session start, update at end).
 
 ## Non-negotiables (must always stay in context)
 - Never commit `.env.local` or secrets. Never push directly to `main` — feature branch + PR. Never touch `coming-soon.html` until launch (hook-enforced).

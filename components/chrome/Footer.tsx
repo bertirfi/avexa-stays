@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Logo } from '@/components/chrome/Logo';
 import { CONTACT_EMAIL, PHONE_DISPLAY, PHONE_TEL, WHATSAPP_URL } from '@/lib/contact';
+import { CookiePreferencesLink } from '@/components/consent/CookiePreferencesLink';
 
 const contactLinks = [
   { label: 'FAQ', href: '/faq' },
@@ -77,6 +78,7 @@ export function Footer() {
             <Link href="/terms" className="hover:text-gold">Terms &amp; Conditions</Link>
             <Link href="/privacy" className="hover:text-gold">Privacy Policy</Link>
             <Link href="/cookies" className="hover:text-gold">Cookie Policy</Link>
+            <CookiePreferencesLink className="transition hover:text-gold" />
             <Link href="/imprint" className="hover:text-gold">Imprint</Link>
           </div>
         </div>
