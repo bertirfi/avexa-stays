@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { jakarta, manrope, dmMono } from '@/lib/fonts';
 import { AuthProvider } from '@/components/auth/AuthProvider';
+import { ConsentProvider } from '@/components/consent/ConsentProvider';
+import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { ChromeScrollProvider } from '@/components/chrome/ChromeScrollProvider';
 import { CurrencyProvider } from '@/components/currency/CurrencyProvider';
 import { SearchProvider } from '@/components/search/SearchContext';
@@ -43,13 +45,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="font-body antialiased">
         <AuthProvider>
-          {/* Display rates come from server env — RON stays the money of record. */}
-          <CurrencyProvider rates={getDisplayRates()}>
-            <ChromeScrollProvider>
-              {/* One shared search state for the Nav header pill + all pages. */}
-              <SearchProvider>{children}</SearchProvider>
-            </ChromeScrollProvider>
-          </CurrencyProvider>
+          {/* GDPR consent state (transparency + future analytics gating); banner mounts below. */}
+          <ConsentProvider>
+            {/* Display rates come from server env — RON stays the money of record. */}
+            <CurrencyProvider rates={getDisplayRates()}>
+              <ChromeScrollProvider>
+                {/* One shared search state for the Nav header pill + all pages. */}
+                <SearchProvider>{children}</SearchProvider>
+              </ChromeScrollProvider>
+            </CurrencyProvider>
+            <ConsentBanner />
+          </ConsentProvider>
         </AuthProvider>
       </body>
     </html>
