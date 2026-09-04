@@ -15,14 +15,12 @@ export function MemberStatement() {
           className="font-display relative italic"
           style={{ fontSize: 'clamp(28px,4vw,52px)', lineHeight: 1.15 }}
         >
-          We offer MORE.
+          {/* No literal period here — the pulsing dot IS the full stop
+              (client 04.09: one dot only, no rule underneath). */}
+          We offer the best prices and MORE
           <span
             aria-hidden
             className="ml-[0.08em] inline-block size-[0.14em] translate-y-[0.04em] rounded-full bg-gold-dark align-baseline pulse-dot"
-          />
-          <span
-            aria-hidden
-            className="mx-auto mt-6 block h-[3px] w-12 rounded-sm bg-ink"
           />
         </div>
         <p className="mx-auto mt-8 max-w-[620px] text-[16px] leading-[1.75] text-ink-80 md:text-[17px]">

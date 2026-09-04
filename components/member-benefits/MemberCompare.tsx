@@ -2,28 +2,30 @@ import { Reveal } from '@/components/Reveal';
 
 interface Row {
   feature: string;
-  guest: string;
   member: string;
+  nonMember: string;
 }
 
+// Member column FIRST, non-member second (client 04.09) — the page sells
+// membership, so the strong column leads.
 const rows: Row[] = [
-  { feature: 'Price', guest: 'Standard price', member: 'Same price + AVX Coins back on every stay' },
+  { feature: 'Price', member: 'Same price + AVX Coins back on every stay', nonMember: 'Standard price' },
   {
     feature: 'Cancellation',
-    guest: 'Non-refundable',
-    member: 'Flexible: 100% refund ≥72h before check-in · 50% between 72h and 24h',
+    member: 'Flexible: 100% refund ≥72h before check-in · 50% between 72h and 24h — a benefit only members have',
+    nonMember: 'Non-refundable',
   },
-  { feature: 'AVX Coins', guest: '—', member: '5%–15% of every stay, 1 AVX = 1 RON' },
-  { feature: 'Upsells', guest: 'Pay full price', member: 'Pay with AVX Coins at every tier — 1 AVX = 1 RON' },
+  { feature: 'AVX Coins', member: '5%–15% of every stay, 1 AVX = 1 RON', nonMember: '—' },
+  { feature: 'Upsells', member: 'Pay with AVX Coins at every tier — 1 AVX = 1 RON', nonMember: 'Pay full price' },
   {
     feature: 'Pay the stay with AVX',
-    guest: '—',
     member: 'PLATINUM & DIAMOND HERO exclusive — 2 AVX = 1 RON',
+    nonMember: '—',
   },
-  { feature: 'Cost to join', guest: '—', member: 'Free, forever' },
+  { feature: 'Cost to join', member: 'Free, forever', nonMember: '—' },
 ];
 
-const cols = 'grid grid-cols-[1fr_0.8fr_1.6fr] md:grid-cols-[1fr_0.8fr_1.6fr]';
+const cols = 'grid grid-cols-[1fr_1.6fr_0.8fr] md:grid-cols-[1fr_1.6fr_0.8fr]';
 
 export function MemberCompare() {
   return (
@@ -35,11 +37,7 @@ export function MemberCompare() {
             className="font-display mt-3.5 text-white"
             style={{ fontSize: 'clamp(44px,6.2vw,80px)', lineHeight: 1 }}
           >
-            Guest vs
-            <span aria-hidden className="text-white/25">
-              .
-            </span>{' '}
-            Member
+            Member vs. Non-member
             <span
               aria-hidden
               className="ml-[0.08em] inline-block size-[0.14em] translate-y-[0.04em] rounded-full bg-gold align-baseline pulse-dot"
@@ -52,11 +50,11 @@ export function MemberCompare() {
             {/* Header */}
             <div className={`${cols} border-b border-white/10 bg-white/[0.04]`}>
               <div className="px-3 py-5 md:px-7" />
-              <div className="font-display px-3 py-5 text-center text-base text-white/50 md:px-7">
-                Guest
-              </div>
               <div className="font-display px-3 py-5 text-center text-base text-gold md:px-7">
                 AVEXIAN Member
+              </div>
+              <div className="font-display px-3 py-5 text-center text-base text-white/50 md:px-7">
+                Non-member
               </div>
             </div>
 
@@ -69,11 +67,11 @@ export function MemberCompare() {
                 <div className="px-4 py-3.5 text-xs font-medium text-white/70 md:px-7 md:py-[18px] md:text-sm">
                   {row.feature}
                 </div>
-                <div className="px-3 py-3.5 text-center text-xs text-white/55 md:px-7 md:py-[18px] md:text-sm">
-                  {row.guest}
-                </div>
                 <div className="px-3 py-3.5 text-left text-xs leading-[1.5] text-white md:px-7 md:py-[18px] md:text-sm">
                   <strong className="font-bold text-gold">{row.member}</strong>
+                </div>
+                <div className="px-3 py-3.5 text-center text-xs text-white/55 md:px-7 md:py-[18px] md:text-sm">
+                  {row.nonMember}
                 </div>
               </div>
             ))}
