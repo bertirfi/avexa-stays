@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { syncListingAvailability } from '@/lib/hostaway/sync';
 import { sendEmail } from '@/lib/email/brevo';
 import { timingSafeEqualStrings } from '@/lib/timing-safe';
+import { revokeEarnForBooking } from '@/lib/avx/ledger';
 
 /**
  * Hostaway unified webhook — near-real-time availability. Hostaway pushes
@@ -117,6 +118,7 @@ async function reconcileBookingStatus(
     )
     .maybeSingle();
   if (!booking) return; // not one of ours, or already cancelled
+  await revokeEarnForBooking(booking.id); // cancelled stay → no AVX
 
   // A PAID direct booking was cancelled in the PMS (ops-side, not via the
   // My Trips flow — that one flips status to cancelled BEFORE Hostaway, so it

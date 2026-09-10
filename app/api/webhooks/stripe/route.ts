@@ -7,6 +7,7 @@ import { sendBookingConfirmation } from '@/lib/hostaway/confirmation';
 import type { HostawayFinanceField } from '@/lib/hostaway/types';
 import { bookingConfirmationEmail, refundNoticeEmail, sendEmail } from '@/lib/email/brevo';
 import { properties as propertyCatalog } from '@/lib/properties';
+import { earnAtConfirmation } from '@/lib/avx/ledger';
 import type { Database } from '@/types/database.types';
 
 /**
@@ -170,6 +171,9 @@ export async function POST(req: Request) {
         hostaway_reservation_id: String(reservationId),
       })
       .eq('id', confirmedBooking.id);
+
+    // AVX visible in the wallet right away (pending until check-out + 24h).
+    await earnAtConfirmation(confirmedBooking);
 
     // Optimistic cache update so our own calendar blocks immediately
     // (the 15-min sync will reconcile with Hostaway's truth).

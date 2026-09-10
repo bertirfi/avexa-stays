@@ -54,7 +54,8 @@ export function AvxWallet({ wallet }: { wallet: AvxWalletData | null }) {
             <span className="font-semibold text-gold">
               {pendingTotal.toLocaleString('en-US')} AVX
             </span>{' '}
-            activate on {DATE_FORMAT.format(new Date(nextActivation))}
+            earned — activate on {DATE_FORMAT.format(new Date(nextActivation))}, 24h after
+            check-out
           </p>
         )}
         {earliestExpiry && (
@@ -63,7 +64,7 @@ export function AvxWallet({ wallet }: { wallet: AvxWalletData | null }) {
           </p>
         )}
         {wallet.balance === 0 && pendingTotal === 0 && (
-          <p className="text-white/55">Complete a stay to earn your first AVX.</p>
+          <p className="text-white/55">Book a stay to earn your first AVX.</p>
         )}
       </div>
 
