@@ -35,9 +35,9 @@ export function StickyBookNow() {
         >
           <Link
             href="/locations"
-            className="flex items-center gap-2 rounded-full bg-gold px-5 py-3 font-display text-[15px] font-bold text-ink shadow-[0_10px_30px_-8px_rgba(25,25,25,0.45)] transition hover:bg-ink hover:text-cream"
+            className="flex items-center gap-2.5 rounded-full bg-gold px-7 py-4 font-display text-[17px] font-bold text-ink shadow-[0_0_0_4px_rgba(255,255,255,0.85),0_14px_36px_-8px_rgba(25,25,25,0.55)] transition hover:bg-ink hover:text-cream md:px-8 md:py-[18px] md:text-[18px]"
           >
-            <Icon name="calendar" size={16} strokeWidth={2} />
+            <Icon name="calendar" size={20} strokeWidth={2.25} />
             Book now
           </Link>
         </motion.div>
