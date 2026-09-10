@@ -102,6 +102,8 @@ function formatStayDate(iso: string): string {
 export function bookingConfirmationEmail(input: {
   booking: {
     order_id: string;
+    /** NULL = guest booking (no account): no My Trips link in the email. */
+    user_id: string | null;
     guest_name: string;
     check_in: string;
     check_out: string;
@@ -194,8 +196,13 @@ export function bookingConfirmationEmail(input: {
           ${policyLines.map((line) => `<li style="margin:4px 0">${line}</li>`).join('')}
         </ul>
 
-        <p style="margin:24px 0 12px">You can view or manage this booking anytime at
-        <a href="https://avexastays.com/my-trips" style="color:${GOLD}">avexastays.com/my-trips</a>.</p>
+        ${
+          booking.user_id
+            ? `<p style="margin:24px 0 12px">You can view or manage this booking anytime at
+        <a href="https://avexastays.com/my-trips" style="color:${GOLD}">avexastays.com/my-trips</a>.</p>`
+            : `<p style="margin:24px 0 12px">Keep this email — it is your booking record.
+        Check-in details follow by email before your stay.</p>`
+        }
         <p style="color:${MUTED};font-size:14px">Questions? Write to
         <a href="mailto:${CONTACT_EMAIL}" style="color:${GOLD}">${CONTACT_EMAIL}</a> or message us on
         <a href="${WHATSAPP_URL}" style="color:${GOLD}">WhatsApp (${PHONE_DISPLAY})</a>.</p>

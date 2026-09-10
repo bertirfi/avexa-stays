@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUser } from '@/lib/auth/server';
+import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { getPropertyData } from '@/lib/data/properties';
 import {
@@ -28,16 +28,25 @@ export default async function BookingConfirmationPage({
   searchParams: Promise<{ session_id?: string }>;
 }) {
   const { session_id: sessionId } = await searchParams;
-  const user = await requireUser('/my-trips');
   if (!sessionId) redirect('/');
 
-  // Service-role read, scoped to the session owner (RLS-equivalent check).
-  const { data: booking } = await getSupabaseAdmin()
+  const {
+    data: { user },
+  } = await (await getSupabaseServerClient()).auth.getUser();
+
+  // Service-role read by Stripe session id, then an ownership check
+  // (RLS-equivalent): a member row must match the signed-in user; a guest row
+  // (user_id NULL, no account to sign into) is keyed by the session id alone —
+  // `cs_…` ids are Stripe-issued, high-entropy and only ever handed to the
+  // payer, so the link itself is the bearer, exactly like the email receipt.
+  const { data: found } = await getSupabaseAdmin()
     .from('bookings')
     .select('*')
     .eq('stripe_session_id', sessionId)
-    .eq('user_id', user.id)
     .maybeSingle();
+  if (found && found.user_id !== null && !user) redirect('/login?next=%2Fmy-trips');
+  const booking = found && (found.user_id === null || found.user_id === user?.id) ? found : null;
+  const guest = booking?.user_id === null;
 
   const property = booking ? await getPropertyData(booking.property_id) : null;
 
@@ -61,10 +70,10 @@ export default async function BookingConfirmationPage({
               The confirmation link is invalid or belongs to a different account.
             </p>
             <Link
-              href="/my-trips"
+              href={user ? '/my-trips' : '/'}
               className="mt-8 inline-block rounded-full bg-ink px-6 py-3 font-display text-sm font-bold text-cream transition hover:bg-ink/85"
             >
-              Go to My Trips
+              {user ? 'Go to My Trips' : 'Back to home'}
             </Link>
           </>
         ) : booking.status === 'confirmed' ? (
@@ -102,11 +111,16 @@ export default async function BookingConfirmationPage({
             <p className="mt-4 text-[12px] text-ink/50">
               11% VAT included · Check-in details arrive by email before your stay.
             </p>
+            {guest && (
+              <p className="mt-2 text-[12px] text-ink/50">
+                Guest booking — your confirmation email is your booking record.
+              </p>
+            )}
             <Link
-              href="/my-trips"
+              href={guest ? '/locations' : '/my-trips'}
               className="mt-8 inline-block rounded-full bg-ink px-6 py-3 font-display text-sm font-bold text-cream transition hover:bg-ink/85"
             >
-              View my trips
+              {guest ? 'Explore more stays' : 'View my trips'}
             </Link>
           </>
         ) : booking.status === 'cancelled' ? (
@@ -137,7 +151,7 @@ export default async function BookingConfirmationPage({
         ) : (
           // The poller owns the whole pending presentation: it pulses while the
           // webhook lands, then swaps to a calm fallback instead of looping forever.
-          <ConfirmationPoller />
+          <ConfirmationPoller guest={guest} />
         )}
       </div>
     </main>

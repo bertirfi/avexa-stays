@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { CheckoutApp } from '@/components/checkout/CheckoutApp';
-import { requireUser } from '@/lib/auth/server';
+import { getSupabaseServerClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
   title: 'Checkout',
@@ -9,9 +9,20 @@ export const metadata: Metadata = {
 };
 
 export default async function CheckoutPage() {
-  // Members only — the server-side session check IS the gate (anonymous
-  // visitors are redirected to /login). Contact prefill comes from the session.
-  const user = await requireUser('/checkout');
+  // Identity from the server-side session. Signed in → member checkout with
+  // contact prefill. Signed out → guest checkout (client decision 04.09): the
+  // app shows the "Sign in / Join free" vs "Continue as guest" gate. The money
+  // gate is /api/checkout, which re-derives member vs guest from the session.
+  const {
+    data: { user },
+  } = await (await getSupabaseServerClient()).auth.getUser();
+  if (!user) {
+    return (
+      <div className="bg-cream pt-20 md:pt-24">
+        <CheckoutApp initialContact={{ fullName: '', email: '' }} guest />
+      </div>
+    );
+  }
   const fullName = (user.user_metadata?.full_name as string | undefined)?.trim() ?? '';
   const email = user.email ?? '';
   return (

@@ -6,6 +6,7 @@ import { Icon } from '@/components/Icon';
 import { Stepper } from '@/components/checkout/Stepper';
 import { BookingSummary } from '@/components/checkout/BookingSummary';
 import { ContactInfoStep, type ContactForm } from '@/components/checkout/ContactInfoStep';
+import { GuestContactStep } from '@/components/checkout/GuestContactStep';
 import { PaymentStep } from '@/components/checkout/PaymentStep';
 import { hydrate, readBooking, type HydratedBooking } from '@/lib/booking';
 import type { QuoteBreakdown } from '@/lib/booking/schema';
@@ -48,10 +49,18 @@ const emptyForm = (): ContactForm => ({
   companyCountry: '',
 });
 
-export function CheckoutApp({ initialContact }: { initialContact: InitialContact }) {
+export function CheckoutApp({
+  initialContact,
+  guest = false,
+}: {
+  initialContact: InitialContact;
+  /** No server session (client decision 04.09): show the member/guest gate first. */
+  guest?: boolean;
+}) {
   const [hydrated, setHydrated] = useState<HydratedBooking | null>(null);
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<Step>(1);
+  const [guestChosen, setGuestChosen] = useState(false);
   const [quoteState, setQuoteState] = useState<QuoteState>({ status: 'quoting' });
   const [form, setForm] = useState<ContactForm>(() => {
     // Prefill name/email from the server-validated session (first word = first
@@ -123,21 +132,29 @@ export function CheckoutApp({ initialContact }: { initialContact: InitialContact
     return <UnavailableGate slug={hydrated.property.slug} />;
   }
 
+  if (guest && !guestChosen) {
+    return <GuestEntryGate onGuest={() => setGuestChosen(true)} />;
+  }
+
   return (
     <>
       <Stepper step={step} />
       <div className="mx-auto max-w-[1200px] px-6 py-10 md:px-10">
         <div className="grid gap-10 lg:grid-cols-[1fr_380px]">
           <section className="rounded-card border border-gray-line bg-white p-6 md:p-10">
-            {step === 1 && (
-              <ContactInfoStep form={form} setForm={setForm} onNext={() => setStep(2)} />
-            )}
+            {step === 1 &&
+              (guest ? (
+                <GuestContactStep form={form} setForm={setForm} onNext={() => setStep(2)} />
+              ) : (
+                <ContactInfoStep form={form} setForm={setForm} onNext={() => setStep(2)} />
+              ))}
             {step === 2 && (
               <PaymentStep
                 hydrated={hydrated}
                 form={form}
                 quoteState={quoteState}
                 onBack={() => setStep(1)}
+                guest={guest}
               />
             )}
           </section>
@@ -156,6 +173,61 @@ export function CheckoutApp({ initialContact }: { initialContact: InitialContact
 }
 
 /* ── Gates ───────────────────────────────────────────────────────── */
+
+/** Signed-out visitors choose: member (sign in / join free) or guest. */
+function GuestEntryGate({ onGuest }: { onGuest: () => void }) {
+  return (
+    <div className="mx-auto max-w-2xl px-6 py-20 md:py-28">
+      <p className="font-mono-label text-gold-dark">— Checkout</p>
+      <h1 className="font-display mt-3 text-3xl md:text-4xl">Member or guest?</h1>
+      <p className="mt-3 text-ink-80">
+        <span className="block">Same apartment, same price either way.</span>
+        <span className="block">Members keep the right to cancel and earn AVEXA Coins on this stay.</span>
+      </p>
+
+      <div className="mt-8 grid gap-4 md:grid-cols-2">
+        <div className="flex flex-col rounded-card border border-gold/40 bg-gold-pale/40 p-6">
+          <span className="font-mono-label text-gold-dark">Recommended</span>
+          <h2 className="font-display mt-2 text-xl">Sign in / Join free</h2>
+          <ul className="mt-3 flex-1 space-y-1.5 text-sm text-ink-80">
+            {[
+              'Flexible cancellation — members only',
+              'Earn AVEXA Coins on every stay',
+              'Every trip in My Trips',
+            ].map((perk) => (
+              <li key={perk} className="flex items-start gap-2">
+                <Icon name="check" size={14} className="mt-0.5 shrink-0 text-gold-dark" />
+                {perk}
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/login?next=%2Fcheckout"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-ink px-6 py-3 font-semibold text-cream transition hover:bg-gold hover:text-ink"
+          >
+            Sign in / Join free →
+          </Link>
+        </div>
+
+        <div className="flex flex-col rounded-card border border-gray-line bg-white p-6">
+          <span className="font-mono-label text-ink-60">No account</span>
+          <h2 className="font-display mt-2 text-xl">Continue as guest</h2>
+          <p className="mt-3 flex-1 text-sm text-ink-80">
+            <span className="block">Name, email, phone.</span>
+            <span className="block">Non-refundable, no coins, no My Trips.</span>
+          </p>
+          <button
+            type="button"
+            onClick={onGuest}
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-full border border-gray-line px-6 py-3 font-semibold text-ink transition hover:border-ink"
+          >
+            Continue as guest
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function NoBookingGate() {
   return (

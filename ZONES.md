@@ -14,7 +14,7 @@ Legendă stadiu: ✅ livrat & verificat · 🔶 parțial · ❌ neînceput · �
 - **Cod:** `lib/pricing.ts` (unic punct de calcul), `lib/booking/{quote,schema,cancellation}.ts`, `lib/policies.ts`, `lib/fx.ts`, `components/checkout`, `app/book`
 - **Invarianți:** RON = money of record; preț = ceil(bază×1.21), NIMIC altceva; re-verificare live Hostaway înainte de Stripe; suma liniilor per-noapte = totalul încasat prin construcție; curățenie 120/150/180 separată; taxă oraș 10×nopți×pers pass-through; DX7: 100/50/0 + taxa oraș integral înapoi. Regula completă: `.claude/rules/pricing.md`.
 - **Modifici sigur:** NICIODATĂ calcul de preț în componente client; orice schimbare de sumă → rulează scenariile din `/stage-validate` (quote → checkout → refund) înainte de merge.
-- **Stadiu:** ✅ live și dovedit (V1 cu capturi). Rămas: plata cu AVX la checkout (⏳ contabilă, 10.09), catalog upsells prin Stripe (M3.6 ❌).
+- **Stadiu:** ✅ live și dovedit (V1 cu capturi). ✅ Guest checkout (10.09): rând cu `user_id NULL` + `rate_plan 'non_refundable'` (CHECK în DB, migrarea 005), prețul re-derivat LIVE doar în `/api/checkout`; `/api/quote` (public) citește din cache-ul Supabase; webhook-ul Stripe nu mai „adoptă" o rezervare deja legată de alt booking (dublă plată → refund, nu dublă confirmare). Rămas: plata cu AVX la checkout (⏳ contabilă, 10.09), catalog upsells prin Stripe (M3.6 ❌).
 
 ## Z3 · Integrări externe
 - **Cod:** `lib/hostaway/*` (server-only!), `app/api/webhooks/{stripe,hostaway}`, `lib/email/brevo.ts`, `lib/maps`, `lib/supabase/*`
@@ -30,13 +30,13 @@ Legendă stadiu: ✅ livrat & verificat · 🔶 parțial · ❌ neînceput · �
 ## Z5 · Auth & zona de membru
 - **Cod:** `app/(auth)`, `app/(member)`, `components/{auth,profile}`, `lib/supabase`
 - **Invarianți:** identitatea DOAR din sesiunea Supabase server-side, niciodată din client; RLS pe toate tabelele; parole/plăți nu se ating în clar.
-- **Stadiu:** ✅ login/signup/reset + My Trips + self-cancel cu refund automat. Rămas: guest checkout (M1.4/M3), check-in online (M4 ❌ — cel mai mare bloc).
+- **Stadiu:** ✅ login/signup/reset + My Trips + self-cancel cu refund automat. ✅ Guest checkout (10.09): poarta „Member or guest?" pe `/checkout` fără sesiune, dezavantajele afișate înainte de plată; flag-ul `guest` vine DOAR din UI-ul de guest — lipsa sesiunii fără flag = 401, niciodată downgrade tăcut; rândurile guest sunt invizibile prin RLS (NULL ≠ auth.uid()), fără AVX, fără self-cancel. Rămas: check-in online (M4 ❌ — cel mai mare bloc).
 
 ## Z6 · API & trust boundary (SECURITATE)
 - **Cod:** `app/api/**`, `.claude/rules/api-validation.md`, `next.config.ts` (security headers)
 - **Invarianți:** input validat cu Zod pe orice route; secrete doar în env server; interne (`/api/sync`, `/api/cron`) cu Bearer; nu există `any`; CSP amânat conștient (de adăugat la hardening).
 - **Modifici sigur:** endpoint nou = checklist-ul din regula api-validation, apoi `/adversarial-review` pe zona security.
-- **Stadiu:** ✅ baza. Rămas: CSP + nonce (❌, hardening), rate-limiting pe endpoints publice (❌).
+- **Stadiu:** ✅ baza. 🔶 Rate-limiting (10.09): `lib/rate-limit.ts` per IP pe `/api/quote` (30/min) și `/api/checkout` (10/min) — bucket în memorie, PER INSTANȚĂ Vercel (prag, nu zid). Datorie explicită: regulă Vercel WAF rate-limit pe aceleași rute (config în dashboard, Robert). Rămas: CSP + nonce (❌, hardening).
 
 ## Z7 · SEO & Performanță (obiective de produs, nu nice-to-have)
 - **Cod:** metadata per pagină, `components/seo/JsonLd.tsx`, `app/{sitemap,robots}`, imagini
@@ -46,7 +46,7 @@ Legendă stadiu: ✅ livrat & verificat · 🔶 parțial · ❌ neînceput · �
 ## Z8 · Date & DB
 - **Cod:** `db/{schema,migrations,seed}`, `lib/data/properties.ts` (overlay-uri!), `types/database.types.ts`
 - **Invarianți:** catalogul din `lib/properties.ts` BATE conținutul stale din DB prin overlay-urile `withCatalogRate`/`withEditorialContent` — orice câmp nou de catalog se adaugă și în overlay, altfel producția îl pierde; migrările le rulează Robert manual în Supabase; `npm run db:types` după schimbări de schemă.
-- **Stadiu:** ✅. Rămas: coloană dedicată cleaning_ron (🔶 amânat), migrare rate_plan 'standard' (🔶 amânat).
+- **Stadiu:** ✅. Migrarea `005_guest_checkout.sql` (user_id nullable + CHECK guest⇒non_refundable) se rulează MANUAL în Supabase ÎNAINTE de merge-ul guest checkout-ului; apoi `npm run db:types` (tipurile sunt editate de mână până atunci). Rămas: coloană dedicată cleaning_ron (🔶 amânat), migrare rate_plan 'standard' (🔶 amânat).
 
 ## Z9 · Infrastructură & Deploy
 - **Cod:** `vercel.json` (cron), `.claude/hooks` (lint+typecheck pe commit, coming-soon blocat), branch-uri

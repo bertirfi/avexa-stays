@@ -42,14 +42,18 @@ export async function GET(request: Request) {
     }
     const earnedIds = new Set((earnedRes.data ?? []).map((r) => r.booking_id));
 
+    // Guest bookings (user_id NULL, since 005_guest_checkout) earn nothing —
+    // AVX is a membership benefit. Filtered in SQL and re-narrowed in TS.
     const eligibleRes = await admin
       .from('bookings')
       .select('id, user_id, check_in, check_out, status, accommodation_ron')
       .eq('status', 'confirmed')
+      .not('user_id', 'is', null)
       .lte('check_out', cutoffYmd);
     if (eligibleRes.error) throw new Error(eligibleRes.error.message);
 
     const candidates = (eligibleRes.data ?? [])
+      .filter((b): b is typeof b & { user_id: string } => b.user_id !== null)
       .filter((b) => !earnedIds.has(b.id))
       .sort((a, b) => a.check_out.localeCompare(b.check_out));
 
@@ -67,6 +71,7 @@ export async function GET(request: Request) {
         .in('user_id', userIds);
       if (historyRes.error) throw new Error(historyRes.error.message);
       for (const row of historyRes.data ?? []) {
+        if (row.user_id === null) continue; // unreachable (.in filter) — type narrowing
         const list = historyByUser.get(row.user_id) ?? [];
         list.push(row);
         historyByUser.set(row.user_id, list);

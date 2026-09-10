@@ -339,7 +339,20 @@ export async function POST(req: Request) {
       departureDate: booking.check_out,
       guestEmail: booking.guest_email,
     });
-    if (orphan) {
+    // A reservation already linked to ANOTHER booking is not an orphan — it is
+    // a duplicate payment for the same stay (two tabs, guest + member, email
+    // case variants). Adopting it would confirm two bookings on one
+    // reservation: the guest charged twice, refund never issued.
+    const { data: alreadyLinked } = orphan
+      ? await admin
+          .from('bookings')
+          .select('id')
+          .eq('hostaway_reservation_id', String(orphan.id))
+          .neq('id', booking.id)
+          .limit(1)
+          .maybeSingle()
+      : { data: null };
+    if (orphan && !alreadyLinked) {
       await confirmBooking(orphan.id);
       console.log(
         `webhook: adopted orphaned reservation ${orphan.id} after ambiguous create`,

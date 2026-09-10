@@ -417,7 +417,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
       : exceedsMaxNights
         ? `Max ${MAX_NIGHTS} nights`
         : !loggedIn
-          ? 'Sign up & book →'
+          ? 'Book now →'
           : roomCount > 1 && MULTI_ROOM_ENABLED
             ? `Book ${roomCount} rooms →`
             : 'Book best rate →';

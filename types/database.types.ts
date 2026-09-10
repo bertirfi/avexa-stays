@@ -220,7 +220,10 @@ export interface Database {
         Row: {
           id: string;
           order_id: string;
-          user_id: string;
+          // Nullable since 005_guest_checkout.sql (guest bookings have no
+          // account). Hand-edited — rerun `npm run db:types` after the
+          // migration runs to regenerate.
+          user_id: string | null;
           property_id: string;
           hostaway_reservation_id: string | null;
           check_in: string;
@@ -254,7 +257,8 @@ export interface Database {
         Insert: {
           id?: string;
           order_id: string;
-          user_id: string;
+          // Still required on insert — a guest booking passes an explicit null.
+          user_id: string | null;
           property_id: string;
           hostaway_reservation_id?: string | null;
           check_in: string;
