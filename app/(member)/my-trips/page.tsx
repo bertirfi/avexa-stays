@@ -170,9 +170,17 @@ export default async function MyTripsPage() {
   const wallet = await getWallet(user.id);
   const nextMeta = progress.next ? tierMeta(progress.next.tier) : null;
 
+  // Order (client 10.09): the stays with their details FIRST, then the
+  // AVEXIAN band (wallet, tier, vault), then the rest.
   return (
     <>
-      <section className="bg-ink pt-28 pb-[clamp(70px,8vw,110px)] text-white md:pt-36">
+      {trips.length === 0 ? (
+        <EmptyTripsState name={firstName} />
+      ) : (
+        <TripsList name={firstName} upcoming={upcoming} past={past} />
+      )}
+
+      <section className="bg-ink py-[clamp(70px,8vw,110px)] text-white">
         <div className="mx-auto max-w-5xl px-6 md:px-10">
           <p className="font-mono-label text-gold-dark">— Membership</p>
           <h2 className="font-display mt-3.5 text-[clamp(36px,5vw,60px)] leading-none">
@@ -209,11 +217,6 @@ export default async function MyTripsPage() {
         </div>
       </section>
 
-      {trips.length === 0 ? (
-        <EmptyTripsState name={firstName} />
-      ) : (
-        <TripsList name={firstName} upcoming={upcoming} past={past} />
-      )}
       <MosaicSection />
       <ContactSection />
     </>

@@ -3,7 +3,7 @@ import { Sentences } from '@/components/shared/Sentences';
 
 export function EmptyTripsState({ name }: { name: string }) {
   return (
-    <section className="bg-cream pt-32 md:pt-40">
+    <section className="bg-cream pt-32 pb-20 md:pt-40 md:pb-28">
       <div className="mx-auto grid max-w-3xl gap-12 px-6 text-center md:px-10">
         {/* Stylized cityscape — pure CSS, no asset needed */}
         <div className="relative mx-auto h-40 w-full max-w-md overflow-hidden rounded-card bg-ink">

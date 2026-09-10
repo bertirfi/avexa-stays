@@ -8,7 +8,7 @@
  */
 
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import type { TierId } from '@/lib/avx/tiers';
+import { computeProgress, TIER_PERCENT, type TierId } from '@/lib/avx/tiers';
 
 export interface AvxTranche {
   /** Unspent AVX in this tranche. */
@@ -133,6 +133,76 @@ export async function earnForBooking(
     throw new Error(error.message);
   }
   return { inserted: true, amount };
+}
+
+/**
+ * Earn at CONFIRMATION (client decision 10.09: the coins must be visible in
+ * the wallet the moment a booking is paid). The tranche is still PENDING
+ * until check_out + 24h (M2.4.1) — only its visibility moves earlier. Tier =
+ * the member's history as of that activation moment, including this stay
+ * (M2.1.3). Guests (user_id NULL) earn nothing. Fail-soft: never fails the
+ * webhook; the daily cron is the safety net for anything missed.
+ * ponytail: the percent is locked here — a stay completing in between could
+ * nudge the tier up; recompute at activation if that ever matters.
+ */
+export async function earnAtConfirmation(booking: {
+  id: string;
+  user_id: string | null;
+  check_out: string;
+  accommodation_ron: number;
+}): Promise<void> {
+  if (!booking.user_id) return;
+  try {
+    const { data, error } = await getSupabaseAdmin()
+      .from('bookings')
+      .select('check_in, check_out, status')
+      .eq('user_id', booking.user_id);
+    if (error) throw new Error(error.message);
+    const progress = computeProgress(data ?? [], activationDate(booking.check_out));
+    const percent = TIER_PERCENT[progress.tier];
+    if (percent <= 0) return;
+    await earnForBooking(
+      { ...booking, user_id: booking.user_id, accommodation_ron: Number(booking.accommodation_ron) },
+      progress.tier,
+      percent,
+    );
+  } catch (e) {
+    console.error('earnAtConfirmation failed:', e instanceof Error ? e.message : e);
+  }
+}
+
+/**
+ * A cancelled booking earns nothing: void its earn tranche (idempotent —
+ * only a tranche with remaining > 0 is touched; the 'revoke' row is audit).
+ * Fail-soft: the refund/cancel flow never depends on the ledger.
+ */
+export async function revokeEarnForBooking(bookingId: string): Promise<void> {
+  try {
+    const admin = getSupabaseAdmin();
+    const { data: tranche } = await admin
+      .from('avx_ledger')
+      .select('id, user_id, remaining')
+      .eq('booking_id', bookingId)
+      .eq('type', 'earn')
+      .gt('remaining', 0)
+      .maybeSingle();
+    if (!tranche) return;
+    const { error } = await admin
+      .from('avx_ledger')
+      .update({ remaining: 0 })
+      .eq('id', tranche.id)
+      .gt('remaining', 0);
+    if (error) throw new Error(error.message);
+    await admin.from('avx_ledger').insert({
+      user_id: tranche.user_id,
+      booking_id: bookingId,
+      type: 'revoke',
+      amount: -(tranche.remaining ?? 0),
+      note: `booking cancelled — tranche ${tranche.id} voided`,
+    });
+  } catch (e) {
+    console.error('revokeEarnForBooking failed:', e instanceof Error ? e.message : e);
+  }
 }
 
 /**

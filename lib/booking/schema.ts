@@ -39,6 +39,10 @@ export type QuoteInputBody = z.infer<typeof QuoteInputSchema>;
 
 /** Checkout extends the quote input with the guest contact block. */
 export const CheckoutBodySchema = QuoteInputSchema.extend({
+  // Sent ONLY by the guest UI. Without it a missing session is a 401 (member
+  // whose session lapsed), never a silent downgrade to a non-refundable guest
+  // booking. The flag can only downgrade — a session always wins.
+  guest: z.boolean().default(false),
   contact: z.object({
     name: z.string().trim().min(2).max(120),
     email: z.string().trim().email().max(200),
@@ -51,6 +55,24 @@ export const CheckoutBodySchema = QuoteInputSchema.extend({
 });
 
 export type CheckoutBody = z.infer<typeof CheckoutBodySchema>;
+
+/**
+ * Guest checkout (client decision 04.09): no account, so the contact block IS
+ * the identity — name, email AND phone are all required. Validated client-side
+ * (GuestContactStep) and again in /api/checkout when there is no session.
+ */
+export const GuestContactSchema = z.object({
+  name: z.string().trim().min(2, 'Enter your full name.').max(120),
+  email: z.string().trim().email('Enter a valid email address.').max(200),
+  // Forwarded verbatim to Hostaway after capture — keep it phone-shaped so a
+  // junk value can never fail the reservation post-payment.
+  phone: z
+    .string()
+    .trim()
+    .min(6, 'Enter your phone number.')
+    .max(40)
+    .regex(/^\+?[\d\s().-]+$/, 'Enter a valid phone number.'),
+});
 
 /**
  * /api/quote success response — the authoritative money the checkout UI renders.

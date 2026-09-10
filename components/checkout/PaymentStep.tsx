@@ -8,6 +8,7 @@ import type { ContactForm } from '@/components/checkout/ContactInfoStep';
 import type { QuoteState } from '@/components/checkout/CheckoutApp';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { Sentences } from '@/components/shared/Sentences';
+import { CANCELLATION_POLICY } from '@/lib/policies';
 
 interface Props {
   hydrated: HydratedBooking;
@@ -15,7 +16,21 @@ interface Props {
   /** Authoritative server quote — the amount shown here and charged. */
   quoteState: QuoteState;
   onBack: () => void;
+  /** Guest checkout (no session): show what the guest gives up before paying. */
+  guest?: boolean;
 }
+
+/**
+ * Guest disadvantages — shown BEFORE payment (client decision 04.09). The
+ * cancellation lines are the published policy verbatim (lib/policies), so the
+ * checkout, T&C, FAQ and confirmation email can never drift.
+ */
+const GUEST_TERMS = [
+  CANCELLATION_POLICY.nonMember,
+  CANCELLATION_POLICY.cityTax,
+  'No AVEXA Coins are earned on this stay.',
+  'No My Trips access — your confirmation and check-in details arrive by email only.',
+].join(' ');
 
 type PayState =
   | { status: 'idle' }
@@ -34,7 +49,7 @@ interface Consent {
  * server-side and returns the Stripe session URL. The client never sends a
  * price.
  */
-export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
+export function PaymentStep({ hydrated, form, quoteState, onBack, guest = false }: Props) {
   const isBiz = form.accountType === 'business';
   const { currency, format } = useCurrency();
   const [state, setState] = useState<PayState>({ status: 'idle' });
@@ -68,6 +83,9 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
           infants: raw.guests.infants,
           breakfast: Boolean(raw.upgrades?.breakfast),
           displayCurrency: currency,
+          // Only the guest UI may declare guest — a lapsed member session gets
+          // a 401 (→ login) instead of a silent non-refundable booking.
+          guest,
           contact: {
             name: `${form.firstName} ${form.lastName}`.trim(),
             email: form.email.trim(),
@@ -102,8 +120,9 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
         if (data?.error === 'already_processing') {
           setState({
             status: 'error',
-            message:
-              'A payment for this stay is already processing — check My Trips in a moment before paying again.',
+            message: guest
+              ? 'A payment for this stay is already processing — check your email in a moment before paying again.'
+              : 'A payment for this stay is already processing — check My Trips in a moment before paying again.',
           });
           return;
         }
@@ -189,6 +208,28 @@ export function PaymentStep({ hydrated, form, quoteState, onBack }: Props) {
           ))}
         </div>
       </div>
+
+      {guest && (
+        <div className="rounded-card border border-gold/40 bg-gold-pale/40 p-5 text-sm">
+          <p className="font-mono-label text-gold-dark">Guest booking</p>
+          <strong className="mt-2 block text-ink">What you give up as a guest.</strong>
+          <p className="mt-2 text-ink-80">
+            <Sentences text={GUEST_TERMS} />
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-gold/30 pt-4">
+            <Link
+              href="/login?next=%2Fcheckout"
+              className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-cream transition hover:bg-gold hover:text-ink"
+            >
+              Join free instead →
+            </Link>
+            <span className="text-xs text-ink-60">
+              <span className="block">Free to join, always.</span>
+              <span className="block">Flexible cancellation and AVEXA Coins on every stay.</span>
+            </span>
+          </div>
+        </div>
+      )}
 
       {state.status === 'error' && (
         <div className="flex items-start gap-3 rounded-card border border-red-300 bg-red-50 p-4 text-sm" role="alert">

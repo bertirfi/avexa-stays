@@ -8,6 +8,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { cancelReservation } from '@/lib/hostaway/client';
 import { cancellationConfirmedEmail, sendEmail } from '@/lib/email/brevo';
 import { isSelfCancellable, refundPercentFor } from '@/lib/booking/cancellation';
+import { revokeEarnForBooking } from '@/lib/avx/ledger';
 
 export interface CancelBookingResult {
   ok: boolean;
@@ -97,6 +98,8 @@ export async function cancelBooking(bookingId: string): Promise<CancelBookingRes
     .update({ status: 'cancelled' })
     .eq('id', booking.id)
     .eq('status', 'confirmed');
+  // A cancelled stay earns nothing — void the pending AVX tranche.
+  await revokeEarnForBooking(booking.id);
 
   // 3 — Cancel in the PMS. The unified webhook then frees the availability
   // cache. Best-effort: the guest already has their money back.

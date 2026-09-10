@@ -4,7 +4,8 @@ import { getStripe } from '@/lib/stripe/client';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { quoteBooking } from '@/lib/booking/quote';
-import { CheckoutBodySchema } from '@/lib/booking/schema';
+import { CheckoutBodySchema, GuestContactSchema } from '@/lib/booking/schema';
+import { rateLimited } from '@/lib/rate-limit';
 import { getDisplayRates } from '@/lib/pricing';
 
 /**
@@ -12,6 +13,9 @@ import { getDisplayRates } from '@/lib/pricing';
  *
  * Trust boundary (api-validation + pricing rules):
  * - Identity comes from the Supabase session — never from the client body.
+ *   No session = GUEST checkout (client decision 04.09): user_id NULL,
+ *   rate_plan 'non_refundable', contact block fully required. The server —
+ *   not a client flag — decides member vs guest.
  * - The client sends ONLY ids/dates/guests/contact. The price is re-derived
  *   server-side from a live Hostaway read (lib/booking/quote) — any client
  *   total is ignored by design.
@@ -44,14 +48,17 @@ function trustedOrigin(req: Request): string {
 }
 
 export async function POST(req: Request) {
-  // 1 — Identity from the validated Supabase session (members only).
+  // Public since guest checkout: every call inserts a row + opens a Stripe
+  // session, so cap naive loops per IP before doing any work.
+  if (rateLimited(req, 'checkout', 10)) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+  }
+
+  // 1 — Identity from the validated Supabase session; null = guest checkout.
   const supabase = await getSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'not_authenticated' }, { status: 401 });
-  }
 
   // 2 — Validate input (ids/dates/guests/contact only — never money).
   // Shared schema with /api/quote so the previewed price and the charge are
@@ -60,6 +67,16 @@ export async function POST(req: Request) {
   try {
     body = CheckoutBodySchema.parse(await req.json());
   } catch {
+    return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
+  }
+  // No session AND no explicit guest flag = a member whose session lapsed
+  // mid-checkout → 401 (the UI sends them to /login), never a silent
+  // downgrade to a non-refundable guest booking they were never warned about.
+  if (!user && !body.guest) {
+    return NextResponse.json({ error: 'not_authenticated' }, { status: 401 });
+  }
+  // Guests have no account to fall back on: name + email + phone all required.
+  if (!user && !GuestContactSchema.safeParse(body.contact).success) {
     return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
   }
 
@@ -87,14 +104,22 @@ export async function POST(req: Request) {
   // Repeat Pay clicks / back-button retries must not pile up pending bookings
   // or leave live Stripe sessions open: expire each old session (best-effort),
   // then mark the row cancelled before creating the fresh one.
-  const { data: stalePendings } = await admin
-    .from('bookings')
-    .select('id, stripe_session_id')
-    .eq('user_id', user.id)
-    .eq('property_id', quote.propertyId)
-    .eq('check_in', quote.checkIn)
-    .eq('check_out', quote.checkOut)
-    .eq('status', 'pending');
+  // Members only: the key is the unforgeable session uid. A guest's only
+  // identifier is a client-typed email — keying on it would let anyone expire
+  // a stranger's live Stripe session by posting their email + dates. Guest
+  // retries just create a fresh row; the old session dies at Stripe's 30-min
+  // expiry, and a double payment is caught by the webhook's linked-reservation
+  // check (never adopted twice → refunded).
+  const { data: stalePendings } = user
+    ? await admin
+        .from('bookings')
+        .select('id, stripe_session_id')
+        .eq('user_id', user.id)
+        .eq('property_id', quote.propertyId)
+        .eq('check_in', quote.checkIn)
+        .eq('check_out', quote.checkOut)
+        .eq('status', 'pending')
+    : { data: [] };
   for (const stale of stalePendings ?? []) {
     if (stale.stripe_session_id) {
       // A session already PAID (e.g. in another tab) must never be superseded:
@@ -138,7 +163,7 @@ export async function POST(req: Request) {
     .from('bookings')
     .insert({
       order_id: crypto.randomUUID(),
-      user_id: user.id,
+      user_id: user?.id ?? null,
       property_id: quote.propertyId,
       check_in: quote.checkIn,
       check_out: quote.checkOut,
@@ -146,11 +171,12 @@ export async function POST(req: Request) {
       adults: quote.adults,
       children: quote.children,
       infants: quote.infants,
-      // Single flat rate since M1.1 — DX7 makes cancellation a membership right,
-      // and every site booking is a member booking, so 'flexible' is the truth
-      // (the bookings.rate_plan CHECK only allows non_refundable|flexible; a
-      // dedicated 'standard' value would need a migration — deferred).
-      rate_plan: 'flexible',
+      // Single flat rate since M1.1 — DX7 makes cancellation a membership right:
+      // member booking → 'flexible' (the truth for a member; a dedicated
+      // 'standard' value would need a migration — deferred), guest booking →
+      // 'non_refundable' (CANCELLATION_POLICY.nonMember; the email + Hostaway
+      // comment read this column).
+      rate_plan: user ? 'flexible' : 'non_refundable',
       accommodation_ron: quote.accommodationRon,
       // Cleaning is stored inside `extras` jsonb + extras_ron for now (no schema
       // migration — a dedicated cleaning_ron column is a flagged follow-up).
@@ -166,7 +192,9 @@ export async function POST(req: Request) {
       currency: 'RON',
       status: 'pending',
       guest_name: body.contact.name,
-      guest_email: body.contact.email,
+      // Lowercased: the adoption path compares emails case-insensitively and
+      // ops look rows up by email — one spelling per person.
+      guest_email: body.contact.email.toLowerCase(),
       guest_phone: body.contact.phone,
       invoice_company: body.contact.invoiceCompany,
       invoice_vat: body.contact.invoiceVat,
@@ -233,7 +261,7 @@ export async function POST(req: Request) {
         line_items: lineItems,
         success_url: `${origin}/book/confirmation?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/checkout?cancelled=1`,
-        client_reference_id: user.id,
+        ...(user ? { client_reference_id: user.id } : {}),
         customer_email: body.contact.email,
         expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
         metadata: {
@@ -242,7 +270,7 @@ export async function POST(req: Request) {
           listingMapId: String(quote.listingMapId),
           checkIn: quote.checkIn,
           checkOut: quote.checkOut,
-          userId: user.id,
+          userId: user?.id ?? 'guest',
         },
       },
       // One session per booking row — a client retry reuses it instead of

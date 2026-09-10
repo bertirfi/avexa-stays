@@ -128,7 +128,10 @@ function PerkIcon({ glyph, featured }: { glyph: string; featured?: boolean }) {
   return (
     <span
       className={cn(
-        'grid size-14 flex-none place-items-center rounded-[14px] font-mono-label text-[15px] normal-case tracking-normal md:size-16 md:rounded-[18px] md:text-[18px] lg:size-[72px]',
+        // Plain font-mono, NOT .font-mono-label — that class hard-sets 10px
+        // and would override the size utilities (client 04.09: glyph must
+        // fill the square).
+        'grid size-14 flex-none place-items-center rounded-[14px] font-mono font-medium text-[22px] tracking-normal md:size-16 md:rounded-[18px] md:text-[26px] lg:size-[72px] lg:text-[28px]',
         featured ? 'bg-white/[0.08] text-gold' : 'bg-ink/[0.06] text-gold-dark',
       )}
       aria-hidden

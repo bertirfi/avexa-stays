@@ -16,7 +16,7 @@ const MAX_TICKS = 20;
  * (never an infinite pulse): the payment succeeded; the confirmation is just
  * lagging and will land in My Trips.
  */
-export function ConfirmationPoller() {
+export function ConfirmationPoller({ guest = false }: { guest?: boolean }) {
   const router = useRouter();
   const ticks = useRef(0);
   const [gaveUp, setGaveUp] = useState(false);
@@ -64,15 +64,19 @@ export function ConfirmationPoller() {
       </h1>
       <p className="mt-3 leading-relaxed text-ink/70">
         <span className="block">Your payment went through — the confirmation is taking longer than usual.</span>
-        <span className="block">It will appear in My Trips shortly.</span>
+        <span className="block">
+          {guest ? 'Your confirmation email arrives shortly.' : 'It will appear in My Trips shortly.'}
+        </span>
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
-        <Link
-          href="/my-trips"
-          className="inline-block rounded-full bg-ink px-6 py-3 font-display text-sm font-bold text-cream transition hover:bg-ink/85"
-        >
-          Go to My Trips
-        </Link>
+        {!guest && (
+          <Link
+            href="/my-trips"
+            className="inline-block rounded-full bg-ink px-6 py-3 font-display text-sm font-bold text-cream transition hover:bg-ink/85"
+          >
+            Go to My Trips
+          </Link>
+        )}
         <a
           href={WHATSAPP_URL}
           target="_blank"

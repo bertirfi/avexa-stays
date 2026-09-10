@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { syncListingAvailability } from '@/lib/hostaway/sync';
 import { sendEmail } from '@/lib/email/brevo';
 import { timingSafeEqualStrings } from '@/lib/timing-safe';
+import { revokeEarnForBooking } from '@/lib/avx/ledger';
 
 /**
  * Hostaway unified webhook — near-real-time availability. Hostaway pushes
@@ -112,9 +113,12 @@ async function reconcileBookingStatus(
     .update({ status: 'cancelled' })
     .eq('hostaway_reservation_id', String(reservationId))
     .neq('status', 'cancelled')
-    .select('id, property_id, check_in, check_out, rate_plan, total_ron, stripe_payment_intent_id')
+    .select(
+      'id, property_id, check_in, check_out, rate_plan, total_ron, city_tax_ron, stripe_payment_intent_id',
+    )
     .maybeSingle();
   if (!booking) return; // not one of ours, or already cancelled
+  await revokeEarnForBooking(booking.id); // cancelled stay → no AVX
 
   // A PAID direct booking was cancelled in the PMS (ops-side, not via the
   // My Trips flow — that one flips status to cancelled BEFORE Hostaway, so it
@@ -132,9 +136,13 @@ async function reconcileBookingStatus(
             (${booking.check_in} → ${booking.check_out}, rate: ${booking.rate_plan},
             paid: <strong>${Number(booking.total_ron).toFixed(0)} RON</strong>)
             was cancelled in the PMS.</p>
-            <p>The guest paid via Stripe on the website. If a refund is due under the
-            member cancellation policy (100% ≥72h / 50% ≥24h before 15:00 check-in;
-            city tax always refunded in full), issue it here:</p>
+            <p>The guest paid via Stripe on the website. ${
+              booking.rate_plan === 'non_refundable'
+                ? `<strong>Non-refundable guest booking</strong> (no account): only the city tax
+            of <strong>${Number(booking.city_tax_ron).toFixed(0)} RON</strong> is refunded, nothing else.`
+                : `Member booking: if a refund is due under the member cancellation policy
+            (100% ≥72h / 50% ≥24h before 15:00 check-in; city tax always refunded in full),`
+            } Issue it here:</p>
             <p><a href="https://dashboard.stripe.com/payments/${booking.stripe_payment_intent_id}"
             style="color:#B08840">Open the payment in Stripe → Refund</a></p>
             <p>Booking id: ${booking.id}</p>

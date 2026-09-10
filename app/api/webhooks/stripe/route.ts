@@ -7,6 +7,7 @@ import { sendBookingConfirmation } from '@/lib/hostaway/confirmation';
 import type { HostawayFinanceField } from '@/lib/hostaway/types';
 import { bookingConfirmationEmail, refundNoticeEmail, sendEmail } from '@/lib/email/brevo';
 import { properties as propertyCatalog } from '@/lib/properties';
+import { earnAtConfirmation } from '@/lib/avx/ledger';
 import type { Database } from '@/types/database.types';
 
 /**
@@ -170,6 +171,9 @@ export async function POST(req: Request) {
         hostaway_reservation_id: String(reservationId),
       })
       .eq('id', confirmedBooking.id);
+
+    // AVX visible in the wallet right away (pending until check-out + 24h).
+    await earnAtConfirmation(confirmedBooking);
 
     // Optimistic cache update so our own calendar blocks immediately
     // (the 15-min sync will reconcile with Hostaway's truth).
@@ -339,7 +343,20 @@ export async function POST(req: Request) {
       departureDate: booking.check_out,
       guestEmail: booking.guest_email,
     });
-    if (orphan) {
+    // A reservation already linked to ANOTHER booking is not an orphan — it is
+    // a duplicate payment for the same stay (two tabs, guest + member, email
+    // case variants). Adopting it would confirm two bookings on one
+    // reservation: the guest charged twice, refund never issued.
+    const { data: alreadyLinked } = orphan
+      ? await admin
+          .from('bookings')
+          .select('id')
+          .eq('hostaway_reservation_id', String(orphan.id))
+          .neq('id', booking.id)
+          .limit(1)
+          .maybeSingle()
+      : { data: null };
+    if (orphan && !alreadyLinked) {
       await confirmBooking(orphan.id);
       console.log(
         `webhook: adopted orphaned reservation ${orphan.id} after ambiguous create`,

@@ -257,7 +257,7 @@ export function ContactInfoStep({ form, setForm, onNext }: Props) {
   );
 }
 
-function Field({
+export function Field({
   label,
   htmlFor,
   children,
@@ -277,7 +277,7 @@ function Field({
   );
 }
 
-function Input({
+export function Input({
   className,
   ...rest
 }: React.InputHTMLAttributes<HTMLInputElement>) {
@@ -292,7 +292,7 @@ function Input({
   );
 }
 
-function Hint({ children }: { children: React.ReactNode }) {
+export function Hint({ children }: { children: React.ReactNode }) {
   return (
     <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-60">
       <Icon name="info" size={12} />

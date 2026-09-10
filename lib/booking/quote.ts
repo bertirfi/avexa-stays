@@ -1,6 +1,7 @@
 import { getListingCalendar } from '@/lib/hostaway/client';
 import { HOSTAWAY_LISTING_BY_PROPERTY } from '@/lib/hostaway/mapping';
 import { getPropertyData } from '@/lib/data/properties';
+import { getAvailabilityMap } from '@/lib/data/availability';
 import { accommodationRonPerNight, cityTaxRon } from '@/lib/pricing';
 import type { HostawayCalendarDay } from '@/lib/hostaway/types';
 
@@ -21,6 +22,12 @@ export interface QuoteInput {
   children: number;
   infants: number;
   breakfast: boolean;
+  /**
+   * 'live' (default) = Hostaway calendar — the ONLY source for a charge.
+   * 'cache' = Supabase availability — for public previews (/api/quote), per
+   * the Hostaway rule: user-facing reads never hit Hostaway. Same pricing math.
+   */
+  source?: 'live' | 'cache';
 }
 
 // Type alias (not interface) so it satisfies Supabase's `Json` column type
@@ -103,29 +110,42 @@ export async function quoteBooking(input: QuoteInput): Promise<Quote> {
   // Hostaway does not reject an over-capacity reservation on its own.
   if (adults + children > property.maxGuests) return { ok: false, reason: 'invalid' };
 
-  // ── LIVE availability + base price (money-grade, not the cache) ─────────
-  let calendar: HostawayCalendarDay[];
-  try {
-    calendar = await getListingCalendar(listingMapId, checkIn, checkOut);
-  } catch {
-    // Can't confirm live price/availability → refuse to quote (never guess money).
-    return { ok: false, reason: 'unavailable' };
+  // ── Bookable nights: live Hostaway for the charge, Supabase cache for
+  //    public previews. Only bookable nights enter the map; a missing key is
+  //    "not available". Per-night charged price = ceil(base × markup) in both.
+  const bookable = new Map<string, { ron: number; minStay: number }>();
+  if (input.source === 'cache') {
+    const map = await getAvailabilityMap(propertyId, nightsBetween(todayYmd, checkOut) + 1);
+    for (const [date, day] of Object.entries(map)) {
+      if (day.available && day.ron > 0) bookable.set(date, { ron: day.ron, minStay: day.minStay });
+    }
+  } else {
+    let calendar: HostawayCalendarDay[];
+    try {
+      calendar = await getListingCalendar(listingMapId, checkIn, checkOut);
+    } catch {
+      // Can't confirm live price/availability → refuse to quote (never guess money).
+      return { ok: false, reason: 'unavailable' };
+    }
+    for (const day of calendar) {
+      if (isDayBookable(day)) {
+        bookable.set(day.date, {
+          ron: accommodationRonPerNight(day.price as number),
+          minStay: day.minimumStay ?? 1,
+        });
+      }
+    }
   }
-  const byDate = new Map(calendar.map((d) => [d.date, d]));
 
-  // Single flat rate: per-night charged price = ceil(live base × markup) —
-  // the same lib/pricing math the sidebar's availability cache displays.
   const nightly: Array<{ date: string; ron: number }> = [];
   for (let i = 0; i < nights; i += 1) {
     const [y, m, d] = checkIn.split('-').map(Number);
     const dt = new Date(Date.UTC(y, m - 1, d + i));
     const key = dt.toISOString().slice(0, 10);
-    const day = byDate.get(key);
-    if (!isDayBookable(day)) return { ok: false, reason: 'unavailable' };
-    if (i === 0 && (day.minimumStay ?? 1) > nights) {
-      return { ok: false, reason: 'unavailable' };
-    }
-    nightly.push({ date: key, ron: accommodationRonPerNight(day.price as number) });
+    const night = bookable.get(key);
+    if (!night) return { ok: false, reason: 'unavailable' };
+    if (i === 0 && night.minStay > nights) return { ok: false, reason: 'unavailable' };
+    nightly.push({ date: key, ron: night.ron });
   }
   // The charged accommodation total IS the sum of the per-night lines (each
   // already ceil'd per night) — never derived independently, so the M1.1.6
