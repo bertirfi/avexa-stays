@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import type { PropertyPhoto } from '@/types';
 
@@ -12,15 +12,32 @@ interface StayGalleryProps {
 
 export function StayGallery({ photos, name }: StayGalleryProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const swipeStartX = useRef<number | null>(null);
+  const swiped = useRef(false);
   const visible = photos.slice(0, 5);
+
+  const step = useCallback(
+    (dir: -1 | 1) =>
+      setOpenIndex((i) => (i === null ? null : Math.min(photos.length - 1, Math.max(0, i + dir)))),
+    [photos.length],
+  );
+
+  // ponytail: pointer events, no motion lib — lightbox has no slide animation to respect reduced motion for
+  function onPointerUp(e: React.PointerEvent) {
+    if (swipeStartX.current === null) return;
+    const dx = e.clientX - swipeStartX.current;
+    swipeStartX.current = null;
+    if (Math.abs(dx) < 50) return;
+    swiped.current = true;
+    step(dx < 0 ? 1 : -1);
+  }
 
   useEffect(() => {
     if (openIndex === null) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') setOpenIndex(null);
-      if (e.key === 'ArrowLeft') setOpenIndex((i) => (i === null ? null : Math.max(0, i - 1)));
-      if (e.key === 'ArrowRight')
-        setOpenIndex((i) => (i === null ? null : Math.min(photos.length - 1, i + 1)));
+      if (e.key === 'ArrowLeft') step(-1);
+      if (e.key === 'ArrowRight') step(1);
     }
     window.addEventListener('keydown', onKey);
     const prevOverflow = document.body.style.overflow;
@@ -29,7 +46,7 @@ export function StayGallery({ photos, name }: StayGalleryProps) {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
     };
-  }, [openIndex, photos.length]);
+  }, [openIndex, step]);
 
   return (
     <>
@@ -85,7 +102,20 @@ export function StayGallery({ photos, name }: StayGalleryProps) {
 
       {openIndex !== null && (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/95 p-6"
+          className="fixed inset-0 z-[80] flex touch-pan-y touch-pinch-zoom select-none items-center justify-center bg-ink/95 p-6"
+          onPointerDown={(e) => {
+            swipeStartX.current = e.clientX;
+            swiped.current = false;
+          }}
+          onPointerUp={onPointerUp}
+          onPointerCancel={() => {
+            swipeStartX.current = null;
+          }}
+          onClickCapture={(e) => {
+            if (!swiped.current) return;
+            swiped.current = false;
+            e.stopPropagation();
+          }}
           onClick={() => setOpenIndex(null)}
         >
           <button
@@ -103,7 +133,7 @@ export function StayGallery({ photos, name }: StayGalleryProps) {
               aria-label="Previous"
               onClick={(e) => {
                 e.stopPropagation();
-                setOpenIndex((i) => Math.max(0, (i ?? 0) - 1));
+                step(-1);
               }}
               className="absolute left-4 top-1/2 z-10 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-cream backdrop-blur hover:bg-white/20"
             >
@@ -119,6 +149,7 @@ export function StayGallery({ photos, name }: StayGalleryProps) {
             sizes="92vw"
             className="h-auto max-h-[85vh] w-auto max-w-[92vw] object-contain"
             priority
+            draggable={false}
             onClick={(e) => e.stopPropagation()}
           />
 
@@ -128,7 +159,7 @@ export function StayGallery({ photos, name }: StayGalleryProps) {
               aria-label="Next"
               onClick={(e) => {
                 e.stopPropagation();
-                setOpenIndex((i) => Math.min(photos.length - 1, (i ?? 0) + 1));
+                step(1);
               }}
               className="absolute right-4 top-1/2 z-10 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-cream backdrop-blur hover:bg-white/20"
             >

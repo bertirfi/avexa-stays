@@ -208,9 +208,10 @@ export function PropertyCard({
                 <span className="font-display text-[22px]">{format(range.totalRon)}</span>
                 <span className="text-[11.5px] font-medium opacity-70">total</span>
               </span>
+              {/* Total only — a "/night" here would be a third per-night figure
+                  (the total includes the per-stay fee, the "from" price doesn't). */}
               <span className="mt-1.5 block text-[11px] text-ink-60">
-                {range.nights} night{range.nights === 1 ? '' : 's'} ·{' '}
-                {format(Math.round(range.totalRon / range.nights))}/night
+                {range.nights} night{range.nights === 1 ? '' : 's'} · 11% VAT included
               </span>
             </>
           ) : (

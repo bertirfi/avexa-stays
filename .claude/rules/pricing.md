@@ -19,13 +19,13 @@ Formula (single entry point: `lib/pricing.ts`):
 
 ```
 accommodation_RON/night = ceil( base_RON × (1 + markup) × (1 + paymentFee) )   // flat 21% markup, 0% fee (Spec M1.1.1: Hostaway +21%, nothing else)
-cleaning_RON            = per-property flat fee (120/150/180, client decision 24.08) — own line, "cleaning not included" in the nightly rate
+cleaning_RON            = per-property flat fee (120/150/180, client decision 24.08) — charged + stored separately, but DISPLAYED folded into the accommodation line (client decision 04.09: the guest never sees a "cleaning fee")
 city_tax_RON            = 10 × nights × persons                                 // pass-through: NO markup, NO fee
 charged                 = accommodation + extras + cleaning + city tax  — ALWAYS RON (Stripe currency 'ron')
 display                 = RON ÷ AVEXA_FX_RATE_EUR (5.25) | AVEXA_FX_RATE_USD (4.65)
 ```
 
-- Guests see ONE "total price" line for accommodation — never break out the markup. Cleaning fee and city tax are their own lines (city tax: real RON + "≈ equivalent"). Extras are their own line. "11% VAT included" — VAT is in the price, never added on top. No percentage discounts anywhere; cancellation rights come from membership (DX7: member 100% ≥72h / 50% 72–24h / 0% <24h; city tax always refunded), single rate — no saver/flex split.
+- Guests see ONE "total price" line for accommodation = accommodation + cleaning — never break out the markup, never show a cleaning line or "cleaning not included" wording (client decision 04.09). City tax is its own line: real RON + "≈ equivalent" (never a rounded foreign amount). Extras are their own line. Cleaning stays its own line ONLY on ops surfaces (Hostaway finance lines, DB `extras`). "11% VAT included" — VAT is in the price, never added on top. No percentage discounts anywhere; cancellation rights come from membership (DX7: member 100% ≥72h / 50% 72–24h / 0% <24h; city tax always refunded), single rate — no saver/flex split.
 - Knobs are **server-only env** (`AVEXA_MARKUP_PERCENT`, `AVEXA_PAYMENT_FEE_PERCENT`, `AVEXA_FX_RATE_EUR`, `AVEXA_FX_RATE_USD`), configured in ONE place, never per-listing. Never import `lib/pricing` in a client component — display rates reach the client only via `<CurrencyProvider>` props; use `lib/currency` (client-safe) for formatting.
 - Base price + availability come from **Hostaway** (source of truth, cached in Supabase). See the Hostaway rule.
 - Before creating a Stripe Checkout Session, **re-derive the price server-side** (live Hostaway check + this formula). Never trust a price, total, or currency sent from the client — the client sends only ids/dates/guests.

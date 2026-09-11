@@ -1,17 +1,13 @@
-import {
-  getReservation,
-  getReservationConversations,
-  sendConversationMessage,
-} from './client';
+import { getReservation } from './client';
+import { escapeHtml, sendEmail } from '@/lib/email/brevo';
 
 /**
- * Check-in message for direct website reservations (client rule, final,
- * 2026-07-02): the guest receives exactly ONE email — the ChargeAutomation
- * check-in template with the reservation's unique CA link, sent through the
- * reservation's Hostaway conversation (communicationType "email"), the same
- * pipeline ChargeAutomation itself uses for OTA reservations. No other email,
- * no fallback sender, no separate confirmation: if the CA link never appears
- * we send NOTHING and log an error for the team instead.
+ * Check-in message for direct website reservations: the ChargeAutomation
+ * check-in template with the reservation's unique CA link. Client rule 04.09:
+ * it goes out from office@avexastays.com via Brevo — NOT through the Hostaway
+ * conversation any more (that path produced a second, identical email next to
+ * ChargeAutomation's own). If the CA link never appears we send NOTHING and
+ * log an error for the team instead — never a message without the link.
  *
  * Best-effort end to end — a failure here must never affect the confirmed
  * booking. Runs post-response inside after().
@@ -65,34 +61,30 @@ async function findCheckinLink(
 export interface BookingConfirmationInput {
   reservationId: number;
   guestFirstName: string;
+  guestEmail: string;
 }
 
 /**
  * Mirrors the ChargeAutomation template the client uses for OTA reservations
  * (same wording on every channel; "Powered by ChargeAutomation" footer
- * dropped). CA posts this message itself for OTA bookings; we post it for
- * website bookings through the same Hostaway conversation, so the sender
- * ("Avexa Stays") and formatting match.
+ * dropped), rendered as simple email HTML.
  */
-function confirmationBody(guestFirstName: string, checkinLink: string): string {
-  return [
-    `Hi ${guestFirstName}!`,
-    '',
-    'Thank you for choosing Avexa Stays! We are thrilled to host you! ✨',
-    '',
-    'To activate your digital access, please complete your quick 2-minute online check-in below this message.',
-    '👇👇👇',
-    '',
-    '📌 IMPORTANT: Your self-check-in instructions will be found on this exact check-in link on your arrival day at 12:00 PM, BUT ONLY AFTER the online form is 100% completed.',
-    '',
-    'If you need anything, we are always here to help you! ☀️',
-    '',
-    'Avexa Stays | Anca & Vlad ❤️',
-    '',
-    `Complete Your Online Check-In: ${checkinLink}`,
-    '',
-    `© ${new Date().getFullYear()} — Prime Gold Living SRL`,
-  ].join('\n');
+function confirmationHtml(guestFirstName: string, checkinLink: string): string {
+  const name = escapeHtml(guestFirstName);
+  const link = escapeHtml(checkinLink);
+  const p = (s: string) => `<p style="margin:0 0 14px">${s}</p>`;
+  return `
+    <div style="font-family:Arial,Helvetica,sans-serif;color:#191919;line-height:1.6;max-width:560px">
+      ${p(`Hi ${name}!`)}
+      ${p('Thank you for choosing Avexa Stays! We are thrilled to host you! ✨')}
+      ${p('To activate your digital access, please complete your quick 2-minute online check-in below this message.<br>👇👇👇')}
+      ${p('📌 IMPORTANT: Your self-check-in instructions will be found on this exact check-in link on your arrival day at 12:00 PM, BUT ONLY AFTER the online form is 100% completed.')}
+      ${p('If you need anything, we are always here to help you! ☀️')}
+      ${p('Avexa Stays | Anca &amp; Vlad ❤️')}
+      ${p(`<a href="${link}" style="display:inline-block;background:#191919;color:#F7EDDB;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:bold">Complete Your Online Check-In</a>`)}
+      <p style="margin:0;font-size:12px;color:#666">If the button does not open, copy this link: ${link}</p>
+      <p style="margin:18px 0 0;font-size:12px;color:#666">© ${new Date().getFullYear()} — Prime Gold Living SRL</p>
+    </div>`;
 }
 
 export async function sendBookingConfirmation(input: BookingConfirmationInput): Promise<void> {
@@ -118,28 +110,15 @@ export async function sendBookingConfirmation(input: BookingConfirmationInput): 
       return;
     }
 
-    const body = confirmationBody(input.guestFirstName, checkinLink);
-
-    // The conversation is created by Hostaway moments after the reservation;
-    // retry a few times, then give up loudly — never through another sender.
-    for (let attempt = 1; attempt <= 3; attempt += 1) {
-      try {
-        const conversations = await getReservationConversations(input.reservationId);
-        const conversation =
-          conversations.find((c) => c.type === 'host-guest-email') ?? conversations[0];
-        if (!conversation) throw new Error('no conversation attached to reservation');
-        await sendConversationMessage(conversation.id, body);
-        return;
-      } catch (err) {
-        if (attempt === 3) throw err;
-        if (Date.now() >= deadline) {
-          console.error(
-            `[hostaway] confirmation deadline exceeded for reservation ${input.reservationId} — nothing sent`,
-          );
-          return;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 5_000));
-      }
+    const sent = await sendEmail({
+      to: input.guestEmail,
+      subject: 'Your online check-in — Avexa Stays',
+      html: confirmationHtml(input.guestFirstName, checkinLink),
+    });
+    if (!sent) {
+      console.error(
+        `[hostaway] check-in email not sent for reservation ${input.reservationId} (Brevo returned false)`,
+      );
     }
   } catch (err) {
     console.error(

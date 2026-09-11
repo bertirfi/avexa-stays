@@ -222,7 +222,9 @@ export async function POST(req: Request) {
       quantity: 1,
       price_data: {
         currency: 'ron',
-        unit_amount: Math.round(quote.accommodationRon * 100),
+        // Cleaning is folded into the accommodation item so the Stripe page
+        // matches the site breakdown (client decision 04.09) — same total.
+        unit_amount: Math.round((quote.accommodationRon + quote.cleaningRon) * 100),
         product_data: {
           name: `${quote.propertyName} — ${quote.nights} night${quote.nights === 1 ? '' : 's'}`,
         },
@@ -236,14 +238,6 @@ export async function POST(req: Request) {
         product_data: { name: `Extra service — ${extra.name}` },
       },
     })),
-    {
-      quantity: 1,
-      price_data: {
-        currency: 'ron',
-        unit_amount: Math.round(quote.cleaningRon * 100),
-        product_data: { name: 'Cleaning fee' },
-      },
-    },
     {
       quantity: 1,
       price_data: {

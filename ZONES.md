@@ -12,7 +12,7 @@ Legendă stadiu: ✅ livrat & verificat · 🔶 parțial · ❌ neînceput · �
 
 ## Z2 · Booking & Pricing (BANI — zona cu risc maxim)
 - **Cod:** `lib/pricing.ts` (unic punct de calcul), `lib/booking/{quote,schema,cancellation}.ts`, `lib/policies.ts`, `lib/fx.ts`, `components/checkout`, `app/book`
-- **Invarianți:** RON = money of record; preț = ceil(bază×1.21), NIMIC altceva; re-verificare live Hostaway înainte de Stripe; suma liniilor per-noapte = totalul încasat prin construcție; curățenie 120/150/180 separată; taxă oraș 10×nopți×pers pass-through; DX7: 100/50/0 + taxa oraș integral înapoi. Regula completă: `.claude/rules/pricing.md`.
+- **Invarianți:** RON = money of record; preț = ceil(bază×1.21), NIMIC altceva; re-verificare live Hostaway înainte de Stripe; suma liniilor per-noapte = totalul încasat prin construcție; curățenie 120/150/180 încasată separat dar AFIȘATĂ în linia de cazare (decizie client 04.09 — clientul nu vede niciodată „cleaning fee”; pe lista per-noapte e împărțită egal, `lib/booking/fold-nights.ts`, ca liniile să însumeze exact ce se afișează); taxă oraș 10×nopți×pers pass-through, afișată în RON real + „≈”; DX7: 100/50/0 + taxa oraș integral înapoi. Regula completă: `.claude/rules/pricing.md`.
 - **Modifici sigur:** NICIODATĂ calcul de preț în componente client; orice schimbare de sumă → rulează scenariile din `/stage-validate` (quote → checkout → refund) înainte de merge.
 - **Stadiu:** ✅ live și dovedit (V1 cu capturi). ✅ Guest checkout (10.09): rând cu `user_id NULL` + `rate_plan 'non_refundable'` (CHECK în DB, migrarea 005), prețul re-derivat LIVE doar în `/api/checkout`; `/api/quote` (public) citește din cache-ul Supabase; webhook-ul Stripe nu mai „adoptă" o rezervare deja legată de alt booking (dublă plată → refund, nu dublă confirmare). Rămas: plata cu AVX la checkout (⏳ contabilă, 10.09), catalog upsells prin Stripe (M3.6 ❌).
 
@@ -20,7 +20,7 @@ Legendă stadiu: ✅ livrat & verificat · 🔶 parțial · ❌ neînceput · �
 - **Cod:** `lib/hostaway/*` (server-only!), `app/api/webhooks/{stripe,hostaway}`, `lib/email/brevo.ts`, `lib/maps`, `lib/supabase/*`
 - **Invarianți:** Hostaway DOAR server-side, disponibilitatea din cache-ul Supabase; semnături webhook verificate; email doar prin Brevo din office@avexastays.com (singurul sender verificat); env-urile noi din Vercel cer REDEPLOY. Reguli: `.claude/rules/hostaway.md`.
 - **Modifici sigur:** orice endpoint nou → Zod + Bearer secret; niciun apel extern nou fără try/catch care nu poate pica webhook-ul.
-- **Stadiu:** ✅ Hostaway sync + Stripe + Brevo confirmare rezervare (testat 24.08). Rămas: webhook Hostaway consumers extinși, automatizări mesaje (M4.2, CRM-side).
+- **Stadiu:** ✅ Hostaway sync + Stripe + Brevo confirmare rezervare (testat 24.08). 🔧 10.09: anularea în Hostaway folosea `DELETE /reservations/{id}` (șterge, NU eliberează calendarul) → acum `PUT /reservations/{id}/statuses/cancelled` (documentat „Cancel a reservation"); de verificat pe prima anulare reală că datele se eliberează singure. Emailul de check-in (link ChargeAutomation) pleacă prin Brevo din office@, nu prin conversația Hostaway (dublura raportată 04.09). Rămas: webhook Hostaway consumers extinși, automatizări mesaje (M4.2, CRM-side).
 
 ## Z4 · AVX Coins
 - **Cod:** `lib/avx/{tiers,ledger}.ts`, `db/migrations/004_avx.sql`, `app/api/cron/avx`, `components/trips`
