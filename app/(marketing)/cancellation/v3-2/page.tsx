@@ -3,12 +3,13 @@ import { LegalShell } from '@/components/legal/LegalShell';
 import { CancellationV32 } from '@/content/legal/cancellation-v3-2';
 
 export const metadata: Metadata = {
-  title: 'Cancellation & Modification Policy',
+  title: 'Cancellation & Modification Policy — v3.2',
   description: 'Direct bookings and platform bookings, clearly separated.',
-  alternates: { canonical: '/cancellation' },
+  alternates: { canonical: '/cancellation/v3-2' },
+  robots: { index: false },
 };
 
-export default function CancellationPage() {
+export default function CancellationV3_2Page() {
   return (
     <LegalShell
       title="Cancellation & Modification Policy"

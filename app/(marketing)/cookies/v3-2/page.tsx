@@ -4,12 +4,12 @@ import { CookiePolicyV3_2 } from '@/content/legal/cookies-v3-2';
 import { CookiePreferencesLink } from '@/components/consent/CookiePreferencesLink';
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy',
+  title: 'Cookie Policy — v3.2',
   description: 'The cookies and local storage avexastays.com actually uses — AVX-07 v3.2, in force 1 September 2026.',
-  alternates: { canonical: '/cookies' },
+  robots: { index: false },
 };
 
-export default function CookiesPage() {
+export default function CookiePolicyVersionedPage() {
   return (
     <LegalShell title="Cookie Policy" code="AVX-07" version="3.2" inForce="1 September 2026">
       <CookiePolicyV3_2 />

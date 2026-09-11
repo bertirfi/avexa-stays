@@ -3,12 +3,13 @@ import { LegalShell } from '@/components/legal/LegalShell';
 import { TermsV32 } from '@/content/legal/terms-v3-2';
 
 export const metadata: Metadata = {
-  title: 'Terms & Conditions',
+  title: 'Terms & Conditions — v3.2',
   description: 'The agreement between you and AVEXA Stays.',
-  alternates: { canonical: '/terms' },
+  alternates: { canonical: '/terms/v3-2' },
+  robots: { index: false },
 };
 
-export default function TermsPage() {
+export default function TermsV3_2Page() {
   return (
     <LegalShell
       title="Terms & Conditions"

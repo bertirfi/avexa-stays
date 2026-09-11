@@ -3,12 +3,13 @@ import { LegalShell } from '@/components/legal/LegalShell';
 import { ImprintV32 } from '@/content/legal/imprint-v3-2';
 
 export const metadata: Metadata = {
-  title: 'Imprint / Legal Notice',
+  title: 'Imprint / Legal Notice — v3.2',
   description: 'Who operates this website.',
-  alternates: { canonical: '/imprint' },
+  alternates: { canonical: '/imprint/v3-2' },
+  robots: { index: false },
 };
 
-export default function ImprintPage() {
+export default function ImprintV3_2Page() {
   return (
     <LegalShell
       title="Imprint / Legal Notice"
