@@ -15,7 +15,7 @@ const benefits: Benefit[] = [
   { index: '02', title: 'Earn AVEXA Coins on every stay — 1 AVX = 1 RON', glyph: 'AVX' },
   { index: '03', title: 'Flexible cancellation, exclusively for members', glyph: '✕' },
   { index: '04', title: 'Digital check-in. No front desk, no waiting.', glyph: '◱' },
-  { index: '05', title: 'Spend your coins: late check-out, transfers & more', glyph: 'AVX' },
+  { index: '05', title: 'Spend your coins: early check-in, late check-out & more', glyph: 'AVX' },
   { index: '06', title: 'Fast human support on WhatsApp', glyph: 'WA', variant: 'large' },
 ];
 

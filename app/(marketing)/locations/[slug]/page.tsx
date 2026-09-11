@@ -16,6 +16,7 @@ import {
   StayTestimonials,
 } from '@/components/stay/StayContent';
 import { StayAmenities } from '@/components/stay/StayAmenities';
+import { StayExtras } from '@/components/stay/StayExtras';
 import { StayBookingSidebar } from '@/components/stay/StayBookingSidebar';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getSiblingIds } from '@/lib/roomGroups';
@@ -210,9 +211,12 @@ export default async function StayPage(props: { params: Promise<Params> }) {
             <StayBookingSidebar property={property} siblings={siblings} availability={availability} />
           </div>
 
-          <div>
+          {/* min-w-0: grid items default to min-width:auto, which would let the
+              extras carousel widen the column instead of scrolling inside it. */}
+          <div className="min-w-0">
             <StayDescription property={property} />
             <StayAmenities property={property} />
+            <StayExtras property={property} />
             <StayGoodToKnow property={property} />
             <StayFAQ property={property} />
             <StayLocation property={property} />

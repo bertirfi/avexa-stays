@@ -8,7 +8,8 @@ import { BookingSummary } from '@/components/checkout/BookingSummary';
 import { ContactInfoStep, type ContactForm } from '@/components/checkout/ContactInfoStep';
 import { GuestContactStep } from '@/components/checkout/GuestContactStep';
 import { PaymentStep } from '@/components/checkout/PaymentStep';
-import { hydrate, readBooking, type HydratedBooking } from '@/lib/booking';
+import { hydrate, readBooking, writeBooking, type HydratedBooking } from '@/lib/booking';
+import { readExtrasParam } from '@/lib/searchParams';
 import type { QuoteBreakdown } from '@/lib/booking/schema';
 
 /** Server-derived contact prefill (from the validated Supabase session). */
@@ -75,10 +76,21 @@ export function CheckoutApp({
   });
 
   // Read the booking draft from localStorage on mount (UI-only optimistic cache).
+  // Extra services come from the `extras=id1,id2` URL param the stay page sends
+  // (window.location, not useSearchParams — no Suspense bailout for a mount-only
+  // read); the draft is the fallback for a reload that dropped the query.
   useEffect(() => {
     setMounted(true);
     const b = readBooking();
-    if (b) setHydrated(hydrate(b));
+    if (!b) return;
+    const fromUrl = readExtrasParam(new URLSearchParams(window.location.search));
+    if (fromUrl.length > 0 && fromUrl.join(',') !== (b.extras ?? []).join(',')) {
+      b.extras = fromUrl;
+      // PaymentStep reads the draft for /api/checkout — persist so the extras
+      // the guest picked survive the step change and any reload.
+      writeBooking(b);
+    }
+    setHydrated(hydrate(b));
   }, []);
 
   // Fetch the AUTHORITATIVE quote once the draft is hydrated. This — not the
@@ -97,7 +109,7 @@ export function CheckoutApp({
           adults: raw.guests.adults,
           children: raw.guests.children,
           infants: raw.guests.infants,
-          breakfast: Boolean(raw.upgrades?.breakfast),
+          extras: raw.extras ?? [],
         }),
       });
       if (res.status === 409) {

@@ -1,17 +1,10 @@
-import type { Building, NeighborhoodId, Property, PropertyRate, PropertyUpgrade } from '@/types';
+import type { Building, NeighborhoodId, Property, PropertyRate } from '@/types';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 
 /**
  * AVEXA properties — ported verbatim from stay-data-*.jsx files
  * by Claude Design handoff. All 8 suites in Bucharest City Centre.
  */
-
-// Money of record: RON (display converts via lib/currency).
-const baseUpgrades: PropertyUpgrade[] = [
-  { id: 'breakfast', name: 'Breakfast', price: 105, unit: '/day/person', free: false },
-  { id: 'late_checkout', name: 'Late check-out', price: 105, unit: '', free: true },
-  { id: 'early_checkin', name: 'Early check-in', price: 105, unit: '', free: true },
-];
 
 // Static-fallback nightly rate in RON (used only when Supabase is down;
 // live prices overlay from Hostaway via applyLivePricing). ONE rate per suite —
@@ -108,7 +101,6 @@ export const properties: Property[] = [
     ],
     rates: rates(415),
     cleaningRon: 120,
-    upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchenette', 'Elevator',
       'Hair dryer', 'Heating', 'Smart TV with Netflix', 'Dedicated workspace',
@@ -209,7 +201,6 @@ export const properties: Property[] = [
     ],
     rates: rates(479),
     cleaningRon: 120,
-    upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchenette', 'Washer & Dryer',
       'Garden view', 'Hair dryer', 'Heating', 'Smart TV with Netflix',
@@ -299,7 +290,6 @@ export const properties: Property[] = [
     ],
     rates: rates(572),
     cleaningRon: 150,
-    upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
       'Washer', 'Hair dryer', 'Heating', 'Dishwasher',
@@ -395,7 +385,6 @@ export const properties: Property[] = [
     ],
     rates: rates(730),
     cleaningRon: 150,
-    upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
       'Washer & Dryer', 'Hair dryer', 'Heating', 'Dishwasher',
@@ -493,7 +482,6 @@ export const properties: Property[] = [
     ],
     rates: rates(677),
     cleaningRon: 150,
-    upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
       'Washer', 'Hair dryer', 'Heating', 'Dishwasher',
@@ -597,7 +585,6 @@ export const properties: Property[] = [
     ],
     rates: rates(782),
     cleaningRon: 180,
-    upgrades: baseUpgrades,
     amenitiesTop: [
       'Parking', 'Free Wi-Fi', 'Family rooms', 'Non-smoking rooms',
       'Elevator', 'Heating', 'Air conditioning', 'Kitchen',
@@ -687,7 +674,6 @@ export const properties: Property[] = [
     ],
     rates: rates(730),
     cleaningRon: 180,
-    upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
       'Free washer', 'Hair dryer', 'Heating', '75" HDTV with Netflix',
@@ -780,7 +766,6 @@ export const properties: Property[] = [
     ],
     rates: rates(782),
     cleaningRon: 180,
-    upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
       'Washer', 'Hair dryer', 'Heating', 'Dishwasher',
@@ -882,7 +867,6 @@ export const properties: Property[] = [
     ],
     rates: rates(625),
     cleaningRon: 180,
-    upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
       'Free washer', 'Hair dryer', 'Heating', 'Dedicated workspace',

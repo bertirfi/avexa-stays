@@ -35,8 +35,8 @@ const perks: Perk[] = [
   },
   {
     icon: '→',
-    title: 'Spend AVX on your upsells',
-    desc: 'Put your coins toward the upsells your tier has unlocked — early check-in, late check-out & more, 1 AVX = 1 RON.',
+    title: 'Spend AVX on extra services',
+    desc: 'From SILVER, put your coins toward every extra service — early check-in, late check-out, mid-journey cleaning & more, 1 AVX = 1 RON.',
     tag: 'Every earning tier',
   },
   {

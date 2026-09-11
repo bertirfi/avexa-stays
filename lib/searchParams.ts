@@ -1,4 +1,5 @@
 import { ymd } from '@/lib/date';
+import { getExtra } from '@/lib/extras';
 import type { GuestCounts } from '@/types';
 
 /**
@@ -28,6 +29,13 @@ export function readRangeParams(sp: ParamReader): {
   };
 }
 
+/** `extras=id1,id2` → catalogue ids only (unknown ids are dropped). */
+export function readExtrasParam(sp: ParamReader): string[] {
+  const raw = sp.get('extras');
+  if (!raw) return [];
+  return raw.split(',').filter((id) => getExtra(id) !== undefined);
+}
+
 export function readGuestParams(sp: ParamReader): GuestCounts | null {
   const adults = sp.get('adults');
   if (adults === null) return null;
@@ -50,6 +58,8 @@ export function buildSearchQuery(opts: {
   guests?: GuestCounts;
   /** Neighborhood id — omitted when 'all' (absence means "all"). */
   where?: string | null;
+  /** Extra-service catalogue ids — serialized as `extras=id1,id2`. */
+  extras?: readonly string[];
 }): string {
   const params = new URLSearchParams();
   if (opts.where && opts.where !== 'all') params.set('where', opts.where);
@@ -64,5 +74,6 @@ export function buildSearchQuery(opts: {
     params.set('children', String(opts.guests.children));
     params.set('infants', String(opts.guests.infants));
   }
+  if (opts.extras && opts.extras.length > 0) params.set('extras', opts.extras.join(','));
   return params.toString();
 }

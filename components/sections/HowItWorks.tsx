@@ -16,7 +16,7 @@ const panels = [
   {
     eyebrow: '02',
     title: 'Digital Check-in',
-    body: 'No lobby. No waiting. Verify your ID from your phone and receive your unique access code exactly 24 hours before you arrive in Bucharest city center.',
+    body: 'No lobby. No waiting. Complete your online check-in from your phone. Smart-lock apartments receive the access code 24 hours before check-in or as soon as check-in is complete, whichever is later. Apartments with a physical key get the instructions at 12:00 on arrival day.',
     image: '/how-avexa-works/digital-check-in-door.jpg',
   },
   {

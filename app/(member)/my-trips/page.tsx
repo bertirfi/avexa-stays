@@ -8,6 +8,13 @@ import {
   refundPercentFor,
 } from '@/lib/booking/cancellation';
 import { properties } from '@/lib/properties';
+import {
+  extraPriceRon,
+  extrasStillBookable,
+  getExtra,
+  roomsForCleaning,
+  type BookingExtra,
+} from '@/lib/extras';
 import { computeProgress, tierMeta } from '@/lib/avx/tiers';
 import { getWallet } from '@/lib/avx/ledger';
 import { EmptyTripsState } from '@/components/trips/EmptyTripsState';
@@ -76,8 +83,13 @@ function formatApproxLabel(
   return `≈ ${symbol}${amount}`;
 }
 
-export default async function MyTripsPage() {
+export default async function MyTripsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ extras?: string }>;
+}) {
   const user = await requireUser('/my-trips');
+  const extrasAdded = (await searchParams).extras === 'added';
 
   // Session-scoped client: RLS `bookings_select_own` restricts rows to this
   // user — no explicit user_id filter needed, and the admin client is wrong here.
@@ -85,7 +97,7 @@ export default async function MyTripsPage() {
   const { data } = await supabase
     .from('bookings')
     .select(
-      'id, property_id, status, check_in, check_out, adults, children, infants, total_ron, display_currency, display_fx_rate, order_id, rate_plan, hostaway_reservation_id',
+      'id, property_id, status, check_in, check_out, adults, children, infants, total_ron, display_currency, display_fx_rate, order_id, rate_plan, hostaway_reservation_id, extras, guest_email',
     )
     .order('check_in', { ascending: false });
 
@@ -114,6 +126,15 @@ export default async function MyTripsPage() {
     // 100% ≥72h before 15:00 check-in, 50% ≥24h, 0% under 24h.
     const refundPercent = refundPercentFor(b.check_in);
     const cancellable = isSelfCancellable(b);
+
+    // bookings.extras is jsonb — the cleaning fee rides in the same array under
+    // id 'cleaning' and is part of the total, not an add-on service.
+    const booked = (Array.isArray(b.extras) ? b.extras : []) as unknown as BookingExtra[];
+    const bookedServices = booked.filter((e) => e && e.id !== 'cleaning');
+    const bookedIds = new Set(bookedServices.map((e) => e.id));
+    const isUpcoming = b.status === 'confirmed' && b.check_out >= today;
+    const rooms = roomsForCleaning(property?.cleaningRon ?? 120);
+
     return {
       id: b.id,
       orderId: b.order_id,
@@ -147,6 +168,26 @@ export default async function MyTripsPage() {
         b.hostaway_reservation_id !== null &&
         refundPercent === 0 &&
         b.check_out >= today,
+      extras: bookedServices.map((e) => ({
+        id: e.id,
+        name: e.name,
+        ron: Math.round(Number(e.ron)),
+        needsConfirmation: getExtra(e.id)?.needsConfirmation ?? false,
+      })),
+      // Only an upcoming confirmed stay can still buy add-ons, and only those
+      // whose lead time has not passed (the action re-checks server-side).
+      addableExtras: isUpcoming
+        ? extrasStillBookable(b.check_in)
+            .filter((e) => !bookedIds.has(e.id))
+            .map((e) => ({
+              id: e.id,
+              name: e.name,
+              includes: e.includes,
+              leadLabel: e.leadLabel,
+              ron: extraPriceRon(e, rooms),
+              image: e.image,
+            }))
+        : [],
     };
   });
 
@@ -177,7 +218,12 @@ export default async function MyTripsPage() {
       {trips.length === 0 ? (
         <EmptyTripsState name={firstName} />
       ) : (
-        <TripsList name={firstName} upcoming={upcoming} past={past} />
+        <TripsList
+          name={firstName}
+          upcoming={upcoming}
+          past={past}
+          extrasAdded={extrasAdded}
+        />
       )}
 
       <section className="bg-ink py-[clamp(70px,8vw,110px)] text-white">

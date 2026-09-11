@@ -5,9 +5,10 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { createReservation, findRecentDirectReservation } from '@/lib/hostaway/client';
 import { sendBookingConfirmation } from '@/lib/hostaway/confirmation';
 import type { HostawayFinanceField } from '@/lib/hostaway/types';
-import { bookingConfirmationEmail, refundNoticeEmail, sendEmail } from '@/lib/email/brevo';
+import { bookingConfirmationEmail, escapeHtml, refundNoticeEmail, sendEmail } from '@/lib/email/brevo';
 import { properties as propertyCatalog } from '@/lib/properties';
 import { earnAtConfirmation } from '@/lib/avx/ledger';
+import { extraPriceRon, getExtra, roomsForCleaning } from '@/lib/extras';
 import type { Database } from '@/types/database.types';
 
 /**
@@ -97,6 +98,161 @@ export async function POST(req: Request) {
   await admin
     .from('processed_stripe_events')
     .insert({ event_id: event.id, type: event.type });
+
+  // ── Add-on purchase after booking (My Trips "buy more extras") ──────────
+  // Separate from the booking-creation path below: no reservation is created,
+  // no AVX is earned — just append the paid extras to the existing booking.
+  if (session.metadata?.kind === 'extras') {
+    const extrasBookingId = session.metadata?.bookingId;
+    if (!extrasBookingId) {
+      console.error('webhook: extras session has no bookingId metadata:', session.id);
+      return NextResponse.json({ received: true, ignored: 'no_booking_ref' });
+    }
+    const { data: booking } = await admin
+      .from('bookings')
+      .select('*')
+      .eq('id', extrasBookingId)
+      .maybeSingle();
+    if (!booking) {
+      console.error('webhook: extras booking not found:', extrasBookingId);
+      return NextResponse.json({ received: true, ignored: 'booking_missing' });
+    }
+
+    const existingExtras = Array.isArray(booking.extras)
+      ? (booking.extras as Array<{
+          id?: string;
+          name?: string;
+          ron?: number;
+          sessionId?: string;
+          paymentIntentId?: string;
+        }>)
+      : [];
+    // Idempotency: a Stripe redelivery of an already-applied session is a no-op.
+    if (existingExtras.some((e) => e.sessionId === session.id)) {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+    const extrasPi =
+      typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : (session.payment_intent?.id ?? null);
+
+    // The stay was cancelled between opening the extras session and paying it
+    // (other tab / ops): nothing can be delivered — refund in full, tell ops.
+    if (booking.status !== 'confirmed') {
+      if (extrasPi) {
+        await getStripe().refunds.create(
+          { payment_intent: extrasPi },
+          { idempotencyKey: `extras_void_${session.id}` },
+        );
+      }
+      await sendEmail({
+        to: 'office@avexastays.com',
+        subject: `EXTRAS REFUNDED — booking ${booking.order_id} is ${booking.status}`,
+        html: `<p>Extras session ${escapeHtml(session.id)} was paid for a ${escapeHtml(booking.status)} booking and refunded in full automatically.</p>`,
+      });
+      return NextResponse.json({ received: true, ignored: 'booking_not_confirmed' });
+    }
+
+    const property = propertyCatalog.find((p) => p.id === booking.property_id);
+    const rooms = roomsForCleaning(property?.cleaningRon ?? 0);
+    const ids = (session.metadata?.extraIds ?? '').split(',').filter(Boolean);
+    const existingIds = new Set(existingExtras.map((e) => e.id));
+    const all = ids
+      .map((id) => getExtra(id))
+      .filter((e): e is NonNullable<typeof e> => Boolean(e))
+      .map((extra) => ({
+        id: extra.id,
+        name: extra.name,
+        // Recomputed from the catalogue — NEVER trust the amount in metadata.
+        ron: extraPriceRon(extra, rooms),
+        sessionId: session.id,
+        paymentIntentId: extrasPi ?? undefined,
+        needsConfirmation: extra.needsConfirmation,
+      }));
+    // Same extra paid twice (double click before the first webhook landed):
+    // apply once, refund the duplicate lines on this session's charge.
+    const bought = all.filter((e) => !existingIds.has(e.id));
+    const duplicateRon = all.filter((e) => existingIds.has(e.id)).reduce((s, e) => s + e.ron, 0);
+    if (duplicateRon > 0 && extrasPi) {
+      await getStripe().refunds.create(
+        { payment_intent: extrasPi, amount: Math.round(duplicateRon * 100) },
+        { idempotencyKey: `extras_dup_${session.id}` },
+      );
+    }
+    const addedRon = bought.reduce((sum, e) => sum + e.ron, 0);
+    if (Math.round((addedRon + duplicateRon) * 100) !== (session.amount_total ?? -1)) {
+      console.error(
+        `webhook: extras amount mismatch for session ${session.id} — catalogue ${addedRon + duplicateRon} RON vs charged ${(session.amount_total ?? 0) / 100} RON`,
+      );
+    }
+
+    // Optimistic concurrency: two extras webhooks for one booking must not
+    // lose an increment — the stale one gets a 500 and Stripe redelivers it.
+    const { data: updated, error: updateError } = await admin
+      .from('bookings')
+      .update({
+        extras: [
+          ...existingExtras,
+          ...bought.map((e) => ({
+            id: e.id,
+            name: e.name,
+            ron: e.ron,
+            sessionId: e.sessionId,
+            paymentIntentId: e.paymentIntentId,
+          })),
+        ],
+        extras_ron: Number(booking.extras_ron) + addedRon,
+        total_ron: Number(booking.total_ron) + addedRon,
+      })
+      .eq('id', booking.id)
+      .eq('total_ron', booking.total_ron)
+      .select('id');
+    if (updateError || !updated || updated.length === 0) {
+      console.error('webhook: extras update failed/stale:', updateError?.message ?? 'stale row');
+      return NextResponse.json({ error: 'update_failed' }, { status: 500 });
+    }
+    if (bought.length === 0) {
+      return NextResponse.json({ received: true, extrasAdded: 0, duplicatesRefunded: true });
+    }
+
+    const propName = property?.name ?? `AVEXA Suite ${booking.property_id}`;
+    const needsConfirmationNote =
+      'Subject to availability — we confirm within 48 hours; full refund if we cannot make it happen.';
+    const itemsHtml = bought
+      .map(
+        (e) =>
+          `<li>${escapeHtml(e.name)} — ${Math.round(e.ron)} RON${e.needsConfirmation ? ` <em>(${needsConfirmationNote})</em>` : ''}</li>`,
+      )
+      .join('');
+
+    await sendEmail({
+      to: booking.guest_email,
+      subject: `Added to your stay — ${propName}`,
+      html: `
+        <div style="font-family:Arial,Helvetica,sans-serif;color:#191919;line-height:1.6;max-width:520px">
+          <p>Hi ${escapeHtml(booking.guest_name.split(' ')[0] || 'there')},</p>
+          <p>These extras have been added to your stay at <strong>${escapeHtml(propName)}</strong>:</p>
+          <ul>${itemsHtml}</ul>
+          <p>— AVEXA Stays</p>
+        </div>
+      `,
+    });
+
+    await sendEmail({
+      to: 'office@avexastays.com',
+      subject: `EXTRA SERVICE — Order ${booking.order_id} — ${propName} ${booking.check_in}→${booking.check_out}`,
+      html: `
+        <div style="font-family:Arial,Helvetica,sans-serif;color:#191919;line-height:1.6">
+          <p><strong>${escapeHtml(propName)}</strong> · ${booking.check_in} → ${booking.check_out}</p>
+          <ul>${itemsHtml}</ul>
+          <p>Guest: ${escapeHtml(booking.guest_name)} · ${escapeHtml(booking.guest_email)} · ${escapeHtml(booking.guest_phone ?? '-')}</p>
+          <p>Stripe session: ${escapeHtml(session.id)}</p>
+        </div>
+      `,
+    });
+
+    return NextResponse.json({ received: true, extrasAdded: bought.length });
+  }
 
   const bookingId = session.metadata?.bookingId;
   if (!bookingId) {

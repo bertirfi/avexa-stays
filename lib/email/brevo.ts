@@ -130,10 +130,10 @@ export function bookingConfirmationEmail(input: {
   // Accommodation row here, exactly like checkout — only the Hostaway finance
   // lines (ops) keep it split out.
   const extrasArr = Array.isArray(booking.extras)
-    ? (booking.extras as Array<{ id?: string; ron?: number }>)
+    ? (booking.extras as Array<{ id?: string; name?: string; ron?: number }>)
     : [];
   const cleaningRon = Number(extrasArr.find((e) => e.id === 'cleaning')?.ron ?? 0);
-  const otherExtrasRon = Number(booking.extras_ron) - cleaningRon;
+  const otherExtras = extrasArr.filter((e) => e.id !== 'cleaning');
 
   const guestParts = [
     `${booking.adults} ${booking.adults === 1 ? 'adult' : 'adults'}`,
@@ -184,7 +184,7 @@ export function bookingConfirmationEmail(input: {
         <p style="margin:20px 0 6px;font-weight:bold;border-bottom:2px solid ${GOLD};padding-bottom:4px">Price breakdown</p>
         <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;font-size:14px">
           ${priceRow('Accommodation', Number(booking.accommodation_ron) + cleaningRon)}
-          ${otherExtrasRon > 0 ? priceRow('Extra services', otherExtrasRon) : ''}
+          ${otherExtras.map((e) => priceRow(escapeHtml(e.name ?? 'Extra service'), Number(e.ron ?? 0))).join('')}
           ${priceRow('City tax', Number(booking.city_tax_ron))}
           <tr>
             <td style="padding:10px 0 0;border-top:1px solid #ddd;font-weight:bold">Total paid</td>
