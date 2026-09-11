@@ -14,7 +14,6 @@ import type { Booking, GuestCounts, Property } from '@/types';
 import type { AvailabilityMap } from '@/lib/data/availability';
 import { ymd, parseYmd } from '@/lib/date';
 import { CITY_TAX_RON_PER_PERSON_NIGHT } from '@/lib/currency';
-import { foldIntoNights } from '@/lib/booking/fold-nights';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 import { readSearchPrefs, writeSearchPrefs } from '@/lib/searchPrefs';
 import { buildSearchQuery, readGuestParams, readRangeParams } from '@/lib/searchParams';
@@ -813,10 +812,10 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
             <ul className="mt-3 space-y-1.5 text-sm">
               {/* Accommodation — ONE total-price line, never the 18%/3% split —
                   expandable per night (M1.1.6). The per-stay cleaning fee is
-                  part of this line (client 04.09) and spread evenly over the
-                  nights, so the lines sum exactly to the figure shown — same
-                  fold as the checkout BookingSummary; checkout re-quotes live
-                  and flags drift. RON-real per line + ≈ display equivalent. */}
+                  INCLUDED in this line (client 04.09) and itemised only inside
+                  the breakdown (client 11.09) — same as the checkout
+                  BookingSummary; checkout re-quotes live and flags drift.
+                  RON-real per line + ≈ display equivalent. */}
               <li>
                 <details className="group">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
@@ -829,7 +828,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                     <span>{format(pricing.staySubtotal + pricing.cleaning)}</span>
                   </summary>
                   <ul className="mt-2 space-y-1 border-l border-gray-line pl-3 text-xs text-ink-60">
-                    {foldIntoNights(stayNights, pricing.cleaning).map((n) => (
+                    {stayNights.map((n) => (
                       <li key={n.key} className="flex items-center justify-between gap-3">
                         <span>{n.label}</span>
                         <span>
@@ -838,6 +837,17 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                         </span>
                       </li>
                     ))}
+                    {pricing.cleaning > 0 && (
+                      <li className="flex items-center justify-between gap-3 border-t border-gray-line pt-1">
+                        <span>Cleaning fee</span>
+                        <span>
+                          {pricing.cleaning.toLocaleString('en-US')} RON
+                          {approx(pricing.cleaning) && (
+                            <span className="ml-1">({approx(pricing.cleaning)})</span>
+                          )}
+                        </span>
+                      </li>
+                    )}
                   </ul>
                 </details>
               </li>
