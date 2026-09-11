@@ -113,4 +113,4 @@ Block B check-in compliant (Avexa Automation), Block C export taxa oraș, Block 
 3. Early/Late: „subject to availability" — acceptăm modelul „plătește → confirmăm în 48h → refund integral dacă nu putem"?
 4. Moneda implicită RON (D11) — schimbăm acum? Afectează tot site-ul (azi EUR).
 5. Punctele structurale 1, 3, 4, 11 din secțiunea 4 — de corectat în documente înainte de avocat.
-6. Mid-journey Cleaning pe camere: mapez 1 cameră = studio (curățenie 120), 2 camere (150), 3 camere (180). Corect?
+6. ~~Mid-journey Cleaning pe camere~~ — lămurit cu Robert 11.09: prețul urmează mărimea apartamentului ca la curățenie (120/150/180 → 99/129/149), exact ca în AVX-08.
