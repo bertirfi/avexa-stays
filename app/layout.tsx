@@ -8,6 +8,8 @@ import { CurrencyProvider } from '@/components/currency/CurrencyProvider';
 import { SearchProvider } from '@/components/search/SearchContext';
 import { getDisplayRates } from '@/lib/pricing';
 import './globals.css';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { organizationSchema, websiteSchema } from '@/lib/seo/brand-schema';
 
 export const metadata: Metadata = {
   title: {
@@ -22,7 +24,7 @@ export const metadata: Metadata = {
     description:
       'Premium short and medium-stay apartments in the heart of Bucharest. Booked direct, kept honest.',
     url: 'https://avexastays.com',
-    siteName: 'AVEXA Stays',
+    siteName: 'AVEXA',
     type: 'website',
     locale: 'en_US',
   },
@@ -44,6 +46,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${jakarta.variable} ${manrope.variable} ${dmMono.variable}`}
     >
       <body className="font-body antialiased">
+        {/* Brand entity on every page — see lib/seo/brand-schema.ts */}
+        <JsonLd data={organizationSchema} />
+        <JsonLd data={websiteSchema} />
         <AuthProvider>
           {/* GDPR consent state (transparency + future analytics gating); banner mounts below. */}
           <ConsentProvider>

@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import type { HydratedBooking } from '@/lib/booking';
 import { shortDate } from '@/lib/booking';
-import { foldIntoNights } from '@/lib/booking/fold-nights';
 import type { QuoteState } from '@/components/checkout/CheckoutApp';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { CANCELLATION_POLICY } from '@/lib/policies';
@@ -72,10 +71,10 @@ export function BookingSummary({ hydrated, quoteState }: BookingSummaryProps) {
         {quote ? (
           <>
             {/* Accommodation — ONE total-price line (never a margin split),
-                expandable per night (M1.1.6). The per-stay cleaning fee is part
-                of this line (client decision 04.09: no separate cleaning line
-                anywhere the guest looks) and spread evenly over the nights, so
-                the nightly lines sum exactly to the figure shown. */}
+                expandable per night (M1.1.6). The per-stay cleaning fee is
+                INCLUDED in this line (client decision 04.09) and itemised only
+                inside the breakdown (client 11.09: guests should see what they
+                pay), so the lines below sum exactly to the figure shown. */}
             <details className="group">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
                 <span className="text-ink-80">
@@ -89,7 +88,7 @@ export function BookingSummary({ hydrated, quoteState }: BookingSummaryProps) {
                 </span>
               </summary>
               <ul className="mt-2 space-y-1 border-l border-gray-line pl-3 text-xs text-ink-60">
-                {foldIntoNights(quote.nightly, quote.cleaningRon).map((n) => (
+                {quote.nightly.map((n) => (
                   <li key={n.date} className="flex items-center justify-between gap-3">
                     <span>{nightLabel(n.date)}</span>
                     <span>
@@ -98,6 +97,17 @@ export function BookingSummary({ hydrated, quoteState }: BookingSummaryProps) {
                     </span>
                   </li>
                 ))}
+                {quote.cleaningRon > 0 && (
+                  <li className="flex items-center justify-between gap-3 border-t border-gray-line pt-1">
+                    <span>Cleaning fee</span>
+                    <span>
+                      {quote.cleaningRon.toLocaleString('en-US')} RON
+                      {approx(quote.cleaningRon) && (
+                        <span className="ml-1">({approx(quote.cleaningRon)})</span>
+                      )}
+                    </span>
+                  </li>
+                )}
               </ul>
             </details>
             {/* Factual label — every rate on the site is a member rate (login is

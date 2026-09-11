@@ -16,6 +16,7 @@ const discoverLinks = [
   { label: 'All locations', href: '/locations' },
   { label: 'Bucharest guide', href: '/guide' },
   { label: 'Member benefits', href: '/member-benefits' },
+  { label: 'About AVEXA', href: '/about' },
 ];
 
 // Social links removed 24.08 (client review): none of the accounts exist yet —
