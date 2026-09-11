@@ -3,9 +3,10 @@
  *
  * Scope: ALL transactional mail goes through Brevo from office@avexastays.com
  * (client decision 24.08). Auth emails go through Supabase SMTP (pointed at
- * Brevo SMTP in the Supabase dashboard); the CA check-in link additionally
- * rides the reservation's Hostaway conversation (lib/hostaway/confirmation.ts).
- * The app sends: the booking confirmation (Stripe webhook), the refund notice
+ * Brevo SMTP in the Supabase dashboard). The app sends: the booking
+ * confirmation (Stripe webhook), the ChargeAutomation check-in link
+ * (lib/hostaway/confirmation.ts, client 04.09 — no longer via the Hostaway
+ * conversation), the refund notice
  * when payment succeeded but the dates were taken (Stripe webhook), the
  * cancellation-confirmed notice (My Trips cancel) — plus the internal ops alert.
  * Best-effort: a missing key or API failure must never break the money flow,
@@ -20,7 +21,7 @@ const SENDER = {
 };
 
 /** Escape guest-supplied text before interpolating into email HTML. */
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s.replace(
     /[&<>"']/g,
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
@@ -124,8 +125,10 @@ export function bookingConfirmationEmail(input: {
   const { booking, property } = input;
   const first = escapeHtml(booking.guest_name.split(' ')[0] || 'there');
 
-  // Cleaning lives inside `extras` jsonb (id 'cleaning') — split it out as its
-  // own line, exactly like checkout and the Hostaway finance lines do.
+  // Cleaning lives inside `extras` jsonb (id 'cleaning'). The guest never sees
+  // it as its own line (client decision 04.09): it is folded into the
+  // Accommodation row here, exactly like checkout — only the Hostaway finance
+  // lines (ops) keep it split out.
   const extrasArr = Array.isArray(booking.extras)
     ? (booking.extras as Array<{ id?: string; ron?: number }>)
     : [];
@@ -180,9 +183,8 @@ export function bookingConfirmationEmail(input: {
 
         <p style="margin:20px 0 6px;font-weight:bold;border-bottom:2px solid ${GOLD};padding-bottom:4px">Price breakdown</p>
         <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;font-size:14px">
-          ${priceRow('Accommodation', Number(booking.accommodation_ron))}
+          ${priceRow('Accommodation', Number(booking.accommodation_ron) + cleaningRon)}
           ${otherExtrasRon > 0 ? priceRow('Extra services', otherExtrasRon) : ''}
-          ${cleaningRon > 0 ? priceRow('Cleaning fee', cleaningRon) : ''}
           ${priceRow('City tax', Number(booking.city_tax_ron))}
           <tr>
             <td style="padding:10px 0 0;border-top:1px solid #ddd;font-weight:bold">Total paid</td>

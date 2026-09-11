@@ -2,7 +2,6 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { sendEmail } from '@/lib/email/brevo';
 import type {
   HostawayCalendarDay,
-  HostawayConversation,
   HostawayCreateReservationInput,
   HostawayListing,
   HostawayReservation,
@@ -187,13 +186,14 @@ async function hostawayPost<T>(
   path: string,
   payload: unknown,
   isRetry = false,
+  method: 'POST' | 'PUT' = 'POST',
 ): Promise<T> {
   // 429 handling mirrors hostawayGet and stays independent of the 403-refresh.
   for (let attempt = 0; ; attempt += 1) {
     await space();
     const token = await getAccessToken(isRetry);
     const res = await fetch(`${BASE}${path}`, {
-      method: 'POST',
+      method,
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -204,7 +204,7 @@ async function hostawayPost<T>(
     });
 
     // 403 => token expired/invalid. Refresh once and retry.
-    if (res.status === 403 && !isRetry) return hostawayPost<T>(path, payload, true);
+    if (res.status === 403 && !isRetry) return hostawayPost<T>(path, payload, true, method);
     if (res.status === 429 && attempt < MAX_429_RETRIES) {
       await sleep(backoffForAttempt(res, attempt));
       continue;
@@ -212,37 +212,7 @@ async function hostawayPost<T>(
     if (!res.ok) {
       const body = await res.text().catch(() => '');
       throw new HostawayApiError(
-        `Hostaway POST ${path} failed: HTTP ${res.status}`,
-        res.status,
-        body.slice(0, 2000),
-      );
-    }
-
-    const body = (await res.json()) as HostawayResponse<T>;
-    return body.result;
-  }
-}
-
-async function hostawayDelete<T>(path: string, isRetry = false): Promise<T> {
-  // Mirrors hostawayPost: 429 backoff independent of the one-shot 403 refresh.
-  for (let attempt = 0; ; attempt += 1) {
-    await space();
-    const token = await getAccessToken(isRetry);
-    const res = await fetch(`${BASE}${path}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}`, 'Cache-Control': 'no-cache' },
-      cache: 'no-store',
-    });
-
-    if (res.status === 403 && !isRetry) return hostawayDelete<T>(path, true);
-    if (res.status === 429 && attempt < MAX_429_RETRIES) {
-      await sleep(backoffForAttempt(res, attempt));
-      continue;
-    }
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new HostawayApiError(
-        `Hostaway DELETE ${path} failed: HTTP ${res.status}`,
+        `Hostaway ${method} ${path} failed: HTTP ${res.status}`,
         res.status,
         body.slice(0, 2000),
       );
@@ -390,10 +360,12 @@ export function getReservation(id: number | string): Promise<HostawayReservation
 }
 
 /**
- * Cancel a reservation in the PMS (Hostaway keeps the record, status becomes
- * cancelled; the calendar frees and the unified webhook fires). Idempotent for
- * callers: cancelling an already-cancelled/deleted reservation returns cleanly
- * instead of throwing, so a retried cancel flow never fails on this step.
+ * Cancel a reservation in the PMS: `PUT /reservations/{id}/statuses/cancelled`
+ * — the documented "Cancel a reservation" call. Only a CANCEL releases the
+ * calendar and fires the `status: cancelled` webhook; a DELETE removes the
+ * record without either (bug found 10.09: dates stayed blocked after a
+ * self-cancel and had to be freed by hand). Idempotent for callers: if the
+ * call errors but the reservation already reads as cancelled, return cleanly.
  */
 export async function cancelReservation(id: number | string): Promise<void> {
   if (process.env.HOSTAWAY_MOCK_RESERVATIONS === '1') {
@@ -401,14 +373,18 @@ export async function cancelReservation(id: number | string): Promise<void> {
     return;
   }
   try {
-    await hostawayDelete<unknown>(`/reservations/${id}`);
+    await hostawayPost<unknown>(
+      `/reservations/${id}/statuses/cancelled`,
+      { cancelledBy: 'guest' },
+      false,
+      'PUT',
+    );
   } catch (err) {
-    if (
-      err instanceof HostawayApiError &&
-      (err.status === 404 || /cancel/i.test(err.body))
-    ) {
-      return; // already gone or already cancelled — the goal state
-    }
+    if (err instanceof HostawayApiError && err.status === 404) return; // already gone
+    // Check the goal state instead of pattern-matching the error text — an
+    // unrelated error mentioning "cancellation" must not pass as success.
+    const current = await getReservation(id).catch(() => null);
+    if (current && /cancel/i.test(current.status ?? '')) return;
     throw err;
   }
 }
@@ -455,27 +431,6 @@ export async function findRecentDirectReservation(input: {
   } catch {
     return null;
   }
-}
-
-export function getReservationConversations(
-  reservationId: number | string,
-): Promise<HostawayConversation[]> {
-  return hostawayGet<HostawayConversation[]>(`/conversations?reservationId=${reservationId}`);
-}
-
-/**
- * Send a message on a reservation's guest conversation. communicationType
- * "email" (the default) makes Hostaway email the guest AND keeps the message
- * visible in the Hostaway inbox — the client's team sees it and any replies.
- */
-export function sendConversationMessage(
-  conversationId: number,
-  body: string,
-): Promise<unknown> {
-  return hostawayPost<unknown>(`/conversations/${conversationId}/messages`, {
-    body,
-    communicationType: 'email',
-  });
 }
 
 export function getListings(): Promise<HostawayListing[]> {

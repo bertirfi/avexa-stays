@@ -110,6 +110,8 @@ export async function cancelBooking(bookingId: string): Promise<CancelBookingRes
       `[cancel] Hostaway cancel failed for reservation ${booking.hostaway_reservation_id}:`,
       err instanceof Error ? err.message : err,
     );
+    // Best-effort too: the guest is refunded and cancelled — an email failure
+    // must not surface as an error to them.
     await sendEmail({
       to: 'office@avexastays.com',
       subject: `[OPS] Cancel in Hostaway manually — reservation ${booking.hostaway_reservation_id}`,
@@ -122,7 +124,7 @@ export async function cancelBooking(bookingId: string): Promise<CancelBookingRes
           <p>Please cancel it in Hostaway so the calendar frees.</p>
         </div>
       `,
-    });
+    }).catch((e: unknown) => console.error('[cancel] ops email failed:', e));
   }
 
   // Guest notice — best-effort, never blocks the outcome.

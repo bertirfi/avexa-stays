@@ -14,6 +14,7 @@ import type { Booking, GuestCounts, Property } from '@/types';
 import type { AvailabilityMap } from '@/lib/data/availability';
 import { ymd, parseYmd } from '@/lib/date';
 import { CITY_TAX_RON_PER_PERSON_NIGHT } from '@/lib/currency';
+import { foldIntoNights } from '@/lib/booking/fold-nights';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 import { readSearchPrefs, writeSearchPrefs } from '@/lib/searchPrefs';
 import { buildSearchQuery, readGuestParams, readRangeParams } from '@/lib/searchParams';
@@ -345,8 +346,9 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     const breakfastTotal = upgrades.breakfast ? breakfastPrice * nights * occupants : 0;
     const mainCityTax = CITY_TAX_PER_PERSON * nights * occupants;
     // Per-stay cleaning fee (RON) — mirrors lib/booking/quote so the displayed
-    // total equals the server charge. Breakdown order: accommodation →
-    // extra services → cleaning → city tax (M1.1.5).
+    // total equals the server charge. Shown folded into the accommodation line,
+    // never as its own row (client decision 04.09). Breakdown order:
+    // accommodation (incl. cleaning) → extra services → city tax.
     const cleaning = property.cleaningRon;
     // Member stay price = sum of per-night prices (variable from availability,
     // else flat rate.perNight × nights).
@@ -544,13 +546,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
         <span className="font-display text-[26px] text-gold-dark">{format(rate.perNight)}</span>
         <span className="text-sm text-ink-60">/night</span>
       </div>
-      <p className="text-[11px] text-ink-60">11% VAT included</p>
-      {/* Cleaning fee: per-stay, real RON (charged as such) + ≈ display equivalent */}
-      <p className="mb-4 mt-0.5 text-[11px] text-ink-60">
-        Cleaning fee {property.cleaningRon} RON
-        {approx(property.cleaningRon) ? ` (${approx(property.cleaningRon)})` : ''} — not
-        included in the nightly rate
-      </p>
+      <p className="mb-4 text-[11px] text-ink-60">11% VAT included</p>
 
       {/* Mobile: clean "Book your stay" rows */}
       <div className="mb-2 lg:hidden">
@@ -816,11 +812,11 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
           {priceOpen && (
             <ul className="mt-3 space-y-1.5 text-sm">
               {/* Accommodation — ONE total-price line, never the 18%/3% split —
-                  expandable into per-night prices (M1.1.6). The lines are the
-                  exact numbers staySubtotal is summed from (same lib/pricing
-                  math as /api/quote); checkout re-quotes live and flags drift.
-                  RON-real per line (the charged money) + ≈ display equivalent,
-                  mirroring the checkout BookingSummary breakdown. */}
+                  expandable per night (M1.1.6). The per-stay cleaning fee is
+                  part of this line (client 04.09) and spread evenly over the
+                  nights, so the lines sum exactly to the figure shown — same
+                  fold as the checkout BookingSummary; checkout re-quotes live
+                  and flags drift. RON-real per line + ≈ display equivalent. */}
               <li>
                 <details className="group">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
@@ -830,10 +826,10 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                         per night
                       </span>
                     </span>
-                    <span>{format(pricing.staySubtotal)}</span>
+                    <span>{format(pricing.staySubtotal + pricing.cleaning)}</span>
                   </summary>
                   <ul className="mt-2 space-y-1 border-l border-gray-line pl-3 text-xs text-ink-60">
-                    {stayNights.map((n) => (
+                    {foldIntoNights(stayNights, pricing.cleaning).map((n) => (
                       <li key={n.key} className="flex items-center justify-between gap-3">
                         <span>{n.label}</span>
                         <span>
@@ -862,10 +858,10 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                   value={format(pricing.breakfastTotal)}
                 />
               )}
-              <Row label="Cleaning fee" value={format(pricing.cleaning)} />
+              {/* City tax: real RON (the charged pass-through) + ≈ equivalent. */}
               <Row
                 label="City tax"
-                value={format(pricing.cityTax * roomCount)}
+                value={`${(pricing.cityTax * roomCount).toLocaleString('en-US')} RON`}
                 approxValue={approx(pricing.cityTax * roomCount)}
                 muted
               />

@@ -230,7 +230,7 @@ export const properties: Property[] = [
       'Kitchen & Dining': ['Microwave', 'Cooking basics (pots, pans, oil, salt & pepper)', 'Dishes and silverware', 'Mini fridge', 'Freezer', 'Hot water kettle', 'Coffee maker (drip)', 'Wine glasses', 'Toaster', 'Induction stove', 'Kitchenette', 'Coffee'],
     },
     faqs: [
-      { q: 'Can I park there?', a: 'Free street parking is available nearby on Calea Victoriei. Paid street parking off premises is also available. No reservation needed.' },
+      { q: 'Can I park there?', a: 'Free street parking is no longer available. Paid parking costs 30 lei per day plus fees, or 5 lei per hour plus fees. It\'s free between 8:00 PM and 8:00 AM. We recommend the Amparcat or ParkingBucuresti app.' },
       { q: 'Is the apartment quiet?', a: 'Yes — the studio faces the building\'s interior garden rather than the boulevard, making it one of the quietest units on Calea Victoriei.' },
       { q: 'Is the apartment suitable for longer stays?', a: 'Yes, long-term stays of 28 days or more are welcome. The kitchenette is fully equipped for self-catering, with an in-unit washer and dryer, and housekeeping is available at extra cost.' },
     ],
@@ -378,9 +378,9 @@ export const properties: Property[] = [
     metaDescription:
       'One-bedroom directly on Calea Victoriei — two private balconies, Știrbey Palace views, 65-inch TV, sleeps 4. Digital check-in, Bucharest city center.',
     description:
-      'Two private balconies look straight onto Calea Victoriei and the Știrbey Palace from this one-bedroom for four. Inside: a queen bed on a premium orthopedic mattress, a convertible sofa for extra guests, a 65-inch screen for movie nights, and a fully equipped kitchen with dishwasher and oven. Morning coffee comes with a palace view.',
-    checkin: sharedCheckin,
-    checkout: sharedCheckout,
+      'Two private balconies look straight onto Calea Victoriei and the Știrbey Palace from this one-bedroom for four. Inside: a queen bed on a premium orthopedic mattress, a convertible sofa for extra guests, a 65-inch screen for movie nights, and a fully equipped kitchen with dishwasher and oven. The sofa converts into a comfortable 150×190 cm double bed, a great fit for very tall guests. Morning coffee comes with a palace view.',
+    checkin: '3:00 PM (flexible)',
+    checkout: 'Anytime until 11:00 AM',
     cover: '/listings/202/00-cover.jpeg',
     photos: [
       { id: 1, label: 'Cover', src: '/listings/202/00-cover.jpeg' },
@@ -404,7 +404,7 @@ export const properties: Property[] = [
     amenitiesProperty: {
       'Internet & Office': ['Wi-Fi', 'Dedicated workspace'],
       'Outdoor': ['Private patio or balcony'],
-      'Parking & Facilities': ['Free street parking', 'Elevator', 'Paid street parking off premises', 'Single level home', 'No stairs in home'],
+      'Parking & Facilities': ['Elevator', 'Paid street parking off premises', 'Single level home', 'No stairs in home'],
       'Services': ['Long term stays allowed', 'Self check-in (Lockbox)', 'Housekeeping — available at extra cost'],
       'Not Included': ['Pets not allowed', 'Carbon monoxide alarm', 'Private entrance'],
     },
@@ -418,7 +418,8 @@ export const properties: Property[] = [
       'Kitchen & Dining': ['Kitchen', 'Microwave', 'Cooking basics (pots, pans, oil, salt & pepper)', 'Dishes and silverware', 'Freezer', 'Dishwasher', 'Induction stove', 'Oven', 'Hot water kettle', 'Wine glasses', 'Toaster', 'Dining table', 'Coffee'],
     },
     faqs: [
-      { q: 'Can I park there?', a: 'Free street parking is available nearby. Paid street parking is also available off premises. No reservation needed.' },
+      { q: 'Can I park there?', a: 'Free street parking is no longer available. Paid parking costs 30 lei per day plus fees, or 5 lei per hour plus fees. It\'s free between 8:00 PM and 8:00 AM. We recommend the Amparcat or ParkingBucuresti app.' },
+      { q: 'What are the check-in and check-out times?', a: 'Check-in is from 3:00 PM and flexible on request. Check-out is anytime until 11:00 AM.' },
       { q: 'Does the apartment have a balcony?', a: 'Yes — two private balconies overlooking Calea Victoriei and the beautiful Stirbey Palace landscape.' },
       { q: 'Is there a view?', a: 'Stunning panoramic views of Stirbey Palace from both private balconies. The apartment is located directly on Calea Victoriei, Bucharest\'s most iconic boulevard.' },
     ],
@@ -605,7 +606,7 @@ export const properties: Property[] = [
     amenitiesProperty: {
       'Internet & Office': ['Wi-Fi'],
       'Location Features': ['Private entrance (separate street entrance)'],
-      'Parking & Facilities': ['Free street parking', 'Elevator', 'Paid street parking off premises', 'Single level home', 'No stairs in home'],
+      'Parking & Facilities': ['Elevator', 'Paid street parking off premises', 'Single level home', 'No stairs in home'],
       'Services': ['Luggage dropoff allowed', 'Long term stays allowed', 'Self check-in (Lockbox)', 'Housekeeping — available at extra cost'],
       'Not Included': ['Exterior security cameras', 'Carbon monoxide alarm'],
     },
@@ -619,7 +620,7 @@ export const properties: Property[] = [
       'Kitchen & Dining': ['Kitchen', 'Refrigerator', 'Microwave', 'Cooking basics (pots, pans, oil, salt & pepper)', 'Dishes and silverware', 'Freezer', 'Dishwasher', 'Stainless steel gas stove', 'Oven', 'Hot water kettle', 'Coffee maker (drip)', 'Wine glasses', 'Toaster', 'Coffee'],
     },
     faqs: [
-      { q: 'Can I park there?', a: 'Public parking is available at a location nearby (reservation is not needed) and costs 30 lei per day.' },
+      { q: 'Can I park there?', a: 'Free street parking is no longer available. Paid parking costs 30 lei per day plus fees, or 5 lei per hour plus fees. It\'s free between 8:00 PM and 8:00 AM. We recommend the Amparcat or ParkingBucuresti app.' },
       { q: 'Do they serve breakfast?', a: 'There\'s no breakfast option available.' },
       { q: 'What are the check-in and check-out times?', a: 'Check-in from 15:00 to 22:00. Check-out until 11:00. If you\'d like to request an early or late check-in or check-out, you can make a special request when you book.' },
     ],
@@ -694,7 +695,7 @@ export const properties: Property[] = [
     ],
     amenitiesProperty: {
       'Internet & Office': ['Wi-Fi', 'Dedicated workspace'],
-      'Parking & Facilities': ['Free street parking', 'Elevator', 'Paid parking off premises', 'Single level home', 'No stairs in home'],
+      'Parking & Facilities': ['Elevator', 'Paid parking off premises', 'Single level home', 'No stairs in home'],
       'Services': ['Luggage dropoff allowed', 'Long term stays allowed', 'Self check-in (Lockbox)', 'Housekeeping — available at extra cost'],
       'Not Included': ['Pets not allowed', 'Carbon monoxide alarm', 'Private entrance'],
     },
@@ -708,7 +709,7 @@ export const properties: Property[] = [
       'Kitchen & Dining': ['Kitchen', 'Refrigerator', 'Microwave', 'Cooking basics (pots, pans, oil, salt & pepper)', 'Dishes and silverware', 'Freezer', 'Induction stove', 'Oven', 'Hot water kettle', 'Coffee maker (drip)', 'Wine glasses', 'Toaster', 'Dining table', 'Coffee'],
     },
     faqs: [
-      { q: 'Can I park there?', a: 'Free street parking is available nearby. Paid parking is also available off premises. No reservation needed.' },
+      { q: 'Can I park there?', a: 'Free street parking is no longer available. Paid parking costs 30 lei per day plus fees, or 5 lei per hour plus fees. It\'s free between 8:00 PM and 8:00 AM. We recommend the Amparcat or ParkingBucuresti app.' },
       { q: 'How far is the nearest metro?', a: 'Piata Romana Metro Station is 600 meters away — roughly a 7-minute walk. Piața Victoriei 1 is 1.2 km.' },
       { q: 'Is the apartment family-friendly?', a: 'Yes. A crib (25 lei/night) and high chair are available upon request. Children of all ages are welcome. We provide children\'s books, toys, dinnerware, and colorful plastic dishes and cutlery.' },
     ],
@@ -763,7 +764,7 @@ export const properties: Property[] = [
     metaDescription:
       'Freshly renovated two-bedroom over Calea Victoriei — Queen and double suites plus a sofa bed, dining for 6. Bucharest city center, digital check-in.',
     description:
-      'Freshly renovated in spring 2026, this two-bedroom sits directly over Calea Victoriei, Bucharest\'s most historic boulevard. A plush Queen suite, a cozy double bedroom, and a high-comfort sofa bed sleep six, gathered around a dining table made for long breakfasts. The full kitchen brings modern appliances, dishwasher and dryer included, for stays of any length.',
+      'Freshly renovated in spring 2026, this two-bedroom sits directly over Calea Victoriei, Bucharest\'s most historic boulevard. A plush Queen suite, a cozy double bedroom, and a high-comfort sofa bed sleep six, gathered around a dining table made for long breakfasts. The full kitchen brings modern appliances, dishwasher and washing machine included, for stays of any length.',
     checkin: sharedCheckin,
     checkout: sharedCheckout,
     cover: '/listings/303/00-cover.jpeg',
@@ -782,7 +783,7 @@ export const properties: Property[] = [
     upgrades: baseUpgrades,
     amenitiesTop: [
       'Free Wi-Fi', 'Air conditioning', 'Kitchen', 'Elevator',
-      'Washer & Dryer', 'Hair dryer', 'Heating', 'Dishwasher',
+      'Washer', 'Hair dryer', 'Heating', 'Dishwasher',
       'HDTV with Netflix', 'Private entrance',
     ],
     amenitiesProperty: {
@@ -794,7 +795,7 @@ export const properties: Property[] = [
     },
     amenitiesRoom: {
       'Bathroom': ['Hair dryer', 'Cleaning products', 'Shampoo', 'Body soap', 'Hot water', 'Shower gel'],
-      'Bedroom & Laundry': ['Washer', 'Free dryer — In unit', 'Essentials (towels, bed sheets, soap, toilet paper)', 'Hangers', 'Bed linens', 'Extra pillows and blankets', 'Room-darkening shades', 'Iron', 'Drying rack for clothing', 'Clothing storage'],
+      'Bedroom & Laundry': ['Washer', 'Essentials (towels, bed sheets, soap, toilet paper)', 'Hangers', 'Bed linens', 'Extra pillows and blankets', 'Room-darkening shades', 'Iron', 'Drying rack for clothing', 'Clothing storage'],
       'Entertainment': ['Ethernet connection', 'HDTV with Netflix, premium cable'],
       'Family': ['Paid crib — available upon request', 'Children\'s toys'],
       'Heating & Cooling': ['Air conditioning', 'Central heating'],
@@ -802,7 +803,7 @@ export const properties: Property[] = [
       'Kitchen & Dining': ['Kitchen', 'Refrigerator', 'Microwave', 'Cooking basics (pots, pans, oil, salt & pepper)', 'Dishes and silverware', 'Freezer', 'Dishwasher', 'Stove', 'Oven', 'Hot water kettle', 'Coffee maker (drip)', 'Wine glasses', 'Toaster', 'Dining table', 'Coffee'],
     },
     faqs: [
-      { q: 'Can I park there?', a: 'Ample public paid parking is available on all surrounding streets. No reservation needed.' },
+      { q: 'Can I park there?', a: 'Free street parking is no longer available. Paid parking costs 30 lei per day plus fees, or 5 lei per hour plus fees. It\'s free between 8:00 PM and 8:00 AM. We recommend the Amparcat or ParkingBucuresti app.' },
       { q: 'How close is public transit?', a: 'Piata Romana Metro Station is 600 meters away. Piața Victoriei 1 is 1.2 km. Bucharest North Railway Station is 1.7 km.' },
       { q: 'Is the apartment family-friendly?', a: 'Yes. A crib is available upon request (25 lei/night). Children of all ages are welcome. Children 6+ are charged as adults. Toys are provided for little ones.' },
     ],

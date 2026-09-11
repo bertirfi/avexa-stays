@@ -1,3 +1,4 @@
+import { properties as staticProperties } from '@/lib/properties';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { accommodationRonPerNight } from '@/lib/pricing';
 import { ymd, parseYmd } from '@/lib/date';
@@ -54,7 +55,7 @@ export async function getAvailabilityMap(
 /** Availability verdict for one property over a requested [checkIn, checkOut) range. */
 export interface PropertyRangeAvailability {
   available: boolean;
-  /** Accommodation RON total for the stay (only when available). */
+  /** Stay RON total = accommodation + per-stay cleaning fee (only when available). */
   totalRon?: number;
   /** totalRon / nights, rounded (only when available). */
   nightlyRon?: number;
@@ -138,10 +139,13 @@ export async function getRangeAvailability(
 
       const total = windowTotal(start);
       if (total !== null) {
+        // Displayed stay price includes the per-stay cleaning fee (client
+        // decision 04.09).
+        const stayRon = total + (staticProperties.find((p) => p.id === propId)?.cleaningRon ?? 0);
         out[propId] = {
           available: true,
-          totalRon: total,
-          nightlyRon: Math.round(total / nights),
+          totalRon: stayRon,
+          nightlyRon: Math.round(stayRon / nights),
         };
         continue;
       }

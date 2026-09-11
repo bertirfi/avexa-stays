@@ -215,11 +215,12 @@ export async function POST(req: Request) {
       }
     });
     // 2) The check-in message: wait for ChargeAutomation's check-in link, then
-    //    post the CA-template message on the Hostaway conversation.
+    //    email the CA-template message from office@ via Brevo (client 04.09).
     after(() =>
       sendBookingConfirmation({
         reservationId,
         guestFirstName: confirmedBooking.guest_name.trim().split(/\s+/)[0] || 'there',
+        guestEmail: confirmedBooking.guest_email,
       }),
     );
   }
