@@ -36,7 +36,7 @@ Legendă stadiu: ✅ livrat & verificat · 🔶 parțial · ❌ neînceput · �
 - **Cod:** `app/api/**`, `.claude/rules/api-validation.md`, `next.config.ts` (security headers)
 - **Invarianți:** input validat cu Zod pe orice route; secrete doar în env server; interne (`/api/sync`, `/api/cron`) cu Bearer; nu există `any`; CSP amânat conștient (de adăugat la hardening).
 - **Modifici sigur:** endpoint nou = checklist-ul din regula api-validation, apoi `/adversarial-review` pe zona security.
-- **Stadiu:** ✅ baza. 🔶 Rate-limiting (10.09): `lib/rate-limit.ts` per IP pe `/api/quote` (30/min) și `/api/checkout` (10/min) — bucket în memorie, PER INSTANȚĂ Vercel (prag, nu zid). Datorie explicită: regulă Vercel WAF rate-limit pe aceleași rute (config în dashboard, Robert). Rămas: CSP + nonce (❌, hardening).
+- **Stadiu:** ✅ baza. 🔶 Rate-limiting (10.09): `lib/rate-limit.ts` per IP pe `/api/quote` (30/min) și `/api/checkout` (10/min) — bucket în memorie, PER INSTANȚĂ Vercel (prag, nu zid). ✅ Regulă Vercel WAF rate-limit (30/min per IP) pe aceleași rute, pusă de Robert 11.09 și verificată live (429 cu `X-Vercel-Mitigated: deny`). Rămas: CSP + nonce (❌, hardening).
 
 ## Z7 · SEO & Performanță (obiective de produs, nu nice-to-have)
 - **Cod:** metadata per pagină, `components/seo/JsonLd.tsx`, `app/{sitemap,robots}`, imagini
