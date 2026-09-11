@@ -941,7 +941,8 @@ openssl rand -base64 32
 
 ## Stripe Integration Notes
 
-(Empty — populate during Phase 5 integration.)
+- **Add-on după plată (11.09):** o a doua sesiune Checkout pe aceeași rezervare = alt PaymentIntent. Refund-ul la anulare NU se calculează pe `total_ron` crescut, ci pe sejur (`total_ron − add-ons`), iar add-on-urile se returnează pe propriul PI. Regula generală: orice sumă care crește după confirmare trebuie să-și țină minte charge-ul (`paymentIntentId` în jsonb).
+- Webhook-ul pentru add-on: verifică `status === 'confirmed'` ÎNAINTE de a aplica (altfel refund automat), dedupe pe `sessionId` (redelivery) ȘI pe `id` (dublu click înainte să ajungă webhook-ul), update optimist `.eq('total_ron', vechi)` + 500 ca Stripe să reîncerce.
 
 ## Performance Insights
 
@@ -949,4 +950,4 @@ openssl rand -base64 32
 
 ## User Feedback Patterns
 
-(Empty — populate after launch.)
+- **Drive (11.09):** documentele legale ale clientului se montează VERBATIM — Robert: „textul să nu fie modificat deloc”; observațiile sunt doar de structură/logică între documente. AVX-19 (Implementation Brief) e sursa unică pentru Berti și bate Specificația v1. Subagenții pot citi Drive direct prin MCP-ul Google Drive (`read_file_content` cu fileId) și salvează extractele în scratchpad — 12 agenți în paralel pentru ~400 KB de text.

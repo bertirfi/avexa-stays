@@ -35,7 +35,7 @@ const PRINCIPLES = [
   },
   {
     title: 'No friction.',
-    body: 'One price with taxes included, a 2-minute booking, and a 24/7 human reception on WhatsApp.',
+    body: 'One price with taxes included, a 2-minute booking, and fast human support on WhatsApp.',
   },
   {
     title: 'No compromise.',

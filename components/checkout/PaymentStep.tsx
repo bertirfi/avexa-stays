@@ -81,7 +81,7 @@ export function PaymentStep({ hydrated, form, quoteState, onBack, guest = false 
           adults: raw.guests.adults,
           children: raw.guests.children,
           infants: raw.guests.infants,
-          breakfast: Boolean(raw.upgrades?.breakfast),
+          extras: raw.extras ?? [],
           displayCurrency: currency,
           // Only the guest UI may declare guest — a lapsed member session gets
           // a 401 (→ login) instead of a silent non-refundable booking.
@@ -198,7 +198,7 @@ export function PaymentStep({ hydrated, form, quoteState, onBack, guest = false 
           </div>
         </div>
         <div className="mt-4 flex items-center gap-2 border-t border-gray-line pt-4">
-          {['VISA', 'MC', 'AMEX', 'Apple Pay', 'G Pay'].map((b) => (
+          {['VISA', 'Mastercard', 'Apple Pay', 'G Pay'].map((b) => (
             <span
               key={b}
               className="rounded-md border border-gray-line px-2 py-0.5 text-[10px] font-semibold tracking-wider text-ink-80"
@@ -273,10 +273,7 @@ export function PaymentStep({ hydrated, form, quoteState, onBack, guest = false 
           label={
             <>
               I accept the Rental Agreement and{' '}
-              {/* TODO: point at the dedicated House Rules doc once the client sends it
-                  this week — for now /terms#6 (Guest responsibilities & House Rules) is
-                  the closest published copy. */}
-              <Link href="/terms" className="underline hover:text-gold-dark">
+              <Link href="/house-rules" className="underline hover:text-gold-dark">
                 House Rules
               </Link>{' '}
               — The AVEXA Standard.

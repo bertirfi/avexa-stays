@@ -56,15 +56,6 @@ export interface PropertyRate {
   cancelNote?: string;
 }
 
-export interface PropertyUpgrade {
-  id: 'breakfast' | 'late_checkout' | 'early_checkin';
-  name: string;
-  /** RON — money of record. */
-  price: number;
-  unit: '/day/person' | '';
-  free: boolean;
-}
-
 export interface PropertyFAQ {
   q: string;
   a: string;
@@ -121,7 +112,6 @@ export interface Property {
   rates: PropertyRate[];
   /** Per-stay cleaning fee, RON (money of record) — charged on top of the nightly rate. */
   cleaningRon: number;
-  upgrades: PropertyUpgrade[];
   amenitiesTop: string[];
   amenitiesProperty: CategorizedAmenities;
   amenitiesRoom: CategorizedAmenities;
@@ -180,11 +170,13 @@ export interface Booking {
   checkOut: string;
   nights: number;
   guests: GuestCounts;
-  upgrades: Record<string, boolean>;
+  /** Extra-service catalogue ids picked before booking (see lib/extras). */
+  extras: string[];
   pricePerNight: number;
   subtotal: number;
   discount: number;
-  breakfastTotal: number;
+  /** RON, sum of the selected extras — indicative only; /api/quote is authoritative. */
+  extrasTotal: number;
   cityTax: number;
   total: number;
   /** Sibling property ids added via "Add room" (multi-room booking). */

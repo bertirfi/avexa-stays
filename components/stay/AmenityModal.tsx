@@ -7,7 +7,7 @@ import type { CategorizedAmenities, Property } from '@/types';
 import { cn } from '@/lib/cn';
 
 const AVEXA_STANDARD = [
-  '24/7 online reception',
+  'Fast human support on WhatsApp',
   'High-speed Wi-Fi',
   'Contactless check-in',
   'Free tea and coffee',

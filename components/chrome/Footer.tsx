@@ -10,6 +10,7 @@ const contactLinks = [
   { label: `Call ${PHONE_DISPLAY}`, href: PHONE_TEL },
   { label: 'Contact us', href: `mailto:${CONTACT_EMAIL}` },
   { label: 'Cancellation policy', href: '/cancellation' },
+  { label: 'Extra services', href: '/extra-services' },
 ];
 
 const discoverLinks = [
@@ -37,7 +38,7 @@ export function Footer() {
           <div>
             <h4 className="font-mono-label mb-3 text-gold">Pay with</h4>
             <ul className="flex flex-wrap gap-2">
-              {['VISA', 'Mastercard', 'AMEX', 'Apple Pay', 'G Pay'].map((p) => (
+              {['VISA', 'Mastercard', 'Apple Pay', 'G Pay'].map((p) => (
                 <li
                   key={p}
                   className="rounded-md border border-cream/15 px-2 py-1 text-[11px] font-medium text-cream/80"
@@ -75,12 +76,16 @@ export function Footer() {
         {/* Bottom: legal */}
         <div className="mt-16 flex flex-col items-start justify-between gap-4 border-t border-cream/10 pt-8 text-sm text-cream/60 md:flex-row md:items-center">
           <span>© {new Date().getFullYear()} AVEXA Stays · Bucharest</span>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
             <Link href="/terms" className="hover:text-gold">Terms &amp; Conditions</Link>
+            <Link href="/cancellation" className="hover:text-gold">Cancellation Policy</Link>
+            <Link href="/damage-policy" className="hover:text-gold">Damage &amp; Penalties</Link>
+            <Link href="/house-rules" className="hover:text-gold">House Rules</Link>
             <Link href="/privacy" className="hover:text-gold">Privacy Policy</Link>
             <Link href="/cookies" className="hover:text-gold">Cookie Policy</Link>
             <CookiePreferencesLink className="transition hover:text-gold" />
             <Link href="/imprint" className="hover:text-gold">Imprint</Link>
+            <Link href="/avexian-club-terms" className="hover:text-gold">AVEXIAN Club Terms</Link>
           </div>
         </div>
       </div>

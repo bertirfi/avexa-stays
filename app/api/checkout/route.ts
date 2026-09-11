@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     adults: body.adults,
     children: body.children,
     infants: body.infants,
-    breakfast: body.breakfast,
+    extras: body.extras,
   });
   if (!quote.ok) {
     const status = quote.reason === 'unavailable' ? 409 : 400;

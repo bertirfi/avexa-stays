@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EXTRA_IDS } from '@/lib/extras';
 
 /**
  * Shared checkout/quote input contract.
@@ -9,7 +10,7 @@ import { z } from 'zod';
  * derived from exactly the same validated input the charge is derived from.
  *
  * Trust boundary (api-validation rule): the client sends ONLY ids/dates/guests/
- * rate/breakfast. Never money, never identity — the price is re-derived
+ * extras (catalogue ids). Never money, never identity — the price is re-derived
  * server-side (lib/booking/quote) and the user comes from the Supabase session.
  */
 
@@ -31,7 +32,7 @@ export const QuoteInputSchema = z.object({
   infants: z.number().int().min(0).max(10),
   // Single flat rate since M1.1 — a legacy `rateId` from an open old tab is an
   // unknown key, which z.object() strips: accepted and ignored by design.
-  breakfast: z.boolean().default(false),
+  extras: z.array(z.enum(EXTRA_IDS)).max(10).default([]),
   displayCurrency: z.enum(['EUR', 'RON', 'USD']).default('EUR'),
 });
 
@@ -83,6 +84,7 @@ export interface QuoteBreakdown {
   accommodationRon: number;
   /** Per-night charged prices (RON) — the expandable accommodation breakdown. */
   nightly: Array<{ date: string; ron: number }>;
+  extras: Array<{ id: string; name: string; ron: number }>;
   extrasRon: number;
   cleaningRon: number;
   cityTaxRon: number;

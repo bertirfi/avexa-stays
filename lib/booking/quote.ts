@@ -3,6 +3,13 @@ import { HOSTAWAY_LISTING_BY_PROPERTY } from '@/lib/hostaway/mapping';
 import { getPropertyData } from '@/lib/data/properties';
 import { getAvailabilityMap } from '@/lib/data/availability';
 import { accommodationRonPerNight, cityTaxRon } from '@/lib/pricing';
+import {
+  extraPriceRon,
+  extrasStillBookable,
+  getExtra,
+  roomsForCleaning,
+  type ExtraId,
+} from '@/lib/extras';
 import type { HostawayCalendarDay } from '@/lib/hostaway/types';
 
 /**
@@ -21,7 +28,7 @@ export interface QuoteInput {
   adults: number;
   children: number;
   infants: number;
-  breakfast: boolean;
+  extras: ExtraId[];
   /**
    * 'live' (default) = Hostaway calendar — the ONLY source for a charge.
    * 'cache' = Supabase availability — for public previews (/api/quote), per
@@ -152,18 +159,18 @@ export async function quoteBooking(input: QuoteInput): Promise<Quote> {
   // breakdown can never drift from the total by a rounding leu.
   const accommodationRon = nightly.reduce((sum, n) => sum + n.ron, 0);
 
-  // ── Extras (v1: breakfast; DB `services` catalog plugs in here later) ───
+  // ── Extras (AVX-08 catalogue — lib/extras.ts is the single source) ──────
   const occupants = adults + children;
+  const rooms = roomsForCleaning(property.cleaningRon ?? 0);
+  // Lead time (AVX-08): an extra past its lead time is silently dropped — we
+  // never charge for something that cannot be delivered. The UI hides the same
+  // items, so the preview and the charge agree.
+  const bookableExtras = new Set<string>(extrasStillBookable(checkIn).map((e) => e.id));
   const extras: QuoteExtra[] = [];
-  if (input.breakfast) {
-    const breakfast = property.upgrades?.find((u) => u.id === 'breakfast');
-    if (breakfast && !breakfast.free && breakfast.price > 0) {
-      extras.push({
-        id: 'breakfast',
-        name: breakfast.name,
-        ron: breakfast.price * nights * occupants,
-      });
-    }
+  for (const id of new Set(input.extras)) {
+    const extra = getExtra(id);
+    if (!extra || !bookableExtras.has(extra.id)) continue;
+    extras.push({ id: extra.id, name: extra.name, ron: extraPriceRon(extra, rooms) });
   }
   const extrasRon = extras.reduce((sum, e) => sum + e.ron, 0);
 

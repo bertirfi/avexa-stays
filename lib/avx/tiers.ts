@@ -2,9 +2,12 @@
  * AVEXIAN tiers — the single source of truth for tier thresholds, earn
  * percentages, vault items and spend rules (Spec M2.2 / M2.5.3).
  *
- * Pure module: no imports, no I/O — unit-checkable with plain tsx and safe
- * to import from server components, the cron, and (metadata only) client bits.
+ * Pure module: no I/O — unit-checkable with plain tsx and safe to import from
+ * server components, the cron, and (metadata only) client bits. The Silver
+ * vault IS the AVX-08 extras catalogue (decisions D16/D18/D24), so the names
+ * come from lib/extras.ts instead of being retyped here.
  */
+import { EXTRAS } from '@/lib/extras';
 
 export type TierId = 'BASIC' | 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
 
@@ -22,10 +25,10 @@ export interface TierMeta {
   vaultItems: string[];
   /**
    * Extra spending/benefit rule unlocked at this tier, if any.
-   * Baseline (client decision 24.08): every earning tier spends AVX on its
-   * unlocked upsells only, 1 AVX = 1 RON. PLATINUM & DIAMOND exclusively can
-   * also pay for the accommodation itself at 2 AVX = 1 RON. Upsells are never
-   * free at any tier.
+   * Baseline (decisions D16/D18/D24): the whole AVX-08 extras catalogue is
+   * unlocked at SILVER and payable at 1 AVX = 1 RON. PLATINUM & DIAMOND
+   * exclusively can also pay for the accommodation itself at 2 AVX = 1 RON.
+   * Extras are never free at any tier.
    */
   spendNote: string | null;
 }
@@ -56,8 +59,8 @@ export const TIERS: TierMeta[] = [
     minStays: 2,
     minNights: 5,
     percent: 8,
-    vaultItems: ['Early Check-in', 'Late Check-out'],
-    spendNote: null,
+    vaultItems: EXTRAS.map((e) => e.name),
+    spendNote: 'Pay for every extra service with AVX — 1 AVX = 1 RON',
   },
   {
     id: 'GOLD',
@@ -65,12 +68,7 @@ export const TIERS: TierMeta[] = [
     minStays: 3,
     minNights: 10,
     percent: 10,
-    vaultItems: [
-      'Welcome Box',
-      'Luggage Drop',
-      'Mid-stay Cleaning',
-      'Birthday & Anniversary Packages',
-    ],
+    vaultItems: ['Jacuzzi & Home Spa (coming)'],
     spendNote: null,
   },
   {
@@ -79,7 +77,7 @@ export const TIERS: TierMeta[] = [
     minStays: 5,
     minNights: 20,
     percent: 12.5,
-    vaultItems: ['24/7 Parking', 'Airport Transfer', 'Spa & Relaxation Kit'],
+    vaultItems: [],
     spendNote: 'Pay for your stay with AVX — 2 AVX = 1 RON',
   },
   {
@@ -89,7 +87,7 @@ export const TIERS: TierMeta[] = [
     minNights: 35,
     percent: 15,
     vaultItems: ['Exclusive physical gift upon arrival'],
-    spendNote: 'Spend AVX on absolutely anything — upsells at 1 AVX = 1 RON, bookings at 2 AVX = 1 RON',
+    spendNote: 'Spend AVX on absolutely anything — extras at 1 AVX = 1 RON, bookings at 2 AVX = 1 RON, plus an exclusive physical gift upon arrival',
   },
 ];
 

@@ -16,6 +16,13 @@ import { ymd, parseYmd } from '@/lib/date';
 import { CITY_TAX_RON_PER_PERSON_NIGHT } from '@/lib/currency';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 import { readSearchPrefs, writeSearchPrefs } from '@/lib/searchPrefs';
+import { extraPriceRon, getExtra, roomsForCleaning } from '@/lib/extras';
+import {
+  setExtrasCheckIn,
+  toggleExtra,
+  useBookableExtras,
+  useSelectedExtras,
+} from '@/lib/extras-selection';
 import { buildSearchQuery, readGuestParams, readRangeParams } from '@/lib/searchParams';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { CONTACT_EMAIL } from '@/lib/contact';
@@ -35,11 +42,6 @@ const CITY_TAX_PER_PERSON = CITY_TAX_RON_PER_PERSON_NIGHT;
 // "Add another room" UI rendering; the addedRoomIds state/logic stays wired
 // so re-enabling later is a one-line flip.
 const MULTI_ROOM_ENABLED = false;
-
-// Launch: extra services (breakfast / late check-out / early check-in) are not
-// sold yet — they return later via Stripe products or on-site upsells. Gates
-// ONLY the upgrades UI; state/pricing plumbing stays wired for the flip back.
-const UPGRADES_ENABLED = false;
 
 // Mirrors lib/booking/quote.ts MAX_NIGHTS — duplicated here (not imported)
 // because that module pulls in the server-only Hostaway client.
@@ -136,11 +138,6 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   const [showCal, setShowCal] = useState(false);
   const [guests, setGuests] = useState<GuestCounts>({ adults: 2, children: 0, infants: 0 });
   const [showGuests, setShowGuests] = useState(false);
-  const [upgrades, setUpgrades] = useState<Record<string, boolean>>({
-    breakfast: false,
-    late_checkout: UPGRADES_ENABLED,
-    early_checkin: UPGRADES_ENABLED,
-  });
   const [priceOpen, setPriceOpen] = useState(false);
   /** True while the range on screen came from pickDefaultRange, not the guest. */
   const [autoPicked, setAutoPicked] = useState(false);
@@ -280,10 +277,28 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
   // limit here so the calendar doesn't dead-end the guest at checkout.
   const exceedsMaxNights = nights > MAX_NIGHTS;
 
-  // Breakfast per-day-per-person price from the property's own upgrades catalog
-  // (RON, money of record) — never hardcoded. Mirrors lib/booking/quote so the
-  // sidebar estimate lines up with the authoritative checkout quote.
-  const breakfastPrice = property.upgrades.find((u) => u.id === 'breakfast')?.price ?? 0;
+  // Extra services — catalogue prices (RON, money of record) from lib/extras,
+  // scaled to this apartment's size. Selection is shared with the "Elevate your
+  // stay" section through lib/extras-selection; /api/quote re-prices it server-side.
+  const rooms = roomsForCleaning(property.cleaningRon);
+  const selectedExtras = useSelectedExtras();
+  const bookableExtras = useBookableExtras();
+
+  // Extras are prepared ahead of check-in: publish the picked date so the store
+  // can hide (and un-select) anything whose lead time has passed — quoteBooking
+  // drops those server-side, so the total here would otherwise be too high.
+  useEffect(() => {
+    setExtrasCheckIn(startDate ? ymd(startDate) : null);
+  }, [startDate]);
+
+  const extraLines = useMemo(() => {
+    const offerable = new Set(bookableExtras.map((e) => e.id));
+    return selectedExtras
+      .map((id) => getExtra(id))
+      .filter((e): e is NonNullable<typeof e> => e !== undefined && offerable.has(e.id))
+      .map((e) => ({ id: e.id, name: e.name, ron: extraPriceRon(e, rooms) }));
+  }, [selectedExtras, bookableExtras, rooms]);
+  const extrasTotal = extraLines.reduce((a, l) => a + l.ron, 0);
 
   // Per-night prices for the selected range: real prices from availability
   // (already markup-applied by lib/data/availability — the SAME lib/pricing
@@ -340,9 +355,6 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
 
   const pricing = useMemo(() => {
     const occupants = guests.adults + guests.children;
-    // Breakfast is priced in RON from the property's upgrades catalog (real
-    // per-day-per-person price — no hardcoded figure).
-    const breakfastTotal = upgrades.breakfast ? breakfastPrice * nights * occupants : 0;
     const mainCityTax = CITY_TAX_PER_PERSON * nights * occupants;
     // Per-stay cleaning fee (RON) — mirrors lib/booking/quote so the displayed
     // total equals the server charge. Shown folded into the accommodation line,
@@ -351,7 +363,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     const cleaning = property.cleaningRon;
     // Member stay price = sum of per-night prices (variable from availability,
     // else flat rate.perNight × nights).
-    const mainRoomTotal = staySubtotal + breakfastTotal + cleaning + mainCityTax;
+    const mainRoomTotal = staySubtotal + extrasTotal + cleaning + mainCityTax;
 
     // Added rooms keep the flat rate × nights + cleaning + city tax (no per-room calendar).
     const addedRoomsTotal = addedRooms.reduce((sum, sib) => {
@@ -363,14 +375,13 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
 
     return {
       staySubtotal,
-      breakfastTotal,
       cleaning,
       cityTax: mainCityTax,
       total: mainRoomTotal,
       combinedTotal,
       occupants,
     };
-  }, [staySubtotal, nights, guests, upgrades, addedRooms, breakfastPrice, property.cleaningRon]);
+  }, [staySubtotal, nights, guests, extrasTotal, addedRooms, property.cleaningRon]);
 
   // RON total actually charged — combinedTotal only applies once multi-room
   // re-enables (roomCount stays 1 in practice while MULTI_ROOM_ENABLED is false).
@@ -388,13 +399,13 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
       checkOut: ymd(endDate),
       nights,
       guests,
-      upgrades,
+      extras: [...selectedExtras],
       // Persist the MEMBER price (no rack / no struck framing) — matches the
       // sidebar and the no-struck-price decision; checkout shows this directly.
       pricePerNight: isVariablePricing ? Math.round(staySubtotal / nights) : rate.perNight,
       subtotal: staySubtotal,
       discount: 0,
-      breakfastTotal: pricing.breakfastTotal,
+      extrasTotal,
       cityTax: pricing.cityTax,
       total: roomCount > 1 ? pricing.combinedTotal : pricing.total,
       addedRoomIds: addedRoomIds.length > 0 ? addedRoomIds : undefined,
@@ -402,7 +413,8 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
     try {
       window.localStorage.setItem('avexa_booking', JSON.stringify(booking));
     } catch {}
-    router.push('/checkout');
+    const extrasQuery = buildSearchQuery({ extras: selectedExtras });
+    router.push(extrasQuery ? `/checkout?${extrasQuery}` : '/checkout');
   }
 
   const mobileBarPrice =
@@ -650,30 +662,50 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
         <p className="mt-1 text-xs text-ink-60">{CANCELLATION_POLICY.nonMember}</p>
       </div>
 
-      {/* Upgrades (hidden at launch — UPGRADES_ENABLED) */}
-      {UPGRADES_ENABLED && (
-      <div className="mt-4 space-y-2">
-        {property.upgrades.map((u) => (
-          <label key={u.id} className="flex cursor-pointer items-center justify-between rounded-2xl border border-gray-line p-3">
-            <span className="text-sm">
-              {u.name}
-              {u.free && <span className="ml-2 rounded-full bg-gold-pale px-2 py-0.5 text-[10px] font-semibold text-gold-dark">FREE</span>}
-            </span>
-            <span className="flex items-center gap-3">
-              {!u.free && (
-                <span className="text-xs text-ink-60">+{format(u.price)}{u.unit}</span>
-              )}
-              <input
-                type="checkbox"
-                checked={upgrades[u.id] ?? false}
-                onChange={(e) => setUpgrades((s) => ({ ...s, [u.id]: e.target.checked }))}
-                className="size-4 accent-gold-dark"
-              />
-            </span>
-          </label>
-        ))}
+      {/* Extra services — same catalogue as the "Elevate your stay" section
+          below (lib/extras); both write to the shared selection store. */}
+      <div className="mt-4 rounded-2xl border border-gray-line p-4">
+        <p className="font-mono-label mb-3 text-ink-60">Extra services</p>
+        {bookableExtras.length === 0 && (
+          <p className="text-xs text-ink-60">
+            Your arrival is too close for us to prepare these in time.
+          </p>
+        )}
+        <ul className="space-y-1">
+          {bookableExtras.map((extra) => {
+            const checked = selectedExtras.includes(extra.id);
+            return (
+              <li key={extra.id}>
+                <label
+                  className={cn(
+                    'flex cursor-pointer items-start gap-3 rounded-xl px-2 py-2 transition hover:bg-cream',
+                    checked && 'bg-gold-pale/60 hover:bg-gold-pale/60',
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleExtra(extra.id)}
+                    className="mt-1 size-4 shrink-0 accent-gold-dark"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-baseline justify-between gap-2">
+                      <span className="text-sm font-semibold">{extra.name}</span>
+                      <span className="shrink-0 text-sm text-gold-dark">
+                        {format(extraPriceRon(extra, rooms))}
+                      </span>
+                    </span>
+                    <span className="mt-0.5 block text-[11px] text-ink-60">{extra.tagline}</span>
+                    <span className="font-mono-label mt-1 inline-block rounded-full bg-gray-light px-2 py-0.5 text-ink-60">
+                      {extra.leadLabel}
+                    </span>
+                  </span>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
       </div>
-      )}
 
       {/* ── Add another room (v1: hidden — MULTI_ROOM_ENABLED) ── */}
       {MULTI_ROOM_ENABLED && validSiblings.length > 0 && (
@@ -862,12 +894,16 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                     />
                   );
                 })}
-              {pricing.breakfastTotal > 0 && (
+              {/* Extra services — one line each, mirroring the cleaning-fee
+                  row's RON-real + ≈ equivalent treatment. */}
+              {extraLines.map((l) => (
                 <Row
-                  label={`Extra services · Breakfast (${pricing.occupants}p × ${nights}n)`}
-                  value={format(pricing.breakfastTotal)}
+                  key={l.id}
+                  label={`Extra · ${l.name}`}
+                  value={`${l.ron.toLocaleString('en-US')} RON`}
+                  approxValue={approx(l.ron)}
                 />
-              )}
+              ))}
               {/* City tax: real RON (the charged pass-through) + ≈ equivalent. */}
               <Row
                 label="City tax"

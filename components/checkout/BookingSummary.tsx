@@ -7,6 +7,7 @@ import type { QuoteState } from '@/components/checkout/CheckoutApp';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 import { Sentences } from '@/components/shared/Sentences';
+import { getExtra } from '@/lib/extras';
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -115,9 +116,22 @@ export function BookingSummary({ hydrated, quoteState }: BookingSummaryProps) {
             <span className="inline-flex w-fit items-center rounded-full bg-gold-pale px-2.5 py-1 text-[11px] font-semibold text-gold-dark">
               Direct rate
             </span>
-            {quote.extrasRon > 0 && (
-              <Row label="Extra services · Breakfast" value={format(quote.extrasRon)} />
-            )}
+            {/* Extra services — one line each, in the order the guest picked
+                them. "Subject to availability" items carry the 48h note. */}
+            {quote.extras.map((e) => (
+              <div key={e.id}>
+                <Row
+                  label={`Extra · ${e.name}`}
+                  value={`${e.ron.toLocaleString('en-US')} RON`}
+                  approxValue={approx(e.ron)}
+                />
+                {getExtra(e.id)?.needsConfirmation && (
+                  <p className="mt-0.5 text-[11px] text-ink-60">
+                    Subject to availability — confirmed within 48h.
+                  </p>
+                )}
+              </div>
+            ))}
             <div className="border-t border-gray-line pt-3" />
 
             {/* City tax: real RON (the charged pass-through) + ≈ equivalent — never

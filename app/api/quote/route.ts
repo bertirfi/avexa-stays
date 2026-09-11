@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     adults: body.adults,
     children: body.children,
     infants: body.infants,
-    breakfast: body.breakfast,
+    extras: body.extras,
     // Public route → Supabase cache, never live Hostaway (hostaway rule). The
     // charge itself is re-quoted LIVE in /api/checkout; Stripe shows that amount.
     source: 'cache',
@@ -52,6 +52,7 @@ export async function POST(req: Request) {
   return NextResponse.json({
     accommodationRon: quote.accommodationRon,
     nightly: quote.nightly,
+    extras: quote.extras,
     extrasRon: quote.extrasRon,
     cleaningRon: quote.cleaningRon,
     cityTaxRon: quote.cityTaxRon,

@@ -1,8 +1,18 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { CancelTripButton } from '@/components/trips/CancelTripButton';
+import { TripExtras, type AddableExtra } from '@/components/trips/TripExtras';
 import { Sentences } from '@/components/shared/Sentences';
 import { CANCELLATION_POLICY } from '@/lib/policies';
+
+/** One extra already on the booking (cleaning excluded), for the read-only list. */
+export interface BookedExtraLine {
+  id: string;
+  name: string;
+  ron: number;
+  /** Early/late/Time & Cravings — the team confirms these within 48h. */
+  needsConfirmation: boolean;
+}
 
 /**
  * View model for a single trip card. Built server-side in
@@ -38,16 +48,23 @@ export interface Trip {
   halfDeadlineLabel: string | null;
   /** Confirmed upcoming stay inside the final 24h — no self-cancel, contact us. */
   nonRefundableNow: boolean;
+  /** Extra services already paid for on this booking (cleaning fee excluded). */
+  extras: BookedExtraLine[];
+  /** Still-buyable services — empty for past/cancelled stays and past lead times. */
+  addableExtras: AddableExtra[];
 }
 
 export function TripsList({
   name,
   upcoming,
   past,
+  extrasAdded = false,
 }: {
   name: string;
   upcoming: Trip[];
   past: Trip[];
+  /** true after a successful extras checkout (?extras=added). */
+  extrasAdded?: boolean;
 }) {
   return (
     <section className="bg-cream pt-28 pb-20 md:pt-36">
@@ -58,6 +75,20 @@ export function TripsList({
         >
           {name}&apos;s stays
         </h1>
+
+        {extrasAdded && (
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-3 rounded-card border border-gold bg-gold-pale px-5 py-4">
+            <p className="text-sm font-semibold text-ink">
+              <Sentences text="Added to your stay. Check your email for the confirmation." />
+            </p>
+            <Link
+              href="/my-trips"
+              className="text-xs font-semibold text-ink-60 underline underline-offset-4 transition hover:text-ink"
+            >
+              Dismiss
+            </Link>
+          </div>
+        )}
 
         {/* Upcoming — rendered only when there are upcoming stays */}
         {upcoming.length > 0 && (
@@ -129,6 +160,29 @@ function TripCard({ trip }: { trip: Trip }) {
             </div>
           )}
         </dl>
+
+        {trip.extras.length > 0 && (
+          <div className="mt-5 border-t border-gray-line pt-5">
+            <p className="font-mono-label text-gold-dark">— Extras</p>
+            <ul className="mt-2.5 grid gap-1.5 text-sm">
+              {trip.extras.map((e) => (
+                <li key={e.id} className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="text-ink">{e.name}</span>
+                  <span className="text-ink-60">· {e.ron.toLocaleString('en-US')} RON</span>
+                  {e.needsConfirmation && (
+                    <span className="rounded-full bg-gold-pale px-2 py-0.5 text-[11px] font-semibold text-gold-dark">
+                      We confirm within 48h
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {trip.addableExtras.length > 0 && (
+          <TripExtras bookingId={trip.id} extras={trip.addableExtras} />
+        )}
 
         <div className="mt-6 flex flex-wrap items-center gap-4">
           <Link
