@@ -80,7 +80,7 @@ function confirmationHtml(guestFirstName: string, checkinLink: string): string {
       ${p('To activate your digital access, please complete your quick 2-minute online check-in below this message.<br>👇👇👇')}
       ${p('📌 IMPORTANT: Your self-check-in instructions will be found on this exact check-in link on your arrival day at 12:00 PM, BUT ONLY AFTER the online form is 100% completed.')}
       ${p('If you need anything, we are always here to help you! ☀️')}
-      ${p('Avexa Stays | Anca &amp; Vlad ❤️')}
+      ${p('Avexa Stays | Anca Smighelschi &amp; Vlad Smighelschi ❤️')}
       ${p(`<a href="${link}" style="display:inline-block;background:#191919;color:#F7EDDB;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:bold">Complete Your Online Check-In</a>`)}
       <p style="margin:0;font-size:12px;color:#666">If the button does not open, copy this link: ${link}</p>
       <p style="margin:18px 0 0;font-size:12px;color:#666">© ${new Date().getFullYear()} — Prime Gold Living SRL</p>
