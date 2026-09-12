@@ -72,10 +72,10 @@ export function BookingSummary({ hydrated, quoteState }: BookingSummaryProps) {
         {quote ? (
           <>
             {/* Accommodation — ONE total-price line (never a margin split),
-                expandable per night (M1.1.6). The per-stay cleaning fee is
-                INCLUDED in this line (client decision 04.09) and itemised only
-                inside the breakdown (client 11.09: guests should see what they
-                pay), so the lines below sum exactly to the figure shown. */}
+                expandable per night (M1.1.6): the nightly lines sum exactly to
+                the figure shown. The per-stay cleaning fee is its OWN visible
+                line right below (client 12.09: guests must see the cleaning
+                price in the breakdown). */}
             <details className="group">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
                 <span className="text-ink-80">
@@ -84,9 +84,7 @@ export function BookingSummary({ hydrated, quoteState }: BookingSummaryProps) {
                     per night
                   </span>
                 </span>
-                <span className="font-semibold text-ink">
-                  {format(quote.accommodationRon + quote.cleaningRon)}
-                </span>
+                <span className="font-semibold text-ink">{format(quote.accommodationRon)}</span>
               </summary>
               <ul className="mt-2 space-y-1 border-l border-gray-line pl-3 text-xs text-ink-60">
                 {quote.nightly.map((n) => (
@@ -98,19 +96,15 @@ export function BookingSummary({ hydrated, quoteState }: BookingSummaryProps) {
                     </span>
                   </li>
                 ))}
-                {quote.cleaningRon > 0 && (
-                  <li className="flex items-center justify-between gap-3 border-t border-gray-line pt-1">
-                    <span>Cleaning fee</span>
-                    <span>
-                      {quote.cleaningRon.toLocaleString('en-US')} RON
-                      {approx(quote.cleaningRon) && (
-                        <span className="ml-1">({approx(quote.cleaningRon)})</span>
-                      )}
-                    </span>
-                  </li>
-                )}
               </ul>
             </details>
+            {quote.cleaningRon > 0 && (
+              <Row
+                label="Cleaning fee"
+                value={`${quote.cleaningRon.toLocaleString('en-US')} RON`}
+                approxValue={approx(quote.cleaningRon)}
+              />
+            )}
             {/* Factual label — every rate on the site is a member rate (login is
                 mandatory); no discount delta exists in the breakdown to claim. */}
             <span className="inline-flex w-fit items-center rounded-full bg-gold-pale px-2.5 py-1 text-[11px] font-semibold text-gold-dark">

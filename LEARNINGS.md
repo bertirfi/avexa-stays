@@ -944,6 +944,10 @@ openssl rand -base64 32
 - **Add-on după plată (11.09):** o a doua sesiune Checkout pe aceeași rezervare = alt PaymentIntent. Refund-ul la anulare NU se calculează pe `total_ron` crescut, ci pe sejur (`total_ron − add-ons`), iar add-on-urile se returnează pe propriul PI. Regula generală: orice sumă care crește după confirmare trebuie să-și țină minte charge-ul (`paymentIntentId` în jsonb).
 - Webhook-ul pentru add-on: verifică `status === 'confirmed'` ÎNAINTE de a aplica (altfel refund automat), dedupe pe `sessionId` (redelivery) ȘI pe `id` (dublu click înainte să ajungă webhook-ul), update optimist `.eq('total_ron', vechi)` + 500 ca Stripe să reîncerce.
 
+## BNR / FX
+
+- **11.09.2026:** `www.bnr.ro/nbrfxrates.xml` nu mai există (302 → homepage) — cron-ul `/api/cron/fx` eșua silențios de la migrarea site-ului BNR. Feed-ul nou: `https://curs.bnr.ro/nbrfxrates.xml` (același XML `<Cube date><Rate currency=…>`). Display = BNR ziua anterioară ÷ 1.01 (echivalentul străin cu 1% mai mare, AVX-08), înghețat pe rezervare în `display_fx_rate`. Când un cron „nu doare” dacă pică, verifică-l manual din când în când (`GET /api/cron/fx` cu bearer).
+
 ## Performance Insights
 
 (Empty — populate during Phase 4-style audit after Phase 5.)

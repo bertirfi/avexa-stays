@@ -21,7 +21,7 @@ import { StayBookingSidebar } from '@/components/stay/StayBookingSidebar';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getSiblingIds } from '@/lib/roomGroups';
 import { getAvailabilityMap } from '@/lib/data/availability';
-import { getFxRateEur } from '@/lib/pricing';
+import { getLiveDisplayRates } from '@/lib/fx-rates';
 import type { Property } from '@/types';
 
 // ISR — refresh live price/availability from Supabase every 15 minutes.
@@ -173,7 +173,7 @@ export default async function StayPage(props: { params: Promise<Params> }) {
 
   // rates[].perNight is RON; this server boundary renders EUR (site default
   // display currency) directly — both in JSON-LD and the "More suites" footer.
-  const fxRateEur = getFxRateEur();
+  const fxRateEur = (await getLiveDisplayRates()).EUR;
 
   return (
     <div className="bg-cream pt-24 md:pt-32 pb-[150px] md:pb-0">

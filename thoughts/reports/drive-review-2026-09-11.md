@@ -93,7 +93,7 @@ Sursa: AVX-19 blocuri A–I + Spec v1 M1–M12 + STATUS Berty 07.09, verificat �
 ### Rămâne — după decizii / alt sprint
 - Creditare AVX la 72h vs 24h (decizie Vlad).
 - Plata cu AVX Coins la checkout și pe upsells (după contabilă, CT2/TVA; Spec M2.4.4).
-- Block I monedă: D11 cere RON implicit (site-ul are EUR implicit) și cursul BNR ziua anterioară +1% înghețat la rezervare și logat per tranzacție. Azi: EUR implicit, curs din env (AVEXA_FX_RATE_*) fără +1%. E schimbare de produs — o fac după confirmarea ta, e o zi de lucru.
+- Block I monedă: ✅ 11.09 cursul e LIVE — BNR ziua anterioară +1% (EUR și USD), citit zilnic din feed-ul nou `curs.bnr.ro` (cel vechi murise, cron-ul eșua), înghețat pe rezervare la plată (`display_fx_rate`), fallback pe cursul fix dacă tabelul e gol. Rămas: moneda implicită RON (D11) — site-ul pornește tot pe EUR până decizi.
 - Block E: log de consimțământ server-side (azi consimțământul e doar în cookie) — mic, îl pot adăuga.
 - Block A limba RO: după avizul avocatului (D4).
 - Versiuni RO/EN cu switch de limbă (D4) — nu există i18n pe site; e proiect separat.

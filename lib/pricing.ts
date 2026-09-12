@@ -18,8 +18,9 @@ import {
  *   Always its own "City Tax" line, always charged in real RON.
  *
  * Charging: ALWAYS in RON — Stripe charges RON and the Hostaway reservation
- * records the same RON total. EUR/USD are DISPLAY-ONLY conversions:
- *   display = RON ÷ AVEXA_FX_RATE_EUR (5.25) | AVEXA_FX_RATE_USD (4.65)
+ * records the same RON total. EUR/USD are DISPLAY-ONLY conversions at the BNR
+ * previous-day rate +1% (lib/fx-rates.ts, D11); AVEXA_FX_RATE_EUR/USD below
+ * are only the FALLBACK when the exchange_rates table is empty/unreachable.
  * Default display currency: EUR. VAT is included in all prices — never added.
  *
  * Every knob is an env var — configured in ONE place, never per-listing.
@@ -61,7 +62,7 @@ export function getFxRateUsd(): number {
   return positive(process.env.AVEXA_FX_RATE_USD, DEFAULT_FX_RATE_USD);
 }
 
-/** Display-rates bundle for <CurrencyProvider> (server layout → client). */
+/** Fixed fallback bundle — prefer getLiveDisplayRates() from lib/fx-rates. */
 export function getDisplayRates(): DisplayRates {
   return { EUR: getFxRateEur(), USD: getFxRateUsd() };
 }

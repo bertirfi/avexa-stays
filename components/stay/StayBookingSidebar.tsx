@@ -844,10 +844,10 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
             <ul className="mt-3 space-y-1.5 text-sm">
               {/* Accommodation — ONE total-price line, never the 18%/3% split —
                   expandable per night (M1.1.6). The per-stay cleaning fee is
-                  INCLUDED in this line (client 04.09) and itemised only inside
-                  the breakdown (client 11.09) — same as the checkout
-                  BookingSummary; checkout re-quotes live and flags drift.
-                  RON-real per line + ≈ display equivalent. */}
+                  its OWN visible line right below (client 12.09: guests must
+                  see the cleaning price in Price details) — same as the
+                  checkout BookingSummary; checkout re-quotes live and flags
+                  drift. RON-real per line + ≈ display equivalent. */}
               <li>
                 <details className="group">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
@@ -857,7 +857,7 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                         per night
                       </span>
                     </span>
-                    <span>{format(pricing.staySubtotal + pricing.cleaning)}</span>
+                    <span>{format(pricing.staySubtotal)}</span>
                   </summary>
                   <ul className="mt-2 space-y-1 border-l border-gray-line pl-3 text-xs text-ink-60">
                     {stayNights.map((n) => (
@@ -869,20 +869,16 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                         </span>
                       </li>
                     ))}
-                    {pricing.cleaning > 0 && (
-                      <li className="flex items-center justify-between gap-3 border-t border-gray-line pt-1">
-                        <span>Cleaning fee</span>
-                        <span>
-                          {pricing.cleaning.toLocaleString('en-US')} RON
-                          {approx(pricing.cleaning) && (
-                            <span className="ml-1">({approx(pricing.cleaning)})</span>
-                          )}
-                        </span>
-                      </li>
-                    )}
                   </ul>
                 </details>
               </li>
+              {pricing.cleaning > 0 && (
+                <Row
+                  label="Cleaning fee"
+                  value={`${pricing.cleaning.toLocaleString('en-US')} RON`}
+                  approxValue={approx(pricing.cleaning)}
+                />
+              )}
               {MULTI_ROOM_ENABLED &&
                 addedRooms.map((sib) => {
                   const pn = siblingPerNight(sib)!;
