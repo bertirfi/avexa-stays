@@ -4,7 +4,7 @@ import { LocationsView } from '@/components/locations/LocationsView';
 import { SearchParamsSync } from '@/components/search/SearchParamsSync';
 import { getAllPropertiesData } from '@/lib/data/properties';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { getFxRateEur } from '@/lib/pricing';
+import { getLiveDisplayRates } from '@/lib/fx-rates';
 import type { LocationsProperty, Property } from '@/types';
 
 const SITE_URL = 'https://avexastays.com';
@@ -104,7 +104,7 @@ function buildBreadcrumbSchema() {
 
 export default async function LocationsPage() {
   const properties = await getAllPropertiesData();
-  const fxRateEur = getFxRateEur();
+  const fxRateEur = (await getLiveDisplayRates()).EUR;
   return (
     <div className="pt-0 sm:pt-20 md:pt-[152px]">
       <JsonLd data={buildItemListSchema(properties, fxRateEur)} />

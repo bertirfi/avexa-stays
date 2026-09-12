@@ -6,7 +6,7 @@ import { ConsentBanner } from '@/components/consent/ConsentBanner';
 import { ChromeScrollProvider } from '@/components/chrome/ChromeScrollProvider';
 import { CurrencyProvider } from '@/components/currency/CurrencyProvider';
 import { SearchProvider } from '@/components/search/SearchContext';
-import { getDisplayRates } from '@/lib/pricing';
+import { getLiveDisplayRates } from '@/lib/fx-rates';
 import './globals.css';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { organizationSchema, websiteSchema } from '@/lib/seo/brand-schema';
@@ -39,7 +39,8 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const rates = await getLiveDisplayRates();
   return (
     <html
       lang="en"
@@ -52,8 +53,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           {/* GDPR consent state (transparency + future analytics gating); banner mounts below. */}
           <ConsentProvider>
-            {/* Display rates come from server env — RON stays the money of record. */}
-            <CurrencyProvider rates={getDisplayRates()}>
+            {/* Display rates = BNR previous day +1% (D11); RON stays the money of record. */}
+            <CurrencyProvider rates={rates}>
               <ChromeScrollProvider>
                 {/* One shared search state for the Nav header pill + all pages. */}
                 <SearchProvider>{children}</SearchProvider>

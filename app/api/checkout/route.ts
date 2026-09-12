@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { quoteBooking } from '@/lib/booking/quote';
 import { CheckoutBodySchema, GuestContactSchema } from '@/lib/booking/schema';
 import { rateLimited } from '@/lib/rate-limit';
-import { getDisplayRates } from '@/lib/pricing';
+import { getLiveDisplayRates } from '@/lib/fx-rates';
 
 /**
  * Creates a Stripe Checkout Session for a booking.
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
   }
 
   const admin = getSupabaseAdmin();
-  const rates = getDisplayRates();
+  const rates = await getLiveDisplayRates();
   const displayFxRate =
     body.displayCurrency === 'RON' ? null : rates[body.displayCurrency];
 

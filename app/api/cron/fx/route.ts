@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchBnrEurRate } from '@/lib/fx';
+import { fetchBnrRates } from '@/lib/fx';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { timingSafeEqualStrings } from '@/lib/timing-safe';
 
@@ -19,13 +19,16 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { date, rate } = await fetchBnrEurRate();
+    const { date, rates } = await fetchBnrRates();
     const { error } = await getSupabaseAdmin()
       .from('exchange_rates')
-      .upsert({ date, currency: 'EUR', rate });
+      .upsert([
+        { date, currency: 'EUR', rate: rates.EUR },
+        { date, currency: 'USD', rate: rates.USD },
+      ]);
     if (error) throw new Error(error.message);
 
-    return NextResponse.json({ ok: true, date, rate });
+    return NextResponse.json({ ok: true, date, rates });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'unknown error';
     console.error('fx cron failed:', message);
