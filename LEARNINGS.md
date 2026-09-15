@@ -948,6 +948,22 @@ openssl rand -base64 32
 
 - **11.09.2026:** `www.bnr.ro/nbrfxrates.xml` nu mai există (302 → homepage) — cron-ul `/api/cron/fx` eșua silențios de la migrarea site-ului BNR. Feed-ul nou: `https://curs.bnr.ro/nbrfxrates.xml` (același XML `<Cube date><Rate currency=…>`). Display = BNR ziua anterioară ÷ 1.01 (echivalentul străin cu 1% mai mare, AVX-08), înghețat pe rezervare în `display_fx_rate`. Când un cron „nu doare” dacă pică, verifică-l manual din când în când (`GET /api/cron/fx` cu bearer).
 
+## Analytics (PostHog)
+
+- **14.09.2026 — integrare cu un singur comutator:** `NEXT_PUBLIC_POSTHOG_KEY`. Fără cheie nu există nimic (nici categorie de consimțământ, nici SDK). Cheia de producție așteaptă AVX-07 (Cookie Policy v3.2 §6 zice „no analytics cookies”; textul legal nu se atinge din cod).
+- `posthog-js` are ~98 KB gz → doar `import('posthog-js')` după consimțământ, niciodată import static (ar intra în bundle-ul tuturor vizitatorilor și în LCP-ul mobil).
+- Efectele copiilor rulează ÎNAINTEA efectului din `ConsentProvider` → un `track()` din `useEffect` la montare vede consimțământul „necitit”. De aceea `lib/analytics.ts` pune apelurile în coadă până se știe răspunsul și le aruncă la refuz.
+- `opt_out_capturing()` NU șterge cookie-ul `ph_*` decât cu `opt_out_persistence_by_default: true`, iar marker-ul de opt-out al PostHog rămâne în localStorage → la un consimțământ nou trebuie `opt_in_capturing()` după `init`, altfel vizitatorul rămâne mut pentru totdeauna.
+- Erorile prinse de un error boundary React nu ajung la `window.onerror` → autocapture-ul de excepții nu le vede; `app/error.tsx` le trimite explicit cu `captureError`.
+- **NU face proxy cu `rewrites()` din next.config spre un serviciu terț:** rewrite-ul copiază TOATE header-ele cererii, inclusiv `Cookie` → sesiunea Supabase (access + refresh token, email, nume) pleca la PostHog cu fiecare eveniment al unui membru logat. Proxy-ul `/lumen` stă în `middleware.ts` cu `headers.delete('cookie')` + `NextResponse.rewrite(url, { request: { headers } })` — dovedit cu un echo server local (cookie/authorization absente, body + query intacte).
+- Proxy-ul cere `skipTrailingSlashRedirect` (endpoint-urile PostHog se termină în „/”, iar redirect-ul Next rulează înaintea middleware-ului) → redirect-ul SEO `/x/ → /x` e reimplementat în middleware cu `new URL(request.url)`: `nextUrl.clone()` ține minte slash-ul final și redirecționa pagina spre ea însăși.
+- `/book/confirmation?session_id=cs_…` e un link-bearer pentru rezervările guest → `custom_personal_data_properties: ['session_id', 'code']` îl maschează în URL-uri și replay, DAR PostHog nu maschează `$referrer` → pagina are `referrer: 'strict-origin'` în metadata.
+- PostHog citește marker-ul de opt-out din storage la fiecare capture: dacă ștergi `__ph_opt_in_out_*` cât SDK-ul e încărcat, colectarea repornește singură. Curățenia manuală (consimțământ expirat/refuzat) rulează doar fără client.
+- `session_recording.maskTextSelector` setat din cod BATE setările de mascare din proiectul PostHog → nu-l seta; clasa implicită `ph-mask` maschează textul elementului și al copiilor. Click-urile autocapture/dead clicks trimit textul elementului → `mask_all_text: true`.
+- Dedupe `booking_confirmed` fără stocare nouă: se trimite doar dacă draftul `avexa_booking` e al ACESTEI rezervări (property + check-in + check-out; checkout-ul nu le schimbă) — altfel Back dintr-un draft nou număra rezervarea de două ori și îi ștergea draftul.
+- Browserele headless (gstack browse) sunt filtrate ca bot de PostHog (`navigator.userAgentData` conține HeadlessChrome) — evenimentele nu pleacă; testează fluxul real în panoul Browser din aplicație.
+- MCP-ul PostHog e conectat pe contul office@avexastays.com; setările proiectului (replay, heatmaps, excepții, web vitals, `anonymize_ips`) fuseseră deja pornite din onboarding.
+
 ## Performance Insights
 
 (Empty — populate during Phase 4-style audit after Phase 5.)

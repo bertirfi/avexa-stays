@@ -25,6 +25,10 @@ const config: NextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
+  // The PostHog proxy (/lumen, middleware.ts) serves endpoints ending in "/"
+  // (/e/, /flags/) — Next's slash-stripping redirect runs before middleware and
+  // would bounce every event. middleware.ts keeps that redirect for real pages.
+  skipTrailingSlashRedirect: true,
   async redirects() {
     // Property pages moved from /stays/* to /locations/* (hub → detail).
     // 301 keeps any old/bookmarked link alive and consolidates SEO signals.

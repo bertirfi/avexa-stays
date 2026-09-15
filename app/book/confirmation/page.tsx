@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   title: 'Booking confirmation',
   description: 'Your AVEXA booking status.',
   robots: { index: false, follow: false },
+  // ?session_id=cs_… is the bearer for a guest booking: pages opened from here
+  // (new tab, analytics $referrer) only ever see our origin, never this URL.
+  referrer: 'strict-origin',
 };
 
 // Always reflect the live booking status (webhook may flip it any second).
@@ -78,7 +81,28 @@ export default async function BookingConfirmationPage({
           </>
         ) : booking.status === 'confirmed' ? (
           <>
-            <BookingConfirmedEffects />
+            <BookingConfirmedEffects
+              stay={{
+                propertyId: booking.property_id,
+                checkIn: booking.check_in,
+                checkOut: booking.check_out,
+              }}
+              event={{
+                revenue: Number(booking.total_ron),
+                currency: 'RON',
+                property: property?.slug ?? booking.property_id,
+                check_in: booking.check_in,
+                // 'YYYY-MM-DD' parses as UTC midnight on both sides — whole nights.
+                nights: Math.round(
+                  (Date.parse(booking.check_out) - Date.parse(booking.check_in)) / 86_400_000,
+                ),
+                guests: booking.guests,
+                rate_plan: booking.rate_plan,
+                guest_checkout: guest,
+                extras_count: Array.isArray(booking.extras) ? booking.extras.length : 0,
+                display_currency: booking.display_currency,
+              }}
+            />
             <p className="font-mono-label text-[10px] uppercase tracking-widest text-gold-dark">
               Booking confirmed
             </p>

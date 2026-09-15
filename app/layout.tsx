@@ -3,6 +3,7 @@ import { jakarta, manrope, dmMono } from '@/lib/fonts';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { ConsentProvider } from '@/components/consent/ConsentProvider';
 import { ConsentBanner } from '@/components/consent/ConsentBanner';
+import { AnalyticsGate } from '@/components/consent/AnalyticsGate';
 import { ChromeScrollProvider } from '@/components/chrome/ChromeScrollProvider';
 import { CurrencyProvider } from '@/components/currency/CurrencyProvider';
 import { SearchProvider } from '@/components/search/SearchContext';
@@ -51,7 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <JsonLd data={organizationSchema} />
         <JsonLd data={websiteSchema} />
         <AuthProvider>
-          {/* GDPR consent state (transparency + future analytics gating); banner mounts below. */}
+          {/* GDPR consent state; banner + the PostHog gate (loads only on Analytics opt-in) mount below. */}
           <ConsentProvider>
             {/* Display rates = BNR previous day +1% (D11); RON stays the money of record. */}
             <CurrencyProvider rates={rates}>
@@ -61,6 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </ChromeScrollProvider>
             </CurrencyProvider>
             <ConsentBanner />
+            <AnalyticsGate />
           </ConsentProvider>
         </AuthProvider>
       </body>

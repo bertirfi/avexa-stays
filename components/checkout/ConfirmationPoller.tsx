@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { clearBooking } from '@/lib/booking';
+import { track, type EventProperties } from '@/lib/analytics';
+import { clearBooking, readBooking } from '@/lib/booking';
 import { CONTACT_EMAIL, PHONE_TEL, WHATSAPP_URL } from '@/lib/contact';
 
 // ~20 refreshes × 3s ≈ 1 min before we stop pulsing and show a calm fallback.
@@ -101,14 +102,30 @@ export function ConfirmationPoller({ guest = false }: { guest?: boolean }) {
 }
 
 /**
- * One-shot client effect when a booking lands confirmed: clear the localStorage
- * draft so /checkout stops offering a stale booking. The trip itself now shows
- * up on /my-trips straight from the DB — no client-side has-trips flag needed.
+ * One-shot client effect when a booking lands confirmed: record the funnel close
+ * in PostHog, then clear the localStorage draft so /checkout stops offering a
+ * stale booking. The trip itself now shows up on /my-trips straight from the DB
+ * — no client-side has-trips flag needed.
  */
-export function BookingConfirmedEffects() {
+export function BookingConfirmedEffects({
+  stay,
+  event,
+}: {
+  stay: { propertyId: string; checkIn: string; checkOut: string };
+  event: EventProperties;
+}) {
+  const { propertyId, checkIn, checkOut } = stay;
   useEffect(() => {
+    // This stay's draft only exists on the first landing from Stripe (checkout
+    // never changes its property or dates). A reload, Back from a newer draft or
+    // a later visit must neither count the booking twice nor wipe that draft.
+    const draft = readBooking();
+    if (draft?.propertyId !== propertyId || draft.checkIn !== checkIn || draft.checkOut !== checkOut) {
+      return;
+    }
+    track('booking_confirmed', event);
     clearBooking();
-  }, []);
+  }, [event, propertyId, checkIn, checkOut]);
 
   return null;
 }

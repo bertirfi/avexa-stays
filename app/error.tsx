@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { captureError } from '@/lib/analytics';
 
 export default function Error({
   error,
@@ -11,8 +12,9 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Standard error-boundary logging; routes to real monitoring once analytics lands.
-    console.error(error);
+    // React swallows errors caught by a boundary, so PostHog's window.onerror
+    // autocapture never sees them — report explicitly (no-op without consent).
+    captureError(error);
   }, [error]);
 
   return (

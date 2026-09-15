@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { cancelBooking } from '@/app/(member)/my-trips/actions';
+import { track } from '@/lib/analytics';
 import { Sentences } from '@/components/shared/Sentences';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 
@@ -74,6 +75,7 @@ export function CancelTripButton({
           startTransition(async () => {
             const result = await cancelBooking(bookingId);
             if (result.ok) {
+              track('booking_cancelled', { refund_percent: refundPercent });
               setDone(true);
             } else {
               setError(ERROR_COPY[result.error ?? 'not_found']);

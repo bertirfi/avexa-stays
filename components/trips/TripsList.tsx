@@ -67,7 +67,8 @@ export function TripsList({
   extrasAdded?: boolean;
 }) {
   return (
-    <section className="bg-cream pt-28 pb-20 md:pt-36">
+    // ph-mask: member name, order ids (and check-in codes once M4 lands) stay out of replays.
+    <section className="ph-mask bg-cream pt-28 pb-20 md:pt-36">
       <div className="mx-auto max-w-5xl px-6 md:px-10">
         <h1
           className="font-display"

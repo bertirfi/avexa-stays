@@ -11,7 +11,9 @@ import { useSearch, type SearchPanel } from '@/components/search/SearchContext';
 import { neighborhoods } from '@/lib/neighborhoods';
 import type { GuestCounts } from '@/types';
 import { buildSearchQuery } from '@/lib/searchParams';
+import { track } from '@/lib/analytics';
 import { cn } from '@/lib/cn';
+import { ymd } from '@/lib/date';
 
 interface SearchPillProps {
   /** Unique id so two pills can share state but each render its own dropdown. */
@@ -149,6 +151,16 @@ export function SearchPill({
     });
     closePanel();
     onSearch?.();
+    track('search_submitted', {
+      surface: 'desktop',
+      ...(location && { area: location }),
+      ...(startDate && endDate && {
+        check_in: ymd(startDate),
+        check_out: ymd(endDate),
+        nights: Math.round((endDate.getTime() - startDate.getTime()) / 86_400_000),
+      }),
+      guests: guests.adults + guests.children,
+    });
     router.push(`/locations?${query}`);
   }
 
