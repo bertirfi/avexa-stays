@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { ANALYTICS_ENABLED } from '@/lib/analytics';
 
 /**
  * GDPR/ePrivacy consent state — first-party, no third-party CMP.
@@ -19,14 +20,18 @@ import {
  *   functional localStorage keys `avexa_search` / `avexa_currency` /
  *   `avexa_booking`. Stripe runs on its own hosted checkout at stripe.com —
  *   nothing from Stripe loads on our origin.
- * - analytics: reserved, NOT in use (v1) — always stored false. When
- *   PostHog/GA4 ships, bump CONSENT_VERSION so every visitor is re-asked.
+ * - analytics: PostHog (EU Cloud) — product analytics, heatmaps, session
+ *   replay; the SDK loads only after opt-in (AnalyticsGate → lib/analytics.ts).
+ *   Exists only when NEXT_PUBLIC_POSTHOG_KEY is set; without it the category
+ *   reads "not in use" and is always stored false (v1).
  *
  * Google Maps (JS API on /locations, Embed iframe on stay pages) loads with
  * the page and is disclosed in the Cookie Policy — client decision 25.08:
  * the map always renders, it is not a toggleable category.
  */
-export const CONSENT_VERSION = 1;
+// v2 = the Analytics category went live — every v1 choice (analytics was never
+// on offer) is re-asked.
+export const CONSENT_VERSION = ANALYTICS_ENABLED ? 2 : 1;
 
 const STORAGE_KEY = 'avexa_consent';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 180; // 6 months, then we ask again
@@ -109,14 +114,11 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const decide = useCallback((choices: ConsentChoices) => {
-    // ponytail: analytics forced false while the category is not in use —
-    // store `choices.analytics` + bump CONSENT_VERSION when it ships.
-    void choices;
     const state: ConsentState = {
       version: CONSENT_VERSION,
       timestamp: new Date().toISOString(),
       necessary: true,
-      analytics: false,
+      analytics: ANALYTICS_ENABLED && choices.analytics,
     };
     setConsent(state);
     persist(state);

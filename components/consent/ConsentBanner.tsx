@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Icon } from '@/components/Icon';
+import { Sentences } from '@/components/shared/Sentences';
 import { cn } from '@/lib/cn';
+import { ANALYTICS_ENABLED } from '@/lib/analytics';
 import { useConsent } from '@/components/consent/ConsentProvider';
 
 /**
@@ -43,7 +45,9 @@ export function ConsentBanner() {
                     We only set what the site needs to work — sign-in, your booking, your preferences.
                   </span>
                   <span className="block">
-                    No advertising, no tracking, and analytics only ever with your consent.
+                    {ANALYTICS_ENABLED
+                      ? 'No advertising — analytics and session replays only with your consent.'
+                      : 'No advertising, no tracking, and analytics only ever with your consent.'}
                   </span>
                   <span className="block">
                     Full details in our{' '}
@@ -90,7 +94,8 @@ export function ConsentBanner() {
 
 /** Granular per-category settings — also reopened via the footer's "Cookie preferences". */
 function ConsentSettingsModal() {
-  const { decide, essentialOnly, closeSettings } = useConsent();
+  const { consent, decide, essentialOnly, closeSettings } = useConsent();
+  const [analytics, setAnalytics] = useState(consent?.analytics ?? false);
 
   // Escape closes + body scroll lock while open (same pattern as FiltersModal).
   useEffect(() => {
@@ -107,7 +112,7 @@ function ConsentSettingsModal() {
   }, [closeSettings]);
 
   const save = () => {
-    decide({ analytics: false });
+    decide({ analytics });
     closeSettings();
   };
 
@@ -146,13 +151,23 @@ function ConsentSettingsModal() {
             checked
             disabled
           />
-          <CategoryRow
-            title="Analytics"
-            badge="Not in use yet"
-            description="We run no analytics today. If we ever add it, we will ask you first."
-            checked={false}
-            disabled
-          />
+          {ANALYTICS_ENABLED ? (
+            <CategoryRow
+              title="Analytics"
+              badge="Optional"
+              description="PostHog, hosted in the EU, shows us how the site is used — visits, clicks, errors and session replays — so we can fix where booking gets stuck. Anything you type stays hidden. If you are signed in, it is linked to your account. Kept for up to 12 months, never used for advertising."
+              checked={analytics}
+              onChange={setAnalytics}
+            />
+          ) : (
+            <CategoryRow
+              title="Analytics"
+              badge="Not in use yet"
+              description="We run no analytics today. If we ever add it, we will ask you first."
+              checked={false}
+              disabled
+            />
+          )}
           <p className="text-xs text-ink-60">
             <span className="block">
               The maps on our pages come from Google Maps, which sets its own cookies.
@@ -214,7 +229,9 @@ function CategoryRow({
           <h3 className="text-[15px] font-semibold text-ink">{title}</h3>
           {badge && <span className="font-mono-label text-gold-dark">{badge}</span>}
         </div>
-        <p className="mt-1 text-[13px] leading-relaxed text-ink-60">{description}</p>
+        <p className="mt-1 text-[13px] leading-relaxed text-ink-60">
+          <Sentences text={description} />
+        </p>
       </div>
       <button
         type="button"

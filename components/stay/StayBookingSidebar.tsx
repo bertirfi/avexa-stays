@@ -25,6 +25,7 @@ import {
 } from '@/lib/extras-selection';
 import { buildSearchQuery, readGuestParams, readRangeParams } from '@/lib/searchParams';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { track } from '@/lib/analytics';
 import { CONTACT_EMAIL } from '@/lib/contact';
 import { cn } from '@/lib/cn';
 
@@ -414,6 +415,14 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
       window.localStorage.setItem('avexa_booking', JSON.stringify(booking));
     } catch {}
     const extrasQuery = buildSearchQuery({ extras: selectedExtras });
+    track('booking_started', {
+      property: property.slug,
+      check_in: booking.checkIn,
+      check_out: booking.checkOut,
+      nights,
+      guests: guests.adults + guests.children,
+      logged_in: loggedIn,
+    });
     router.push(extrasQuery ? `/checkout?${extrasQuery}` : '/checkout');
   }
 

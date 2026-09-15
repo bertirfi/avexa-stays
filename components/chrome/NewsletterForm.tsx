@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { track } from '@/lib/analytics';
 
 /** Form lifecycle — honest states, no fake success. */
 type Status = 'idle' | 'submitting' | 'success' | 'error' | 'not-configured';
@@ -31,6 +32,7 @@ export function NewsletterForm() {
       });
 
       if (res.ok) {
+        track('newsletter_subscribed', { source: 'footer' });
         setStatus('success');
         return;
       }

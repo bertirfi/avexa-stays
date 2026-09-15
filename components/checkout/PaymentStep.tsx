@@ -7,6 +7,7 @@ import type { HydratedBooking } from '@/lib/booking';
 import type { ContactForm } from '@/components/checkout/ContactInfoStep';
 import type { QuoteState } from '@/components/checkout/CheckoutApp';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
+import { track } from '@/lib/analytics';
 import { Sentences } from '@/components/shared/Sentences';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 
@@ -105,6 +106,16 @@ export function PaymentStep({ hydrated, form, quoteState, onBack, guest = false 
       if (res.ok) {
         const data = (await res.json()) as { url?: string };
         if (data.url) {
+          track('payment_started', {
+            property: hydrated.property.slug,
+            check_in: raw.checkIn,
+            nights: raw.nights,
+            guests: raw.guests.adults + raw.guests.children,
+            guest_checkout: guest,
+            extras_count: (raw.extras ?? []).length,
+            ...(totalRon !== null && { revenue: totalRon }),
+            currency: 'RON',
+          });
           window.location.href = data.url;
           return;
         }
@@ -180,7 +191,7 @@ export function PaymentStep({ hydrated, form, quoteState, onBack, guest = false 
           <Icon name="info" size={18} className="mt-0.5 shrink-0 text-gold-dark" />
           <div>
             <strong className="block text-ink">Remember to use your Business card</strong>
-            <span className="block text-ink-80">
+            <span className="ph-mask block text-ink-80">
               This stay will be invoiced to {form.companyName || 'your company'}.
             </span>
             <span className="block text-ink-80">Pay with the company card so your records stay aligned.</span>

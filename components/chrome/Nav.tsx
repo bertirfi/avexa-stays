@@ -188,7 +188,7 @@ export function Nav() {
                 {menuOpen && (
                   <div className="absolute right-0 top-[120%] w-60 overflow-hidden rounded-2xl border border-gray-line bg-white py-2 text-ink shadow-[var(--shadow-pill)]">
                     {loggedIn ? (
-                      <div className="border-b border-gray-line px-4 py-2.5">
+                      <div className="border-b border-gray-line px-4 py-2.5 ph-mask">
                         <p className="text-sm font-semibold text-ink">{displayName}</p>
                         {user?.email && (
                           <p className="truncate text-xs text-ink-60">{user.email}</p>

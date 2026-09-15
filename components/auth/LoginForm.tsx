@@ -8,6 +8,7 @@ import { Icon } from '@/components/Icon';
 import { Sentences } from '@/components/shared/Sentences';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { safeNext } from '@/lib/safeNext';
+import { track } from '@/lib/analytics';
 
 const perks = [
   'Earn AVEXA Coins on every stay',
@@ -78,6 +79,7 @@ export function LoginForm() {
         setError(error.message);
         return;
       }
+      track('user_logged_in', { method: 'password' });
       router.push(next);
       router.refresh();
     } finally {
@@ -102,6 +104,7 @@ export function LoginForm() {
         setError(error.message);
         return;
       }
+      track('user_signed_up', { method: 'password' });
       if (!data.session) {
         // Email confirmation is ON → show the "check your email" screen.
         setMode('verify');
@@ -307,7 +310,7 @@ export function LoginForm() {
           <div className="mt-5 flex flex-col gap-4 text-center">
             <p className="text-[14.5px] leading-[1.6] text-ink-80">
               We sent a confirmation link to{' '}
-              <span className="font-semibold text-ink">{email || 'your email'}</span>. Click it to
+              <span className="ph-mask font-semibold text-ink">{email || 'your email'}</span>. Click it to
               activate your account, then log in.
             </p>
             <button type="button" onClick={() => go('login')} className={darkBtn}>

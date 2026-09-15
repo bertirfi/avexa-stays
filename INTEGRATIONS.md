@@ -66,8 +66,7 @@ BREVO_LIST_ID=
 # ANALYTICS
 # ============================================
 NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
-NEXT_PUBLIC_POSTHOG_KEY=phc_...
-NEXT_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com
+NEXT_PUBLIC_POSTHOG_KEY=phc_...          # the only analytics switch — see ## PostHog
 
 # ============================================
 # INTERNAL SECURITY
@@ -358,31 +357,32 @@ import Script from 'next/script'
 ## PostHog
 
 ### Setup
-- **Region:** EU Cloud (eu.i.posthog.com) for GDPR
-- **Project:** AVEXA
-- **Project API Key:** for frontend
-- **Personal API Key:** for backend (rarely needed)
+- **Project:** EU Cloud, org „Avexa Stays” → „Default project” (id `242490`) — https://eu.posthog.com/project/242490
+- **Env:** `NEXT_PUBLIC_POSTHOG_KEY` = project token (`phc_…`, public, ships in the browser). It is the ONLY switch: unset → no analytics category, no SDK, no requests. Vercel Preview/Production + **redeploy** (NEXT_PUBLIC_* is inlined at build).
+- **Disclosure:** Cookie Policy AVX-07 **v3.3** (`content/legal/cookies-v3-3.tsx` §6, in force 14 Sept 2026, live at /cookies; v3.2 archived at /cookies/v3-2). Written on the site first by Robert's decision — Vlad's Drive copy of AVX-07 must be brought in line. Any change to what PostHog collects (retention, replay masking, new properties) = a new policy version, not an edit of v3.3.
+- **Project settings (already on in PostHog):** session replay (inputs masked, 30-day retention), heatmaps, dead clicks, exception autocapture, web vitals, IPs discarded (`anonymize_ips`). Console logs in replays are switched off in code (`enable_recording_console_log: false`).
 
-### Features to Enable
-- **Session recordings** (sampled at 10% to save quota)
-- **Heatmaps** (auto-collected)
-- **Feature flags** (for A/B tests)
-- **Funnels** (booking conversion)
+### How it's wired
+- `lib/analytics.ts` — `track()`, `captureError()`, `syncIdentity()`, `setAnalyticsConsent()`. `posthog-js` (~94 KB gz) is `import()`ed ONLY after Analytics consent; calls made earlier are queued, dropped on denial.
+- `components/consent/AnalyticsGate.tsx` (root layout) — consent → load / `opt_out_capturing()`; Supabase session → `identify(user.id)` / `reset()`. No email or name is ever sent.
+- Consent: `CONSENT_VERSION` is 2 when the key is set (every visitor re-asked); withdrawal from „Cookie preferences” wipes the `ph_*` cookie + localStorage and stops the recorder; a lapsed or refused consent deletes any PostHog ids left on the device. PostHog cookie lifetime = 180 days (same as the consent).
+- Proxy: `middleware.ts` proxies `/lumen/*` → `eu.i.posthog.com` / `eu-assets.i.posthog.com` with the `cookie` and `authorization` headers **deleted** (blockers skip our own origin). Never move it back to `next.config` rewrites: a rewrite forwards the visitor's cookies — the Supabase session with tokens, email and name — to PostHog. `skipTrailingSlashRedirect` is on for PostHog's `/e/` endpoints, so the middleware keeps the `/x/ → /x` 308 for pages.
+- Privacy: `?session_id=` (bearer link to a guest booking) and `?code=` are masked in every URL, replays included; /book/confirmation sends `Referrer-Policy: strict-origin` (PostHog does not mask `$referrer`); `mask_all_text` keeps element text out of click events; member-only text sits in `ph-mask` elements (Nav account menu, My Trips, Profile, sign-up confirmation email, invoice company name). Don't set `session_recording.maskTextSelector` in code — it overrides the project's masking settings.
+- Errors: `app/error.tsx` → `captureError` (React error boundaries hide errors from autocapture).
+- Testing: headless browsers (gstack browse) are dropped by PostHog's bot filter — verify events from a real browser with `?__posthog_debug=true`; localhost events are flagged as internal.
 
-### Implementation
-```typescript
-// /lib/analytics/posthog.ts
-import posthog from 'posthog-js'
+### Custom events
+| Event | Fired in | Properties |
+|---|---|---|
+| `search_submitted` | `SearchPill` / `MobileSearchOverlay` | surface, area, check_in, check_out, nights, guests |
+| `booking_started` | `StayBookingSidebar` → /checkout | property, check_in, check_out, nights, guests, logged_in |
+| `payment_started` | `PaymentStep`, before the Stripe redirect | property, check_in, nights, guests, guest_checkout, extras_count, revenue, currency |
+| `booking_confirmed` | /book/confirmation (only while that stay's draft exists — first landing from Stripe) | revenue (RON), currency, property, check_in, nights, guests, rate_plan, guest_checkout, extras_count, display_currency |
+| `booking_cancelled` | `CancelTripButton` | refund_percent |
+| `newsletter_subscribed` | footer form | source |
+| `user_signed_up` / `user_logged_in` | `LoginForm` (password) | method |
 
-if (typeof window !== 'undefined') {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-    person_profiles: 'identified_only',
-    capture_pageview: true,
-    capture_pageleave: true,
-  })
-}
-```
+`guests` = adults + children everywhere (same as `bookings.guests`). Autocaptured on top: `$pageview`/`$pageleave` (SPA history), clicks, rage/dead clicks, `$exception`, `$web_vitals`, replays, heatmaps.
 
 ---
 
@@ -479,7 +479,7 @@ Settings → Environment Variables → add each variable for:
 8. ⏳ Brevo sender domain verification
 9. ⏳ Google Search Console verification
 10. ⏳ Google Analytics 4 property
-11. ⏳ PostHog project
+11. ✅ PostHog project (EU, id 242490) — code + Cookie Policy v3.3 ready; Production key = `NEXT_PUBLIC_POSTHOG_KEY` in Vercel + redeploy
 12. ⏳ Google OAuth credentials (Cloud Console)
 13. ⏳ Generate NEXTAUTH_SECRET, SYNC_SECRET, CRON_SECRET
 14. ⏳ All env vars added to Vercel
