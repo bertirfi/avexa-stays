@@ -44,6 +44,11 @@ HOSTAWAY_API_KEY=hosta_...
 HOSTAWAY_WEBHOOK_SECRET=                  # openssl rand -hex 24 — Basic-auth password for /api/webhooks/hostaway (login "avexa"); set the same value when registering the unified webhook
 
 # ============================================
+# AVEXA AUTOMATION (CRM) — see ## AVEXA Automation (CRM)
+# ============================================
+MYTRIPS_API_SECRET=                       # same value in the guest-crm Vercel project; server-only
+
+# ============================================
 # AUTHENTICATION
 # ============================================
 NEXTAUTH_SECRET=                          # openssl rand -base64 32
@@ -351,6 +356,23 @@ import Script from 'next/script'
 - `purchase` (booking confirmed)
 - `sign_up` (newsletter or member)
 - `login` (member login)
+
+---
+
+## AVEXA Automation (CRM)
+
+### What it does on the site
+- **My Trips → „Check-in & access” card** on every confirmed, not-yet-checked-out stay: the online check-in link → „Check-in completed” + when the code will show → the door code, address and validity → hidden after check-out or for cancelled reservations. The site shows exactly what the CRM returns; it derives nothing.
+- **Check-in email** after the Stripe webhook (`lib/hostaway/confirmation.ts`): the link now comes from the CRM first; the ChargeAutomation link in the Hostaway notes is the fallback until CA is switched off.
+
+### Wiring
+- `lib/crm/trip.ts` — `GET https://crm.avexastays.com/api/public/trip?reservation=<hostaway_reservation_id>`, `Authorization: Bearer MYTRIPS_API_SECRET`, `cache: 'no-store'`, 5 s timeout, Zod-validated. Server-only (server component + webhook); never from the browser.
+- Result mapping (`app/(member)/my-trips/page.tsx` → `toCheckin`): 404 = „will appear here shortly”; `active=false` = no card; `access.available` + `code` = the code; `checkin.completed` = tick + `available_from` (Bucharest time); otherwise the link button. 401/500/timeout/bad payload = card hidden + `console.error`.
+- One call per upcoming stay, in parallel, on every My Trips render (the CRM answers no-store by design).
+- Env: `MYTRIPS_API_SECRET` — same value in both Vercel projects (guest-crm + avexa-stays), Production → redeploy both. Unset = integration off (card hidden, email uses the CA fallback).
+- Quick test: `curl -H "Authorization: Bearer $MYTRIPS_API_SECRET" "https://crm.avexastays.com/api/public/trip?reservation=<real hostaway id>"`.
+
+Spec: Google Doc „Integrare My Trips ↔ CRM (AVEXA Automation)” (15.09.2026).
 
 ---
 

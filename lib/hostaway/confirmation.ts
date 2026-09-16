@@ -1,13 +1,18 @@
 import { getReservation } from './client';
+import { getCrmCheckinUrl } from '@/lib/crm/trip';
 import { escapeHtml, sendEmail } from '@/lib/email/brevo';
 
 /**
- * Check-in message for direct website reservations: the ChargeAutomation
- * check-in template with the reservation's unique CA link. Client rule 04.09:
+ * Check-in message for direct website reservations: the check-in template
+ * with the reservation's unique online check-in link. Client rule 04.09:
  * it goes out from office@avexastays.com via Brevo — NOT through the Hostaway
  * conversation any more (that path produced a second, identical email next to
- * ChargeAutomation's own). If the CA link never appears we send NOTHING and
- * log an error for the team instead — never a message without the link.
+ * ChargeAutomation's own). If no link ever appears we send NOTHING and log an
+ * error for the team instead — never a message without the link.
+ *
+ * Link source (15.09): AVEXA Automation (CRM, lib/crm/trip.ts) first; the
+ * ChargeAutomation link in the Hostaway notes stays as the fallback until CA
+ * is switched off, so the email keeps going out during the transition.
  *
  * Best-effort end to end — a failure here must never affect the confirmed
  * booking. Runs post-response inside after().
@@ -21,10 +26,11 @@ const CA_LINK_RE =
 const DEADLINE_MS = 230_000;
 
 /**
- * ChargeAutomation writes CA_PRE_ARRIVAL_LINK into the reservation notes
- * with variable latency — observed live between ~9s and ~60s after creation.
- * Poll generously (~3.5 min, still inside Vercel's function window): without
- * the link there is nothing to send.
+ * The CRM generates its link under a minute after the Hostaway webhook;
+ * ChargeAutomation writes CA_PRE_ARRIVAL_LINK into the reservation notes with
+ * variable latency — observed live between ~9s and ~60s after creation. Poll
+ * generously (~3.5 min, still inside Vercel's function window): without a
+ * link there is nothing to send.
  */
 async function findCheckinLink(
   reservationId: number,
@@ -34,6 +40,8 @@ async function findCheckinLink(
 ): Promise<string | null> {
   for (let i = 0; i < tries; i += 1) {
     if (Date.now() >= deadline) return null; // out of budget — caller logs
+    const crmLink = await getCrmCheckinUrl(reservationId);
+    if (crmLink) return crmLink;
     try {
       const reservation = await getReservation(reservationId);
       const notes = `${reservation.guestNote ?? ''}\n${reservation.hostNote ?? ''}`;
@@ -105,7 +113,7 @@ export async function sendBookingConfirmation(input: BookingConfirmationInput): 
         return;
       }
       console.error(
-        `[hostaway] CA check-in link never appeared for reservation ${input.reservationId} — nothing sent (client rule: the CA-link message is the only guest email)`,
+        `[hostaway] no check-in link (CRM or CA) appeared for reservation ${input.reservationId} — nothing sent (client rule: the check-in-link message is the only guest email)`,
       );
       return;
     }

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { CancelTripButton } from '@/components/trips/CancelTripButton';
 import { TripExtras, type AddableExtra } from '@/components/trips/TripExtras';
+import { TripCheckinCard, type TripCheckin } from '@/components/trips/TripCheckin';
 import { Sentences } from '@/components/shared/Sentences';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 
@@ -48,6 +49,8 @@ export interface Trip {
   halfDeadlineLabel: string | null;
   /** Confirmed upcoming stay inside the final 24h — no self-cancel, contact us. */
   nonRefundableNow: boolean;
+  /** Check-in link / access code from the CRM; null = nothing to show (past, cancelled, CRM off). */
+  checkin: TripCheckin | null;
   /** Extra services already paid for on this booking (cleaning fee excluded). */
   extras: BookedExtraLine[];
   /** Still-buyable services — empty for past/cancelled stays and past lead times. */
@@ -161,6 +164,8 @@ function TripCard({ trip }: { trip: Trip }) {
             </div>
           )}
         </dl>
+
+        {trip.checkin && <TripCheckinCard checkin={trip.checkin} />}
 
         {trip.extras.length > 0 && (
           <div className="mt-5 border-t border-gray-line pt-5">
