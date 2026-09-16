@@ -978,3 +978,10 @@ openssl rand -base64 32
 ## User Feedback Patterns
 
 - **Drive (11.09):** documentele legale ale clientului se montează VERBATIM — Robert: „textul să nu fie modificat deloc”; observațiile sunt doar de structură/logică între documente. AVX-19 (Implementation Brief) e sursa unică pentru Berti și bate Specificația v1. Subagenții pot citi Drive direct prin MCP-ul Google Drive (`read_file_content` cu fileId) și salvează extractele în scratchpad — 12 agenți în paralel pentru ~400 KB de text.
+
+## Sesiunea 16.09.2026 (seara) — merge #28 live + testul cardului CRM
+- **PR #28 → main (16.09):** PostHog pe producție, Cookie Policy v3.3, cardul „Check-in & access”, deciziile lui Vlad din 12.09. Verificat pe avexastays.com: /cookies v3.3 + PostHog, /lumen răspunde, My Trips cu textele noi.
+- **Cardul CRM e ascuns intenționat când CRM-ul zice `reservation.active=false`.** Rezervarea de test #66292180 e `cancelled` în CRM (`GET /api/public/trip` → 200, `active:false`, check-in completat) — integrarea funcționează, lipsește doar o rezervare ACTIVĂ pentru demo. Secretul local: `D:\projects\guest-crm\.env.mytrips.txt` (copiat în `.env.local`).
+- **Login pe preview-ul Vercel NU merge cu Google:** URL-ul preview nu e în Supabase → Auth → URL Configuration → Redirect URLs, deci Supabase redirecționează la Site URL (avexastays.com) și sesiunea se creează pe producție. Fix: adaugă `https://avexa-stays-git-feat-nextjs-platform-berti8.vercel.app/**` în allowlist. Până atunci, testele de membru se fac pe producție după merge.
+- **Modul auto blochează:** citirea token-urilor de sesiune, PATCH/DELETE pe `bookings`, `gh pr merge`. Robert rulează scripturile din scratchpad / dă merge. Vercel MCP: `list_teams` gol → fără log-uri pentru `berti8`.
+- Rând de test rămas în `bookings` (id `f360a392…`, contul lui Robert, „CRM TEST 66292180”, fără Stripe) — de șters cu `delete-test-booking.mjs` după demo; NU apăsa „Cancel now” pe el (ar trimite anularea în Hostaway).
