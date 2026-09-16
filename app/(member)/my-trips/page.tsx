@@ -17,6 +17,8 @@ import {
 } from '@/lib/extras';
 import { computeProgress, tierMeta } from '@/lib/avx/tiers';
 import { getWallet } from '@/lib/avx/ledger';
+import { getCrmTrip, type CrmTripResult } from '@/lib/crm/trip';
+import type { TripCheckin } from '@/components/trips/TripCheckin';
 import { EmptyTripsState } from '@/components/trips/EmptyTripsState';
 import { TripsList, type Trip } from '@/components/trips/TripsList';
 import { MosaicSection } from '@/components/trips/MosaicSection';
@@ -71,6 +73,43 @@ function formatGuestsLabel(adults: number, children: number, infants: number): s
 
 const CURRENCY_SYMBOL: Record<string, string> = { EUR: '€', USD: '$', RON: 'RON' };
 
+const accessTimeFormat = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'Europe/Bucharest',
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+});
+
+function formatAccessTime(iso: string | null): string | null {
+  if (!iso) return null;
+  const ms = Date.parse(iso);
+  return Number.isFinite(ms) ? accessTimeFormat.format(new Date(ms)) : null;
+}
+
+/** CRM answer → card state. Shows exactly what the CRM sends, derives nothing. */
+function toCheckin(result: CrmTripResult): TripCheckin | null {
+  if (result.kind === 'unavailable') return null;
+  if (result.kind === 'pending') return { state: 'pending' };
+  const { trip } = result;
+  if (!trip.reservation.active) return null;
+  if (trip.access.available && trip.access.code) {
+    const from = formatAccessTime(trip.access.valid_from);
+    const to = formatAccessTime(trip.access.valid_to);
+    return {
+      state: 'code',
+      code: trip.access.code,
+      address: trip.reservation.listing.address ?? null,
+      validityLabel: from && to ? `${from} → ${to}` : null,
+    };
+  }
+  if (!trip.checkin) return { state: 'pending' };
+  if (trip.checkin.completed) {
+    return { state: 'completed', availableFromLabel: formatAccessTime(trip.access.available_from) };
+  }
+  return { state: 'link', url: trip.checkin.url };
+}
+
 /** "≈ €420" from the booking's own historical FX rate, or null when charged in RON. */
 function formatApproxLabel(
   totalRon: number,
@@ -116,6 +155,23 @@ export default async function MyTripsPage({
     hour: 'numeric',
     minute: '2-digit',
   });
+
+  // Check-in link + access code from the CRM, only for stays that still need
+  // them (confirmed, in the PMS, not checked out). One call per stay, in
+  // parallel, never cached — the code appears the moment the CRM issues it.
+  const checkins = new Map<string, TripCheckin | null>(
+    await Promise.all(
+      rows
+        .filter(
+          (b) =>
+            b.status === 'confirmed' && b.hostaway_reservation_id !== null && b.check_out >= today,
+        )
+        .map(async (b) => {
+          const result = await getCrmTrip(Number(b.hostaway_reservation_id));
+          return [b.id, toCheckin(result)] as const;
+        }),
+    ),
+  );
 
   const trips: Trip[] = rows.map((b) => {
     const property = properties.find((p) => p.id === b.property_id);
@@ -168,6 +224,7 @@ export default async function MyTripsPage({
         b.hostaway_reservation_id !== null &&
         refundPercent === 0 &&
         b.check_out >= today,
+      checkin: checkins.get(b.id) ?? null,
       extras: bookedServices.map((e) => ({
         id: e.id,
         name: e.name,
