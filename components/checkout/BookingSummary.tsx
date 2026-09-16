@@ -111,7 +111,8 @@ export function BookingSummary({ hydrated, quoteState }: BookingSummaryProps) {
               Direct rate
             </span>
             {/* Extra services — one line each, in the order the guest picked
-                them. "Subject to availability" items carry the 48h note. */}
+                them. Items the team confirms carry the 48h note (never
+                "subject to availability" at purchase — client 12.09). */}
             {quote.extras.map((e) => (
               <div key={e.id}>
                 <Row
@@ -121,7 +122,7 @@ export function BookingSummary({ hydrated, quoteState }: BookingSummaryProps) {
                 />
                 {getExtra(e.id)?.needsConfirmation && (
                   <p className="mt-0.5 text-[11px] text-ink-60">
-                    Subject to availability — confirmed within 48h.
+                    Confirmed by our team within 48h — full refund if we cannot make it happen.
                   </p>
                 )}
               </div>

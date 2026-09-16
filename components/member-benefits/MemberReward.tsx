@@ -22,13 +22,13 @@ const tiers: Tier[] = [
     name: 'BRONZE',
     progress: 'Your first stay',
     earn: '5%',
-    unlock: 'Initiation: start building your AVEXIAN Vault. Your earned AVX Coins will be ready to use on your next visit.',
+    unlock: 'Vault open from day one: every extra service — early check-in, late check-out, mid-journey cleaning, packages and more — payable with AVX at 1 AVX = 1 RON.',
   },
   {
     name: 'SILVER',
     progress: '2 stays & 5 nights',
     earn: '8%',
-    unlock: 'Vault Unlocked: every extra service — early check-in, late check-out, mid-journey cleaning, packages and more — payable with AVX at 1 AVX = 1 RON.',
+    unlock: 'Momentum: 8% back on every stay — your Vault fills faster, with everything in it still at 1 AVX = 1 RON.',
   },
   {
     name: 'GOLD',
@@ -53,9 +53,9 @@ const tiers: Tier[] = [
 
 const footnotes = [
   'Coins are earned on the net accommodation value (excluding VAT, city tax, cleaning and extra services).',
-  'Coins become active 24 hours after check-out.',
+  'Coins become active the moment you check out. A cancelled stay earns none.',
   'Coins expire 12 months after activation. We remind you 30 days before.',
-  'From SILVER, spend AVX on every extra service — 1 AVX = 1 RON.',
+  'From your first coins, spend AVX on every extra service — 1 AVX = 1 RON.',
   'PLATINUM & DIAMOND HERO exclusive: pay for the stay itself with AVX — 2 AVX = 1 RON.',
   'Consecutive back-to-back bookings merge into a single stay for tier progress.',
   'Only completed stays count. Coins are personal, non-transferable and have no cash value.',

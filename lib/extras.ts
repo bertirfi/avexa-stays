@@ -6,6 +6,7 @@
  * Money of record: RON, VAT included, per stay. Prices are "introductory,
  * reviewed quarterly" — change them HERE only. Pure module: no I/O.
  */
+import { bucharestMs } from '@/lib/date';
 
 export type ExtraId =
   | 'early_checkin'
@@ -35,8 +36,10 @@ export interface ExtraService {
   /** AVX-08 "Request" column, shown as a chip. */
   leadLabel: string;
   /**
-   * Early/Late/Time & Cravings are "subject to availability": sold as a paid
-   * request the team confirms (full refund if it cannot be honoured).
+   * Early/Late/Time & Cravings are sold as a paid request the team confirms
+   * within 48h (full refund if it cannot be honoured). The phrase "subject to
+   * availability" stays in the Terms only — never at the point of purchase
+   * (client 12.09: it creates doubt where the case is very rare anyway).
    */
   needsConfirmation: boolean;
   /** Public image path — null until the client delivers photos. */
@@ -48,7 +51,7 @@ export const EXTRAS: ExtraService[] = [
     id: 'early_checkin',
     name: 'Early check-in',
     tagline: 'Arrive from 13:00 instead of 15:00.',
-    includes: 'Arrive from 13:00 instead of 15:00, subject to availability',
+    includes: 'Arrive from 13:00 instead of 15:00',
     priceRon: 119,
     leadHours: 24,
     leadLabel: '24h ahead',
@@ -59,7 +62,7 @@ export const EXTRAS: ExtraService[] = [
     id: 'late_checkout',
     name: 'Late check-out',
     tagline: 'Keep the apartment until 13:00.',
-    includes: 'Keep the apartment until 13:00 instead of 11:00, subject to availability',
+    includes: 'Keep the apartment until 13:00 instead of 11:00',
     priceRon: 119,
     leadHours: 24,
     leadLabel: 'The evening before',
@@ -84,7 +87,8 @@ export const EXTRAS: ExtraService[] = [
     tagline: 'A full professional clean during your stay.',
     includes:
       'A full professional clean during your stay, including a fresh set of bed linen and towels',
-    priceRon: { 1: 99, 2: 129, 3: 149 },
+    // Per apartment (studio / two-room / three-room), client 12.09: 125 not 99.
+    priceRon: { 1: 125, 2: 129, 3: 149 },
     leadHours: 24,
     leadLabel: '24h ahead',
     needsConfirmation: false,
@@ -179,7 +183,7 @@ export function extraPriceRon(extra: ExtraService, rooms: Rooms): number {
   return typeof extra.priceRon === 'number' ? extra.priceRon : extra.priceRon[rooms];
 }
 
-/** "RON 99 / 129 / 149" for the size-dependent item, "RON 169" otherwise. */
+/** "125 / 129 / 149 RON" for the size-dependent item, "169 RON" otherwise. */
 export function extraPriceLabel(extra: ExtraService, rooms?: Rooms): string {
   if (typeof extra.priceRon === 'number') return `${extra.priceRon} RON`;
   if (rooms) return `${extra.priceRon[rooms]} RON`;
@@ -188,18 +192,7 @@ export function extraPriceLabel(extra: ExtraService, rooms?: Rooms): string {
 
 /** Check-in moment: 15:00 Europe/Bucharest on the check-in date, as epoch ms. */
 export function checkInMs(checkIn: string): number {
-  // Bucharest is UTC+3 (summer) / UTC+2 (winter). Use the offset in force on
-  // that date via Intl — no library needed.
-  const [y, m, d] = checkIn.split('-').map(Number);
-  const guess = Date.UTC(y, m - 1, d, 12, 0, 0);
-  const local = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Europe/Bucharest',
-    timeZoneName: 'shortOffset',
-  })
-    .formatToParts(new Date(guess))
-    .find((p) => p.type === 'timeZoneName')?.value;
-  const offsetHours = Number(local?.replace('GMT', '') || 2);
-  return Date.UTC(y, m - 1, d, 15 - offsetHours, 0, 0);
+  return bucharestMs(checkIn, 15);
 }
 
 /** Extras whose lead time has not passed for a given check-in date. */
@@ -210,11 +203,11 @@ export function extrasStillBookable(checkIn: string, now = Date.now()): ExtraSer
 
 /** Guest-facing rules, AVX-08 §6 wording — reused wherever extras are sold. */
 export const EXTRAS_COPY = {
-  confirm: 'Subject to availability. We confirm within 48 hours — full refund if we cannot make it happen.',
+  confirm: 'Early check-in, late check-out and Time & Cravings are confirmed by our team within 48 hours — full refund if we cannot make it happen.',
   cancel:
     'Free to cancel up to the lead time shown. After that, packages we have already bought in or prepared are charged in full.',
   delivery: 'Packages are prepared once, for your arrival. They are not re-stocked during the stay.',
-  avx: 'From Silver tier you can pay with AVX Coins — 1 AVX = 1 RON.',
+  avx: 'Members can pay with AVX Coins — 1 AVX = 1 RON, from the very first tier.',
 } as const;
 
 /** Shape of one entry in bookings.extras jsonb (cleaning uses id 'cleaning'). */
