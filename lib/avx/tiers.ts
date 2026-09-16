@@ -3,9 +3,10 @@
  * percentages, vault items and spend rules (Spec M2.2 / M2.5.3).
  *
  * Pure module: no I/O — unit-checkable with plain tsx and safe to import from
- * server components, the cron, and (metadata only) client bits. The Silver
- * vault IS the AVX-08 extras catalogue (decisions D16/D18/D24), so the names
- * come from lib/extras.ts instead of being retyped here.
+ * server components, the cron, and (metadata only) client bits. The Vault IS
+ * the AVX-08 extras catalogue (decisions D16/D18/D24), open from BASIC (client
+ * 12.09: "toate cele 10 de la început"), so the names come from lib/extras.ts
+ * instead of being retyped here.
  */
 import { EXTRAS } from '@/lib/extras';
 
@@ -25,8 +26,8 @@ export interface TierMeta {
   vaultItems: string[];
   /**
    * Extra spending/benefit rule unlocked at this tier, if any.
-   * Baseline (decisions D16/D18/D24): the whole AVX-08 extras catalogue is
-   * unlocked at SILVER and payable at 1 AVX = 1 RON. PLATINUM & DIAMOND
+   * Baseline (D16/D18/D24 + client 12.09): the whole AVX-08 extras catalogue
+   * is open from BASIC and payable at 1 AVX = 1 RON. PLATINUM & DIAMOND
    * exclusively can also pay for the accommodation itself at 2 AVX = 1 RON.
    * Extras are never free at any tier.
    */
@@ -41,8 +42,8 @@ export const TIERS: TierMeta[] = [
     minStays: 0,
     minNights: 0,
     percent: 0,
-    vaultItems: [],
-    spendNote: null,
+    vaultItems: EXTRAS.map((e) => e.name),
+    spendNote: 'Pay for every extra service with AVX — 1 AVX = 1 RON',
   },
   {
     id: 'BRONZE',
@@ -59,8 +60,8 @@ export const TIERS: TierMeta[] = [
     minStays: 2,
     minNights: 5,
     percent: 8,
-    vaultItems: EXTRAS.map((e) => e.name),
-    spendNote: 'Pay for every extra service with AVX — 1 AVX = 1 RON',
+    vaultItems: [],
+    spendNote: null,
   },
   {
     id: 'GOLD',

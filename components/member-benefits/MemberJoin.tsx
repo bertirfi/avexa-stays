@@ -10,7 +10,7 @@ interface Step {
 const steps: Step[] = [
   { num: '01', title: 'Enter your email', desc: "That's your login. No forms, no paperwork." },
   { num: '02', title: 'Create a password', desc: "Pick something strong. You're done." },
-  { num: '03', title: 'Book and earn AVX', desc: 'Coins land in your wallet 24 hours after every check-out.' },
+  { num: '03', title: 'Book and earn AVX', desc: 'Coins land in your wallet the moment you check out.' },
 ];
 
 export function MemberJoin() {

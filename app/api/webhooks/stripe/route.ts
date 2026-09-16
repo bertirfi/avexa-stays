@@ -217,7 +217,7 @@ export async function POST(req: Request) {
 
     const propName = property?.name ?? `AVEXA Suite ${booking.property_id}`;
     const needsConfirmationNote =
-      'Subject to availability — we confirm within 48 hours; full refund if we cannot make it happen.';
+      'We confirm within 48 hours — full refund if we cannot make it happen.';
     const itemsHtml = bought
       .map(
         (e) =>
@@ -328,7 +328,7 @@ export async function POST(req: Request) {
       })
       .eq('id', confirmedBooking.id);
 
-    // AVX visible in the wallet right away (pending until check-out + 24h).
+    // AVX visible in the wallet right away (pending until check-out).
     await earnAtConfirmation(confirmedBooking);
 
     // Optimistic cache update so our own calendar blocks immediately

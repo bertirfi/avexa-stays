@@ -8,8 +8,10 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Daily AVX sweep (Vercel Cron, 03:00 UTC — vercel.json). Two steps:
- *  (a) earn: every confirmed booking whose check_out + 24h has passed and
- *      that has no earn row yet gets one. The tier is computed at that
+ *  (a) earn: every confirmed booking that has reached its check-out date and
+ *      has no earn row yet gets one (safety net — the Stripe webhook already
+ *      inserts it at confirmation; the tranche activates at check-out time,
+ *      11:00 Bucharest, client 12.09). The tier is computed at that
  *      stay's completion moment, INCLUDING the stay (M2.1.3), from the
  *      user's full booking history via computeProgress.
  *  (b) expire: sweep tranches past their 12-month expiry.
@@ -26,8 +28,8 @@ export async function GET(request: Request) {
   try {
     const admin = getSupabaseAdmin();
     const now = new Date();
-    // check_out + 24h <= now  ⇔  check_out (date) <= UTC date of (now − 24h).
-    const cutoffYmd = new Date(now.getTime() - 86_400_000).toISOString().slice(0, 10);
+    // Every stay whose check-out date has arrived (Bucharest calendar).
+    const cutoffYmd = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Bucharest' }).format(now);
 
     // Bookings already rewarded — also our feature-dark probe (42P01).
     const earnedRes = await admin

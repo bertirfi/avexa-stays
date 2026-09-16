@@ -9,11 +9,11 @@ export interface QA {
 export const faqs: QA[] = [
   {
     q: 'What are AVEXA Coins (AVX)?',
-    a: 'Our loyalty currency: 1 AVX = 1 RON. You earn a percentage of the net accommodation value of every completed stay — from 5% as BRONZE up to 15% as DIAMOND HERO — and spend them on every extra service from SILVER up. PLATINUM and DIAMOND HERO members exclusively can also pay for the stay itself — 2 AVX = 1 RON.',
+    a: 'Our loyalty currency: 1 AVX = 1 RON. You earn a percentage of the net accommodation value of every completed stay — from 5% as BRONZE up to 15% as DIAMOND HERO — and spend them on every extra service from your very first coins. PLATINUM and DIAMOND HERO members exclusively can also pay for the stay itself — 2 AVX = 1 RON.',
   },
   {
     q: 'When can I use my coins?',
-    a: 'Coins become active 24 hours after check-out and stay valid for 12 months. From SILVER, spend them on every extra service — 1 AVX = 1 RON. PLATINUM and DIAMOND HERO members can spend them on anything, including the stay itself at 2 AVX = 1 RON.',
+    a: 'Coins become active the moment you check out and stay valid for 12 months. A cancelled stay earns none. Spend them on every extra service — 1 AVX = 1 RON. PLATINUM and DIAMOND HERO members can spend them on anything, including the stay itself at 2 AVX = 1 RON.',
   },
   {
     q: 'How do I level up?',
@@ -25,7 +25,7 @@ export const faqs: QA[] = [
   },
   {
     q: 'Is early check-in or late check-out included?',
-    a: 'They are bookable extra services, subject to availability — pay with money or, once your tier unlocks them (SILVER and up), with your AVX Coins at 1 AVX = 1 RON.',
+    a: 'They are bookable extra services — pay with money or, from your very first coins, with your AVX at 1 AVX = 1 RON.',
   },
   {
     q: 'How much does membership cost?',

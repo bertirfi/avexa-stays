@@ -8,6 +8,7 @@
  */
 
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { bucharestMs } from '@/lib/date';
 import { computeProgress, TIER_PERCENT, type TierId } from '@/lib/avx/tiers';
 
 export interface AvxTranche {
@@ -20,7 +21,7 @@ export interface AvxTranche {
 export interface AvxWalletData {
   /** Spendable AVX right now: active, non-expired `remaining` summed. */
   balance: number;
-  /** Earned but not yet active (check_out + 24h in the future). */
+  /** Earned but not yet active (check-out still ahead). */
   pending: AvxTranche[];
   /** Active tranches with their expiry, soonest first. */
   active: AvxTranche[];
@@ -32,12 +33,12 @@ interface PgError {
 
 const MISSING_TABLE = '42P01';
 
-/** Earn-row eligibility gate: coins activate 24h after check-out (M2.4.1). */
+/**
+ * Coins activate the moment the stay ends: check-out time, 11:00 Bucharest on
+ * the check-out date (client 12.09 — supersedes M2.4.1's check-out + 24h).
+ */
 export function activationDate(checkOut: string): Date {
-  const [y, m, d] = checkOut.split('-').map(Number);
-  // ponytail: check_out is a calendar date — "check-out + 24h" is anchored at
-  // date-midnight UTC; the daily cron granularity makes finer precision moot.
-  return new Date(Date.UTC(y, m - 1, d) + 24 * 3_600_000);
+  return new Date(bucharestMs(checkOut, 11));
 }
 
 /** Expiry: 12 months after activation (M2.4.2). */
@@ -138,7 +139,7 @@ export async function earnForBooking(
 /**
  * Earn at CONFIRMATION (client decision 10.09: the coins must be visible in
  * the wallet the moment a booking is paid). The tranche is still PENDING
- * until check_out + 24h (M2.4.1) — only its visibility moves earlier. Tier =
+ * until check-out — only its visibility moves earlier. Tier =
  * the member's history as of that activation moment, including this stay
  * (M2.1.3). Guests (user_id NULL) earn nothing. Fail-soft: never fails the
  * webhook; the daily cron is the safety net for anything missed.

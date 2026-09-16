@@ -54,8 +54,8 @@ export function AvxWallet({ wallet }: { wallet: AvxWalletData | null }) {
             <span className="font-semibold text-gold">
               {pendingTotal.toLocaleString('en-US')} AVX
             </span>{' '}
-            earned — activate on {DATE_FORMAT.format(new Date(nextActivation))}, 24h after
-            check-out
+            earned — active from {DATE_FORMAT.format(new Date(nextActivation))}, the moment
+            you check out
           </p>
         )}
         {earliestExpiry && (

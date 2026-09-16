@@ -948,6 +948,13 @@ openssl rand -base64 32
 
 - **11.09.2026:** `www.bnr.ro/nbrfxrates.xml` nu mai există (302 → homepage) — cron-ul `/api/cron/fx` eșua silențios de la migrarea site-ului BNR. Feed-ul nou: `https://curs.bnr.ro/nbrfxrates.xml` (același XML `<Cube date><Rate currency=…>`). Display = BNR ziua anterioară ÷ 1.01 (echivalentul străin cu 1% mai mare, AVX-08), înghețat pe rezervare în `display_fx_rate`. Când un cron „nu doare” dacă pică, verifică-l manual din când în când (`GET /api/cron/fx` cu bearer).
 
+## Decizii Vlad 12.09 (implementate 16.09)
+
+- AVX se activează la check-out (11:00 București), nu la +24h; `activationDate` folosește `bucharestMs(checkOut, 11)` din `lib/date.ts` (același helper ca `checkInMs`). Anularea anulează tranșa (exista deja `revokeEarnForBooking`). AVX-11 v3.2 zice încă „72 hours” — text legal, îl schimbă Vlad.
+- Mid-journey Cleaning: 125/129/149 RON pe apartament (studio nu 99). AVX-08 v3.2 pe site rămâne verbatim cu 99 → de aliniat de Vlad.
+- „Subject to availability” nu mai apare nicăieri la achiziție (carduri, checkout, FAQ membri, email de confirmare) — doar în Terms. Modelul „confirmăm în 48h → refund integral” rămâne.
+- Vault-ul (cele 10 upsells cu AVX 1:1) e deschis din BASIC, nu din SILVER — `TIERS[BASIC].vaultItems`; SILVER rămâne doar cu 8%.
+
 ## Analytics (PostHog)
 
 - **14.09.2026 — integrare cu un singur comutator:** `NEXT_PUBLIC_POSTHOG_KEY`. Fără cheie nu există nimic (nici categorie de consimțământ, nici SDK). Cheia de producție așteaptă AVX-07 (Cookie Policy v3.2 §6 zice „no analytics cookies”; textul legal nu se atinge din cod).

@@ -28,15 +28,15 @@ const perks: Perk[] = [
     tag: '100% refund ≥72h · 50% between 72h–24h',
   },
   {
-    icon: '24h',
-    title: 'Coins land 24h after check-out',
-    desc: 'Your AVX activate a day after you check out and stay valid for 12 months — plenty of time to plan your next Bucharest stay.',
+    icon: '✓',
+    title: 'Coins land at check-out',
+    desc: 'Your AVX activate the moment you check out and stay valid for 12 months — plenty of time to plan your next Bucharest stay.',
     tag: 'Valid for 12 months',
   },
   {
     icon: '→',
     title: 'Spend AVX on extra services',
-    desc: 'From SILVER, put your coins toward every extra service — early check-in, late check-out, mid-journey cleaning & more, 1 AVX = 1 RON.',
+    desc: 'From your very first coins, put them toward every extra service — early check-in, late check-out, mid-journey cleaning & more, 1 AVX = 1 RON.',
     tag: 'Every earning tier',
   },
   {
