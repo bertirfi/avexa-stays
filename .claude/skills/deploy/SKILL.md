@@ -21,7 +21,7 @@ Production (`avexastays.com`) serves `coming-soon.html` from `main` until launch
 
 ## Env-var scopes (Vercel)
 - `NEXT_PUBLIC_*` are inlined at **build** — after adding/changing one, **Redeploy** so it takes effect.
-- App keys (Stripe `pk_`/`sk_`, Maps, Supabase URL/anon) live in **Vercel env**. Google OAuth Client ID/Secret and the Resend SMTP key live in **Supabase**, NOT Vercel. Test keys → Preview scope; live keys → Production at launch.
+- App keys (Stripe `pk_`/`sk_`, Maps, Supabase URL/anon) live in **Vercel env**. Google OAuth Client ID/Secret and the Brevo SMTP key (Supabase → Authentication → SMTP) live in **Supabase**, NOT Vercel. Test keys → Preview scope; live keys → Production at launch.
 
 ## Hard rules (also enforced by hooks)
 - Never edit `coming-soon.html` (hook-blocked).

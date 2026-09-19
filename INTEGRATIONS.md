@@ -58,14 +58,17 @@ GOOGLE_CLIENT_SECRET=GOCSPX-...
 # ============================================
 # EMAIL — BREVO (transactional + newsletter)
 # ============================================
-# lib/email/brevo.ts sends the refund notice + ops alert; /api/newsletter adds
-# contacts to a Brevo list. Auth emails go through Supabase SMTP, pointed at
-# Brevo SMTP (smtp-relay.brevo.com:587) in the Supabase dashboard.
+# lib/email/brevo.ts sends the booking receipt, the refund notice, the
+# cancellation notice and the ops alert; /api/newsletter adds contacts to a
+# Brevo list. Auth emails (magic link, confirm, reset) go through Supabase
+# SMTP, pointed at Brevo SMTP (smtp-relay.brevo.com:587, login = Brevo SMTP
+# key) in the Supabase dashboard → Authentication → SMTP Settings.
+# The confirmation + check-in-link email for DIRECT reservations is sent by the
+# CRM (AVEXA Automation) since 19.09.2026 — not by the site.
 # Setup: Brevo → Contacts → Lists → create → copy the numeric id below. Until
 # it is set, the form honestly answers 503 "Subscriptions open soon".
 BREVO_LIST_ID=
-# (Resend was the launch provider — fully replaced by Brevo; RESEND_* vars can
-# be deleted from Vercel once Brevo is verified working.)
+# (Resend is gone: no code, no env vars, and its DNS records must be deleted.)
 
 # ============================================
 # ANALYTICS
@@ -292,17 +295,25 @@ See **ARCHITECTURE.md** for complete schema. Main tables:
 
 ### Setup
 1. **Sender email:** office@avexastays.com — "Prime Gold Living SRL" (verified in Brevo). Override with `BREVO_SENDER_NAME` / `BREVO_SENDER_EMAIL`.
-2. **Templates live in code** (`lib/email/brevo.ts`, `lib/hostaway/confirmation.ts`), not in the Brevo dashboard.
-3. **Domain authentication (deliverability) — required, checked 19.09.2026: NOT done yet.** avexastays.com had no SPF, no Brevo DKIM and no DMARC, so office@ mail (Brevo *and* Google Workspace) can land in spam. DNS is on Vercel (Vercel → Domains → avexastays.com → DNS Records):
+2. **Templates live in code** (`lib/email/brevo.ts`), not in the Brevo dashboard.
+3. **Domain authentication (deliverability) — required, checked 19.09.2026: NOT done yet.** avexastays.com had no SPF, no Brevo DKIM and no DMARC, so office@ mail (Brevo *and* Google Workspace) can land in spam. DNS is on Vercel (Vercel → Domains → avexastays.com → DNS Records). First **delete the two leftover Resend records on `send`** (TXT + MX) — a name with a CNAME cannot hold other records. Then add (empty Name = root):
 
    | Name | Type | Value |
    |------|------|-------|
-   | `@` | TXT | `v=spf1 include:_spf.google.com include:spf.brevo.com ~all` (one SPF record only) |
-   | Brevo verification + DKIM | TXT / CNAME | **copy the exact records from Brevo → Senders, Domains & Dedicated IPs → Domains → Authenticate** (brevo-code TXT + `brevo1._domainkey` / `brevo2._domainkey` CNAMEs — account-specific, do not type from memory) |
-   | `_dmarc` | TXT | `v=DMARC1; p=none; rua=mailto:office@avexastays.com; fo=1` → after 1–2 weeks of clean reports move to `p=quarantine` |
+   | (empty) | TXT | the `brevo-code` value from Brevo → Senders, Domains & Dedicated IPs → Domains → Authenticate |
+   | (empty) | TXT | `v=spf1 include:_spf.google.com include:spf.brevo.com ~all` (one SPF record only — covers Gmail office@ and Brevo) |
+   | `brevo1._domainkey` | CNAME | `b1.avexastays-com.dkim.brevo.com` |
+   | `brevo2._domainkey` | CNAME | `b2.avexastays-com.dkim.brevo.com` |
+   | `_dmarc` | TXT | `v=DMARC1; p=none; rua=mailto:rua@dmarc.brevo.com` (Brevo aggregates the reports; move to `p=quarantine` after 1–2 clean weeks) |
+   | `send` | CNAME | `send-avexastays-com.brand.brevosend.com` |
+   | `r.send` | CNAME | `send-avexastays-com.r.brand.brevosend.com` |
+   | `img.send` | CNAME | `send-avexastays-com.img.brand.brevosend.com` |
 
-   Done when Brevo shows the domain as Authenticated and the sender's DKIM is no longer "Default". Google's sender guidelines (2024+) require SPF + DKIM with alignment; the Brevo custom DKIM provides the alignment.
-4. **Hostaway must not email direct guests:** the site already sends the booking confirmation + the check-in-link email from office@. In Hostaway → Inbox → Message Automations, exclude the *Hostaway Direct* channel from the confirmation automation (keep it for Airbnb / Booking.com), otherwise guests get a second, Hostaway-branded email.
+   Done when Brevo shows the domain as Authenticated and the sender's DKIM is no longer "Default". Google's sender guidelines (2024+) require SPF + DKIM with alignment; the Brevo custom DKIM provides it. Only after that: point Supabase SMTP at Brevo (above).
+4. **Who emails the guest at booking (since 19.09.2026):**
+   - **CRM (AVEXA Automation):** direct reservations (site / phone) get ONE email from office@ via Brevo — confirmation + check-in link, template editable in Check-in Admin → Settings → "Email rezervări directe". OTA reservations get only the channel chat message. Pre-arrival instructions: email + SMS from the CRM.
+   - **Site:** the booking receipt (dates, price breakdown, extras, cancellation terms — data only the site has), the refund/conflict notice, the cancellation notice and the internal ops alert. The site no longer sends any check-in-link email (`lib/hostaway/confirmation.ts` removed).
+   - **Hostaway:** in Inbox → Message Automations, untick *Direct* / *Website* channels on every "new reservation / confirmed" automation; at CRM go-live switch off the automations carrying the ChargeAutomation link on all channels.
 
 ### API Key
 - Dashboard → SMTP & API → API Keys
@@ -372,7 +383,7 @@ import Script from 'next/script'
 
 ### What it does on the site
 - **My Trips → „Check-in & access” card** on every confirmed, not-yet-checked-out stay: the online check-in link → „Check-in completed” + when the code will show → the door code, address and validity → hidden after check-out or for cancelled reservations. The site shows exactly what the CRM returns; it derives nothing.
-- **Check-in email** after the Stripe webhook (`lib/hostaway/confirmation.ts`): the link now comes from the CRM first; the ChargeAutomation link in the Hostaway notes is the fallback until CA is switched off.
+- **Check-in email:** sent by the CRM itself for direct reservations (since 19.09.2026). The site sends none; `lib/hostaway/confirmation.ts` and `getCrmCheckinUrl` were removed.
 
 ### Wiring
 - `lib/crm/trip.ts` — `GET https://crm.avexastays.com/api/public/trip?reservation=<hostaway_reservation_id>`, `Authorization: Bearer MYTRIPS_API_SECRET`, `cache: 'no-store'`, 5 s timeout, Zod-validated. Server-only (server component + webhook); never from the browser.

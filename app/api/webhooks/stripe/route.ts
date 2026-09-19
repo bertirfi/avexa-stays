@@ -3,7 +3,6 @@ import type Stripe from 'stripe';
 import { getStripe } from '@/lib/stripe/client';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { createReservation, findRecentDirectReservation } from '@/lib/hostaway/client';
-import { sendBookingConfirmation } from '@/lib/hostaway/confirmation';
 import type { HostawayFinanceField } from '@/lib/hostaway/types';
 import { bookingConfirmationEmail, escapeHtml, refundNoticeEmail, sendEmail } from '@/lib/email/brevo';
 import { properties as propertyCatalog } from '@/lib/properties';
@@ -346,8 +345,11 @@ export async function POST(req: Request) {
     // hostaway_reservation_id): confirmBooking runs at most once per booking
     // across redeliveries, so no extra sent-flag column is needed.
     //
-    // 1) Reservation-details email via Brevo, immediately (client decision
-    //    24.08: all transactional mail via Brevo from office@avexastays.com).
+    // The reservation-details (receipt) email via Brevo, immediately (client
+    // decision 24.08: all transactional mail via Brevo from office@).
+    // The check-in-link email is NOT sent from here any more: since 19.09 the
+    // CRM (AVEXA Automation) emails direct guests itself, from office@ via
+    // Brevo, with the editable template in Check-in Admin.
     after(async () => {
       try {
         const prop = propertyCatalog.find((p) => p.id === confirmedBooking.property_id);
@@ -370,15 +372,6 @@ export async function POST(req: Request) {
         );
       }
     });
-    // 2) The check-in message: wait for ChargeAutomation's check-in link, then
-    //    email the CA-template message from office@ via Brevo (client 04.09).
-    after(() =>
-      sendBookingConfirmation({
-        reservationId,
-        guestFirstName: confirmedBooking.guest_name.trim().split(/\s+/)[0] || 'there',
-        guestEmail: confirmedBooking.guest_email,
-      }),
-    );
   }
 
   try {
