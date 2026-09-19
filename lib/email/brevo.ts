@@ -3,12 +3,11 @@
  *
  * Scope: ALL transactional mail goes through Brevo from office@avexastays.com
  * (client decision 24.08). Auth emails go through Supabase SMTP (pointed at
- * Brevo SMTP in the Supabase dashboard). The app sends: the booking
- * confirmation (Stripe webhook), the ChargeAutomation check-in link
- * (lib/hostaway/confirmation.ts, client 04.09 — no longer via the Hostaway
- * conversation), the refund notice
- * when payment succeeded but the dates were taken (Stripe webhook), the
- * cancellation-confirmed notice (My Trips cancel) — plus the internal ops alert.
+ * Brevo SMTP in the Supabase dashboard). The app sends: the booking receipt
+ * (Stripe webhook), the refund notice when payment succeeded but the dates
+ * were taken (Stripe webhook), the cancellation-confirmed notice (My Trips
+ * cancel) — plus the internal ops alert. The check-in-link email for direct
+ * reservations is sent by the CRM (AVEXA Automation) since 19.09, not here.
  * Best-effort: a missing key or API failure must never break the money flow,
  * only log.
  */

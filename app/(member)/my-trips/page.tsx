@@ -92,7 +92,8 @@ function toCheckin(result: CrmTripResult): TripCheckin | null {
   if (result.kind === 'unavailable') return null;
   if (result.kind === 'pending') return { state: 'pending' };
   const { trip } = result;
-  if (!trip.reservation.active) return null;
+  // OTA guests (Booking / Airbnb) get their check-in through the channel chat.
+  if (!trip.reservation.active || !trip.reservation.direct) return null;
   if (trip.access.available && trip.access.code) {
     const from = formatAccessTime(trip.access.valid_from);
     const to = formatAccessTime(trip.access.valid_to);

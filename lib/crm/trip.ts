@@ -5,9 +5,10 @@ import { z } from 'zod';
  * a reservation. Server-only: the Bearer secret must never reach the browser.
  *
  * GET https://crm.avexastays.com/api/public/trip?reservation=<hostaway id>
- * Not cached (the CRM answers no-store); called on every My Trips render and
- * while polling for the check-in email link. Unset MYTRIPS_API_SECRET = the
- * integration is off and every call answers `null`.
+ * Not cached (the CRM answers no-store); called on every My Trips render.
+ * Unset MYTRIPS_API_SECRET = the integration is off and every call answers
+ * `unavailable`. The CRM also owns the guest emails for direct reservations
+ * (since 19.09) — the site only reads.
  */
 
 const BASE = 'https://crm.avexastays.com/api/public/trip';
@@ -16,6 +17,8 @@ const TIMEOUT_MS = 5_000;
 const tripSchema = z.object({
   reservation: z.object({
     active: z.boolean(),
+    /** Booked on the site / by phone (true) vs OTA (false). The card is direct-only. */
+    direct: z.boolean().default(false),
     arrival_date: z.string(),
     departure_date: z.string(),
     listing: z.object({
@@ -72,10 +75,4 @@ export async function getCrmTrip(reservationId: number): Promise<CrmTripResult> 
     console.error(`[crm] trip ${reservationId} failed:`, err);
     return { kind: 'unavailable' };
   }
-}
-
-/** The CRM's check-in link for a reservation, or null while it doesn't exist yet. */
-export async function getCrmCheckinUrl(reservationId: number): Promise<string | null> {
-  const result = await getCrmTrip(reservationId);
-  return result.kind === 'ok' ? (result.trip.checkin?.url ?? null) : null;
 }
