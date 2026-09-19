@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
+import { AddPill } from '@/components/extras/AddPill';
 import { Sentences } from '@/components/shared/Sentences';
 import { useCurrency } from '@/components/currency/CurrencyProvider';
 import { EXTRAS_COPY, extraPriceRon, roomsForCleaning, type ExtraService } from '@/lib/extras';
@@ -90,7 +91,7 @@ function ExtraCard({
     <article
       className={cn(
         'flex w-[78%] shrink-0 snap-start flex-col overflow-hidden rounded-card border bg-cream/[0.04] transition duration-300 hover:-translate-y-1 hover:bg-cream/[0.07] sm:w-auto sm:shrink',
-        selected ? 'border-gold bg-gold/10' : 'border-cream/10',
+        selected ? 'border-gold bg-gold/10 ring-1 ring-gold' : 'border-cream/10',
       )}
     >
       <div className="relative aspect-[16/10] overflow-hidden">
@@ -106,8 +107,12 @@ function ExtraCard({
           <ExtraPlaceholder name={extra.name} />
         )}
         {selected && (
-          <span className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-gold text-ink">
-            <Icon name="check" size={14} strokeWidth={2.4} />
+          <span
+            aria-hidden
+            className="font-mono-label absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-gold px-2.5 py-1 text-ink"
+          >
+            <Icon name="check" size={12} strokeWidth={2.6} />
+            Added
           </span>
         )}
       </div>
@@ -125,19 +130,13 @@ function ExtraCard({
           </span>
         </div>
 
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-pressed={selected}
-          className={cn(
-            'mt-4 w-full rounded-full py-2.5 text-sm font-semibold transition',
-            selected
-              ? 'bg-gold text-ink hover:bg-gold-pale'
-              : 'border border-cream/25 text-cream hover:border-gold hover:text-gold',
-          )}
-        >
-          {selected ? 'Added to booking' : 'Add to booking'}
-        </button>
+        <AddPill
+          added={selected}
+          onToggle={onToggle}
+          tone="dark"
+          labels={{ add: 'Add to booking', added: 'Added to booking' }}
+          className="mt-4 w-full"
+        />
       </div>
     </article>
   );
