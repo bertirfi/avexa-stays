@@ -16,6 +16,7 @@ import { ymd, parseYmd } from '@/lib/date';
 import { CITY_TAX_RON_PER_PERSON_NIGHT } from '@/lib/currency';
 import { CANCELLATION_POLICY } from '@/lib/policies';
 import { readSearchPrefs, writeSearchPrefs } from '@/lib/searchPrefs';
+import { AddPillBadge } from '@/components/extras/AddPill';
 import { extraPriceRon, getExtra, roomsForCleaning } from '@/lib/extras';
 import {
   setExtrasCheckIn,
@@ -685,20 +686,19 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
             const checked = selectedExtras.includes(extra.id);
             return (
               <li key={extra.id}>
-                <label
+                <button
+                  type="button"
+                  aria-pressed={checked}
+                  onClick={() => toggleExtra(extra.id)}
                   className={cn(
-                    'flex cursor-pointer items-start gap-3 rounded-xl px-2 py-2 transition hover:bg-cream',
-                    checked && 'bg-gold-pale/60 hover:bg-gold-pale/60',
+                    'group flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition',
+                    checked
+                      ? 'border-gold bg-gold-pale/60'
+                      : 'border-transparent hover:border-gray-line hover:bg-cream',
                   )}
                 >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleExtra(extra.id)}
-                    className="mt-1 size-4 shrink-0 accent-gold-dark"
-                  />
                   <span className="min-w-0 flex-1">
-                    <span className="flex items-baseline justify-between gap-2">
+                    <span className="flex items-baseline gap-2">
                       <span className="text-sm font-semibold">{extra.name}</span>
                       <span className="shrink-0 text-sm text-gold-dark">
                         {format(extraPriceRon(extra, rooms))}
@@ -709,7 +709,8 @@ export function StayBookingSidebar({ property, siblings = [], availability }: Pr
                       {extra.leadLabel}
                     </span>
                   </span>
-                </label>
+                  <AddPillBadge added={checked} />
+                </button>
               </li>
             );
           })}

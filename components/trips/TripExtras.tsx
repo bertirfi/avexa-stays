@@ -3,7 +3,9 @@
 import { useState, useTransition } from 'react';
 import Image from 'next/image';
 import { startExtrasCheckout } from '@/app/(member)/my-trips/actions';
+import { AddPillBadge } from '@/components/extras/AddPill';
 import { Sentences } from '@/components/shared/Sentences';
+import { cn } from '@/lib/cn';
 import { EXTRAS_COPY } from '@/lib/extras';
 
 /** One still-buyable service, priced for this booking's apartment size. */
@@ -64,18 +66,21 @@ export function TripExtras({
               type="button"
               aria-pressed={on}
               onClick={() => toggle(e.id)}
-              className={`flex gap-3 rounded-card border bg-white p-3 text-left transition ${
+              className={cn(
+                'group flex items-center gap-3 rounded-card border p-3 text-left transition',
                 on
-                  ? 'border-gold-dark shadow-[var(--shadow-card-hover)]'
-                  : 'border-gray-line hover:border-gold'
-              }`}
+                  ? 'border-gold bg-gold-pale/40 ring-1 ring-gold shadow-[var(--shadow-card-hover)]'
+                  : 'border-gray-line bg-white hover:border-gold',
+              )}
             >
               {/* Editorial tile — the photo slot until the client delivers images. */}
               <span className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-ink">
                 {e.image ? (
                   <Image src={e.image} alt="" fill className="object-cover" sizes="56px" />
                 ) : (
-                  <span className="font-display text-xl text-gold">{e.name.charAt(0)}</span>
+                  <span aria-hidden className="font-display text-xl text-gold">
+                    {e.name.charAt(0)}
+                  </span>
                 )}
               </span>
 
@@ -91,6 +96,7 @@ export function TripExtras({
                   {e.leadLabel}
                 </span>
               </span>
+              <AddPillBadge added={on} />
             </button>
           );
         })}
@@ -110,7 +116,11 @@ export function TripExtras({
           }}
           className="rounded-full bg-ink px-6 py-2.5 text-sm font-semibold text-cream transition hover:bg-ink/90 disabled:opacity-40"
         >
-          {pending ? 'Opening checkout…' : `Pay ${total.toLocaleString('en-US')} RON`}
+          {pending
+            ? 'Opening checkout…'
+            : selected.length === 0
+              ? 'Select a service to add'
+              : `Pay ${total.toLocaleString('en-US')} RON · ${selected.length} ${selected.length === 1 ? 'service' : 'services'}`}
         </button>
         {error && (
           <p className="text-sm text-[#B23A3A]">

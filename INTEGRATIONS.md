@@ -291,9 +291,18 @@ See **ARCHITECTURE.md** for complete schema. Main tables:
 - **Existing account** — already has API key
 
 ### Setup
-1. **Sender domain verification:** Add avexastays.com SPF + DKIM
-2. **Sender email:** bookings@avexastays.com (verified)
-3. **Templates** designed in Brevo dashboard
+1. **Sender email:** office@avexastays.com — "Prime Gold Living SRL" (verified in Brevo). Override with `BREVO_SENDER_NAME` / `BREVO_SENDER_EMAIL`.
+2. **Templates live in code** (`lib/email/brevo.ts`, `lib/hostaway/confirmation.ts`), not in the Brevo dashboard.
+3. **Domain authentication (deliverability) — required, checked 19.09.2026: NOT done yet.** avexastays.com had no SPF, no Brevo DKIM and no DMARC, so office@ mail (Brevo *and* Google Workspace) can land in spam. DNS is on Vercel (Vercel → Domains → avexastays.com → DNS Records):
+
+   | Name | Type | Value |
+   |------|------|-------|
+   | `@` | TXT | `v=spf1 include:_spf.google.com include:spf.brevo.com ~all` (one SPF record only) |
+   | Brevo verification + DKIM | TXT / CNAME | **copy the exact records from Brevo → Senders, Domains & Dedicated IPs → Domains → Authenticate** (brevo-code TXT + `brevo1._domainkey` / `brevo2._domainkey` CNAMEs — account-specific, do not type from memory) |
+   | `_dmarc` | TXT | `v=DMARC1; p=none; rua=mailto:office@avexastays.com; fo=1` → after 1–2 weeks of clean reports move to `p=quarantine` |
+
+   Done when Brevo shows the domain as Authenticated and the sender's DKIM is no longer "Default". Google's sender guidelines (2024+) require SPF + DKIM with alignment; the Brevo custom DKIM provides the alignment.
+4. **Hostaway must not email direct guests:** the site already sends the booking confirmation + the check-in-link email from office@. In Hostaway → Inbox → Message Automations, exclude the *Hostaway Direct* channel from the confirmation automation (keep it for Airbnb / Booking.com), otherwise guests get a second, Hostaway-branded email.
 
 ### API Key
 - Dashboard → SMTP & API → API Keys
