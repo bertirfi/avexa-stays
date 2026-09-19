@@ -92,8 +92,10 @@ function toCheckin(result: CrmTripResult): TripCheckin | null {
   if (result.kind === 'unavailable') return null;
   if (result.kind === 'pending') return { state: 'pending' };
   const { trip } = result;
-  // OTA guests (Booking / Airbnb) get their check-in through the channel chat.
+  // OTA guests (Booking / Airbnb) get their check-in through the channel chat,
+  // and the CRM decides per guest whether its link is live (checkin.active).
   if (!trip.reservation.active || !trip.reservation.direct) return null;
+  if (!trip.checkin?.active) return null;
   if (trip.access.available && trip.access.code) {
     const from = formatAccessTime(trip.access.valid_from);
     const to = formatAccessTime(trip.access.valid_to);
@@ -104,7 +106,6 @@ function toCheckin(result: CrmTripResult): TripCheckin | null {
       validityLabel: from && to ? `${from} → ${to}` : null,
     };
   }
-  if (!trip.checkin) return { state: 'pending' };
   if (trip.checkin.completed) {
     return { state: 'completed', availableFromLabel: formatAccessTime(trip.access.available_from) };
   }

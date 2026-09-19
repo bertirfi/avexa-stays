@@ -29,6 +29,12 @@ const tripSchema = z.object({
     .object({
       url: z.string().url(),
       completed: z.boolean(),
+      /**
+       * Whether the link actually opens for this guest. Before the CRM go-live
+       * it is true only for test guests; after go-live for everyone. The card
+       * is shown only when true — nothing to change on the site at go-live.
+       */
+      active: z.boolean().default(false),
     })
     .nullable(),
   access: z.object({
